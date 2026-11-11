@@ -23,6 +23,9 @@ y entre a http://localhost:8080
 | H | Intermitentes |
 | C | Cinturón (con el carro detenido) |
 | Espacio | Freno de mano |
+| V | Vista de piloto |
+| Z / X | (Piloto) mirar a la izquierda / derecha: espejos laterales |
+| F | (Piloto) mirar hacia arriba; también se inclina sola al detenerse en un semáforo |
 | P / Esc | Pausa |
 | M | Sonido |
 | R | Reiniciar |
@@ -34,7 +37,7 @@ y entre a http://localhost:8080
 - **Licencia pixel**: se gana al aprobar teórico, plantel y prueba en calle.
 - **Vista de piloto** (tecla V) en primera persona.
 - **Examen en plantel**: 9 tareas con nota (empieza en 100, mínimo 80): incorporarse con direccional, parqueo en batería, ALTO en el cruce del tren, rotonda (3ª salida con direccionales), ALTO en intersección, retroceso entre conos, parqueo en paralelo y regreso al cuadro de inicio.
-- **Modo calle**: ciudad libre con semáforos altos, rotonda, línea del tren con agujas, pasos peatonales, zona escolar y parqueo público. Lleva la cuenta de infracciones y de destinos alcanzados.
+- **Modo calle**: ciudad libre con tráfico que circula por todas las calles y la rotonda (cediendo el paso), camiones de basura que se detienen a recoger, obras con conos, carros varados con intermitentes, huecos, peatones en las aceras y algunos que cruzan sin paso peatonal. Los carros adelantan a los vehículos detenidos: unos bien (con direccionales) y otros mal. Usted también puede adelantar: direccional izquierda al salir, derecha al volver, nunca en intersecciones ni cerca de pasos peatonales. Además tiene semáforos altos, rotonda, línea del tren con agujas, pasos peatonales, zona escolar y parqueo público. Lleva la cuenta de infracciones y de destinos alcanzados.
 
 ## Faltas (según reportes sobre la prueba de Educación Vial)
 
