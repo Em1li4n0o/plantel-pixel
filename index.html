@@ -72,6 +72,8 @@ button:hover,button:focus-visible{background:var(--acc);color:#000;outline:none}
 #gstats{text-align:left;font-size:calc(var(--u)*3.8);line-height:2;min-width:calc(var(--u)*180)}
 #gstats span{color:var(--acc)}
 .lic{width:calc(var(--u)*192);image-rendering:pixelated;animation:win .7s steps(8)}
+#prgScr button{min-width:0;font-size:calc(var(--u)*3.6);padding:calc(var(--u)*2.5) calc(var(--u)*3)}
+#prgCode{width:calc(var(--u)*300);height:calc(var(--u)*22);font-family:monospace;font-size:calc(var(--u)*3.4);background:#0b0b10;color:#9cf;border:calc(var(--u)*1) solid #4a4a6a;word-break:break-all;resize:none}
 input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5);background:#111;color:var(--fg);border:calc(var(--u)*1) solid #6a6a9a;width:calc(var(--u)*130);text-transform:uppercase}
 .col{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*3.5);width:100%;max-width:calc(var(--u)*320)}
 .qrow{display:flex;gap:calc(var(--u)*5);align-items:center;width:100%;text-align:left}
@@ -121,8 +123,10 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <button id="b4">6 · GARAJE</button>
       <button id="b5">7 · MI LICENCIA</button>
       <button id="b6">8 · REGLAS</button>
+      <button id="b7" style="grid-column:span 2">9 · MI PROGRESO · ENVIAR AL INSTRUCTOR</button>
     </div>
-    <div class="blink sub">PRESIONE 1 AL 8</div>
+    <div class="blink sub">PRESIONE 1 AL 9</div>
+    <a href="instructor.html" class="sub" style="color:var(--info);pointer-events:auto">PANEL DEL INSTRUCTOR ›</a>
   </div>
 
   <div id="garage" class="screen hidden">
@@ -156,6 +160,18 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <div id="thResL" class="res box"></div>
       <div class="row"><button id="thAgain">OTRA VEZ [ENTER]</button><button id="thBack2">VOLVER [ESC]</button></div>
     </div>
+  </div>
+
+  <div id="prgScr" class="screen hidden">
+    <h2>MI PROGRESO</h2>
+    <div class="row"><input id="prgName" maxlength="24" placeholder="SU NOMBRE"><input id="prgSchool" maxlength="24" placeholder="ESCUELA / GRUPO"></div>
+    <div id="prgSum" class="box scroll" style="text-align:left;font-size:calc(var(--u)*3.6);line-height:1.6;max-height:calc(var(--u)*80);width:calc(var(--u)*300);overflow:auto"></div>
+    <div id="prgCodeBox" class="hidden" style="display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*2)">
+      <div class="sub">Copie este código y envíelo a su instructor:</div>
+      <textarea id="prgCode" readonly></textarea>
+      <div id="prgMsg" class="sub" style="color:var(--good)"></div>
+    </div>
+    <div class="row"><button id="prgGen">GENERAR CÓDIGO</button><button id="prgCopy">COPIAR</button><button id="prgShare">COMPARTIR</button><button id="prgBack">VOLVER [ESC]</button></div>
   </div>
 
   <div id="licScr" class="screen hidden">
@@ -619,38 +635,68 @@ function anger(c,crash){if(c.angryT>.5&&!crash)return;const was=c.angryT>0;c.ang
   if(S&&S.P){if(!was)S.angered++;if(Math.hypot(S.P.x-c.x,S.P.y-c.y)<230)sfx.honk()}}
 function angerNear(W,x,y,r){for(const c of W.ai.concat(W.ringCars))if(Math.hypot(c.x-x,c.y-y)<r&&Math.random()<.8)anger(c)}
 
+// ===================== HISTORIAL Y REPORTE PARA EL INSTRUCTOR =====================
+function sid(){let s=store.get('pp_sid',null);if(!s){s=Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);store.set('pp_sid',s)}return s}
+function logAttempt(a){const h=store.get('pp_hist',[]);h.push(Object.assign({d:Date.now()},a));while(h.length>300)h.shift();store.set('pp_hist',h)}
+function logDrive(){if(!S||S.logged||S.t<15)return;S.logged=true;
+  logAttempt({m:S.mode,s:S.exam?Math.max(0,S.score):S.pts,ok:S.exam?S.okRes===true:null,fin:S.exam?S.over:true,t:Math.round(S.t),tk:S.exam?[Math.min(S.task,S.tasks.length),S.tasks.length]:[S.deliv,0],
+    f:S.faults.slice(0,25).map(f=>[f.text,f.cat,Math.round(f.t),f.x,f.y]),car:CAR.type,fp:!!S.fp})}
+addEventListener('pagehide',()=>logDrive());
+const MNAME={teorico:'TEÓRICO',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'CALLE LIBRE'};
+async function makeReport(){const rep={v:1,id:sid(),n:store.get('pp_name','')||'SIN NOMBRE',g:store.get('pp_school',''),at:Date.now(),prog:store.get('pp_prog',{}),h:store.get('pp_hist',[]).slice(-60),w:store.get('pp_wrong',[]).length};
+  const js=JSON.stringify(rep);let out;
+  try{const cs=new Blob([js]).stream().pipeThrough(new CompressionStream('deflate-raw'));const buf=new Uint8Array(await new Response(cs).arrayBuffer());let s='';for(let i=0;i<buf.length;i+=8192)s+=String.fromCharCode.apply(null,buf.subarray(i,i+8192));out='PPZ1.'+btoa(s)}
+  catch(e){out='PPJ1.'+btoa(unescape(encodeURIComponent(js)))}
+  return out.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function openProgress(){show('prgScr');ui='prg';$('prgName').value=store.get('pp_name','');$('prgSchool').value=store.get('pp_school','');$('prgCodeBox').classList.add('hidden');$('prgMsg').textContent='';
+  const h=store.get('pp_hist',[]);let html='';
+  for(const m of['teorico','sanjose','plantel','street','city']){const a=h.filter(x=>x.m===m&&!x.prac);if(!a.length)continue;const best=Math.max(...a.map(x=>x.s));const pass=a.filter(x=>x.ok).length;const last=a.slice(-5);const avg=Math.round(last.reduce((s,x)=>s+x.s,0)/last.length);
+    html+=`<div><b style="color:var(--acc)">${MNAME[m]}</b>: ${a.length} intento${a.length>1?'s':''} · ${m==='city'?'mejor '+best+' pts':pass+' aprobado'+(pass===1?'':'s')+' · mejor '+best+' · promedio de los últimos '+last.length+': '+avg}</div>`}
+  const fc={};for(const a of h)for(const f of a.f||[])fc[f[0]]=(fc[f[0]]||0)+1;const top=Object.entries(fc).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  if(top.length)html+=`<div style="margin-top:calc(var(--u)*3);color:var(--acc)">FALTAS QUE MÁS REPITE</div>`+top.map(([t,n])=>`<div class="c2">${n}× ${t}</div>`).join('');
+  $('prgSum').innerHTML=html||'<div>Aún no hay intentos guardados. ¡Haga una prueba y vuelva aquí!</div>'}
+const saveWho=()=>{store.set('pp_name',$('prgName').value.trim().toUpperCase());store.set('pp_school',$('prgSchool').value.trim().toUpperCase())};
+$('prgName').onchange=saveWho;$('prgSchool').onchange=saveWho;
+$('prgGen').onclick=async()=>{saveWho();if(!store.get('pp_name','')){$('prgCodeBox').classList.remove('hidden');$('prgCode').value='';$('prgMsg').textContent='Escriba su nombre primero.';return}
+  $('prgCode').value=await makeReport();$('prgCodeBox').classList.remove('hidden');$('prgMsg').textContent=`Código listo (${$('prgCode').value.length} caracteres).`};
+$('prgCopy').onclick=async()=>{if(!$('prgCode').value)await $('prgGen').onclick();const v=$('prgCode').value;if(!v)return;try{await navigator.clipboard.writeText(v);$('prgMsg').textContent='¡Copiado! Péguelo en el chat con su instructor.'}catch(e){$('prgCode').select();document.execCommand('copy');$('prgMsg').textContent='¡Copiado!'}};
+$('prgShare').onclick=async()=>{if(!$('prgCode').value)await $('prgGen').onclick();const v=$('prgCode').value;if(!v)return;const txt=`Reporte de Plantel Pixel de ${store.get('pp_name','')}:\n${v}`;
+  if(navigator.share){try{await navigator.share({text:txt});return}catch(e){}}window.open('https://wa.me/?text='+encodeURIComponent(txt),'_blank')};
+$('prgBack').onclick=()=>back();
+
 // ===================== ESTADO =====================
 let S=null,A=null,ui='menu';
 function spawnState(W){const v=VEH[CAR.type];return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,thr:0,bp:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:carCol(),type:CAR.type,sp:v,L:v.L,Wd:v.Wd,player:true}}
 const MODES={sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'CALLE LIBRE'};
 function start(mode){
+  logDrive();
   const W=mode==='plantel'?buildPlantel():mode==='sanjose'?buildSanJose():buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);
   S.tasks=mode==='plantel'?plantelTasks():mode==='sanjose'?sjTasks():mode==='street'?streetTasks():[];if(mode==='city')newDest();
   const mw=130,mh=Math.round(130*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
-  for(const id of['menu','rules','end','pause','garage','licScr','theory'])$(id).classList.add('hidden');$('hud').classList.remove('hidden');ui=null;
+  for(const id of['menu','rules','end','pause','garage','licScr','theory','prgScr'])$(id).classList.add('hidden');$('hud').classList.remove('hidden');ui=null;
   $('banner').textContent='';$('toasts').innerHTML='';
   toast(MODES[mode],S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
 }
-function show(id){for(const s of['menu','rules','end','pause','garage','licScr','theory'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
-function toMenu(){S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0}
+function show(id){for(const s of['menu','rules','end','pause','garage','licScr','theory','prgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
+function toMenu(){logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0}
 function newDest(){const W=S.W,P=S.P;let i;do{i=Math.random()*W.dests.length|0}while(S.dest&&W.dests[i]===S.dest&&W.dests.length>1);S.dest=W.dests[i];
   S.destT=S.t;S.destPar=Math.round(12+(Math.abs(S.dest.x-P.x)+Math.abs(S.dest.y-P.y))/30)}
 
 function toast(title,txt,kind='info'){const d=document.createElement('div');d.className='toast '+kind;d.innerHTML=`<b>${title}</b>${txt||''}`;const T=$('toasts');T.prepend(d);while(T.children.length>3)T.lastChild.remove();setTimeout(()=>d.remove(),3800)}
 const QUIET=new Set(['belt','off','speed','inc','exit','rnoret','cut']);
 function fault(code,text,cat,cdSec=5){if(!S||S.over)return;if(S.cd[code]&&S.t<S.cd[code])return;S.cd[code]=S.t+cdSec;const pts=CAT[cat];
-  S.faults.push({t:S.t,text,cat,pts});
+  S.faults.push({t:S.t,text,cat,pts,x:Math.round(S.P.x),y:Math.round(S.P.y)});
   if(S.exam){S.score-=pts;if(S.score<80&&!S.failed){S.failed=true;$('banner').textContent='REPROBADO · siga practicando o pulse R'}toast(`FALTA CAT. ${cat} · −${pts}`,text,'bad')}
   else{S.infr++;const lost=S.streak>0;S.streak=0;S.pts=Math.max(0,S.pts-50);toast(`INFRACCIÓN · CAT. ${cat}`,text+` · −50 pts${lost?' · ¡RACHA PERDIDA!':''}`,'bad')}
   if(!QUIET.has(code.replace(/\d+$/,'')))angerNear(S.W,S.P.x,S.P.y,95);
   sfx.bad()}
 function fatal(text){if(S.over)return;sfx.crash();angerNear(S.W,S.P.x,S.P.y,120);
-  if(S.exam){S.faults.push({t:S.t,text,cat:'I',pts:32});S.score-=32;endExam('crash',text)}
-  else{S.infr++;S.streak=0;S.pts=Math.max(0,S.pts-100);S.faults.push({t:S.t,text,cat:'I',pts:32});toast('¡ACCIDENTE!',text+' · −100 pts','bad');S.respawn=1.6;S.P.v=0}}
+  if(S.exam){S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});S.score-=32;endExam('crash',text)}
+  else{S.infr++;S.streak=0;S.pts=Math.max(0,S.pts-100);S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});toast('¡ACCIDENTE!',text+' · −100 pts','bad');S.respawn=1.6;S.P.v=0}}
 function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
-  const ok=reason==='done'&&S.score>=80;$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
+  const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   let extra='';const prog=store.get('pp_prog',{});
   const pk=S.mode==='sanjose'?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
   const lic=prog.plantel&&prog.street&&prog.teorico;
@@ -804,7 +850,7 @@ function thPick(n){if(TH.chosen)return;const q=TH.list[TH.i];if(n>=q.o.length)re
 function thNext(){if(!TH.chosen&&TH.mode)return;TH.i++;if(TH.i>=TH.list.length)thFinish();else thShow()}
 function thFinish(){if(!TH.mode)return;const mode=TH.mode;TH.mode=null;const tot=mode==='exam'?40:TH.list.length;const ok=TH.ans.filter(a=>a.ok).length;const nota=Math.round(ok/Math.max(1,tot)*100);
   $('thQ').classList.add('hidden');$('thRes').classList.remove('hidden');
-  const pass=nota>=70;$('thResT').textContent=mode==='exam'?(pass?'¡TEÓRICO APROBADO!':'TEÓRICO REPROBADO'):'PRÁCTICA TERMINADA';$('thResT').style.color=pass?'var(--good)':'var(--bad)';
+  const pass=nota>=70;{const tp={};for(const a of TH.ans)if(!a.ok)tp[a.q.t]=(tp[a.q.t]||0)+1;if(TH.ans.length)logAttempt({m:'teorico',s:nota,ok:mode==='exam'?pass:null,prac:mode!=='exam',n:tot,c:ok,tp})}$('thResT').textContent=mode==='exam'?(pass?'¡TEÓRICO APROBADO!':'TEÓRICO REPROBADO'):'PRÁCTICA TERMINADA';$('thResT').style.color=pass?'var(--good)':'var(--bad)';
   let extra='';if(mode==='exam'&&pass){const p=store.get('pp_prog',{});if(!p.teorico||p.teorico.score<nota)p.teorico={score:nota,date:new Date().toLocaleDateString('es-CR')};store.set('pp_prog',p);sfx.fanfare();extra=' · ¡Siga con el EXAMEN EN PLANTEL!'}
   $('thResS').textContent=`Nota: ${nota}/100 (${ok} de ${tot} correctas)${mode==='exam'?' · Mínimo 70':''}`+extra;
   const bad=TH.ans.filter(a=>!a.ok);$('thResL').innerHTML=bad.length?bad.map(a=>`<div class="c1">✘ ${a.q.q}</div><div style="color:var(--good)">✔ ${a.q.o[0]}</div><div style="color:#9cf;margin-bottom:calc(var(--u)*2)">${a.q.e}</div>`).join(''):'<div style="color:var(--good)">¡Todas correctas!</div>'}
@@ -1216,16 +1262,17 @@ function compass(P,tg){if(!tg)return;const a=nA(Math.atan2(tg.y-P.y,tg.x-P.x)-P.
 
 // ===================== ENTRADA =====================
 const keys={},pressed={};
-addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'){if(e.key==='Escape')e.target.blur();return}const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(!keys[k])pressed[k]=true;keys[k]=true;if(!e.repeat)onKey(k);audioInit()});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){if(e.key==='Escape')e.target.blur();return}const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(!keys[k])pressed[k]=true;keys[k]=true;if(!e.repeat)onKey(k);audioInit()});
 addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 function onKey(k){
   if(!S){
     if(ui==='rules'){if(k==='escape'||k==='enter')back();return}
     if(ui==='lic'){if(k==='escape'||k==='enter')back();return}
+    if(ui==='prg'){if(k==='escape')back();return}
     if(ui==='garage'){if(k==='a'||k==='arrowleft')garage(-1,0);if(k==='d'||k==='arrowright')garage(1,0);if(k==='w'||k==='arrowup')garage(0,-1);if(k==='s'||k==='arrowdown')garage(0,1);if(k==='enter'||k==='escape')back();return}
     if(ui==='theory'){theoryKey(k);return}
-    if(k==='1')openTheory();if(k==='2')start('sanjose');if(k==='3')start('plantel');if(k==='4')start('street');if(k==='5')start('city');if(k==='6')openGarage();if(k==='7')showLicense();if(k==='8'){show('rules');ui='rules'}return}
+    if(k==='1')openTheory();if(k==='2')start('sanjose');if(k==='3')start('plantel');if(k==='4')start('street');if(k==='5')start('city');if(k==='6')openGarage();if(k==='7')showLicense();if(k==='8'){show('rules');ui='rules'}if(k==='9')openProgress();return}
   if(S.over){if(k==='enter')start(S.mode);if(k==='escape')toMenu();return}
   if(k==='escape'||k==='p'){togglePause();return}
   if(S.paused)return;
@@ -1240,7 +1287,7 @@ function onKey(k){
 function back(){show('menu');ui='menu';refreshMenu()}
 function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);if(engG&&S.paused)engG.gain.value=0}
 $('b0').onclick=openTheory;$('bSJ').onclick=()=>{audioInit();start('sanjose')};$('b1').onclick=()=>{audioInit();start('plantel')};$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
-$('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('bBack').onclick=back;$('licBack').onclick=back;
+$('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
 $('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bMenu2').onclick=toMenu;
 

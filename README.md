@@ -34,6 +34,8 @@ y entre a http://localhost:8080
 
 - **Examen teórico**: banco de práctica con explicaciones, examen de 40 preguntas en 50 minutos (nota mínima 70) y repaso de errores. Las preguntas son propias, no el banco oficial.
 - **Plantel San José**: trazado copiado de la foto aérea (aproximado): fila de carros de 40 m bajo los paneles solares, zigzag en diagonal con hileras de conos alternadas (−12 cada uno), rotonda con vuelta completa y una sola salida al sur que sube a la vía de la derecha (2 carriles), retroceso de 40 m y, de último, parqueo hacia atrás en uno de 4 espacios de la plazoleta de la entrada (tocar un cono ahí pierde la prueba).
+- **Mi progreso (9)**: el simulador guarda cada intento (nota, faltas, duración). El alumno genera un código de reporte y lo envía a su instructor (copiar o compartir por WhatsApp).
+- **Panel del instructor** (`instructor.html`): el instructor pega los códigos y ve a todos sus alumnos: mejores notas por prueba, estado (listo / en progreso / necesita práctica), evolución de notas, faltas más repetidas, temas del teórico con más errores e historial de intentos. Exporta a CSV. Los datos quedan solo en el navegador del instructor (sin servidor).
 - **Licencia pixel**: se gana al aprobar teórico, plantel y prueba en calle.
 - **Vista de piloto** (tecla V) en primera persona.
 - **Examen en plantel**: 9 tareas con nota (empieza en 100, mínimo 80): incorporarse con direccional, parqueo en batería, ALTO en el cruce del tren, rotonda (3ª salida con direccionales), ALTO en intersección, retroceso entre conos, parqueo en paralelo y regreso al cuadro de inicio.
