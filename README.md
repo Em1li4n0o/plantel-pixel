@@ -29,7 +29,9 @@ y entre a http://localhost:8080
 | B | Pitar (solo para evitar accidentes; nunca en zona escolar) |
 | G | Marcha baja: compresionar al bajar cuestas |
 | P / Esc | Pausa |
-| M | Sonido |
+| M | Mapa completo (también tocando el minimapa); el juego se pausa |
+| + / - | Zoom de la cámara (en el mapa: acercar) |
+| N | Sonido |
 | R | Reiniciar |
 
 ## Modos
