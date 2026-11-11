@@ -421,7 +421,12 @@ function buildSanJose(){
   W.hslots=[];for(let i=0;i<4;i++){const y=86+16*i;W.hslots.push({x:98,y,w:22,h:16,target:i===1});
     if(i===3){const cx=110,cy=y+8,h=Math.PI;W.parked.push({x:cx,y:cy,h,col:'#c0392b',type:'sedan'});for(const q of circles({x:cx,y:cy,h,L:VEH.sedan.L,Wd:VEH.sedan.Wd}))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'})}}
   for(let i=0;i<=3;i++)for(const x of[101,110,119])cone(x,86+16*i,{fatal:1});
+  // límite del plantel (malla) al suroeste
+  const lim=W.lim=[[0,237],[31,259],[87,285],[160,303],[234,318],[300,330]];
+  for(let i=0;i<lim.length-1;i++){const[a,b]=lim[i],[e,f]=lim[i+1];W.fences.push([a,b,e,f]);const L=Math.hypot(e-a,f-b);for(let k=0;k<=L;k+=3)W.circObs.push({x:a+(e-a)*k/L,y:b+(f-b)*k/L,r:1.5,type:'fence'})}
+  const limY=x=>{for(let i=0;i<lim.length-1;i++){const[a,b]=lim[i],[e,f]=lim[i+1];if(x>=a&&x<=e)return b+(f-b)*(x-a)/(e-a)}return 1e9};
   addTrees(W,rng(21),30,{x:0,y:0,w:W.w,h:W.h},9);
+  W.trees=W.trees.filter(t=>t.y<limY(t.x)-6);W.obst=W.obst.filter(o=>o.type!=='tree'||o.y+2<limY(o.x+2)-6);
   const lane=sjq([[200,90],[335,60],[345,59],[362,52],[380,40],[377,28],[360,18],[340,16],[250,34],[110,64]]);
   spawnOnLoop(W,makePathLoop(lane.concat([[70,86],[40,112],[48,150],[92,165],[130,158],[150,128],[175,111]]),0),1,20);
   W.spawn={x:175*K,y:94*K,h:Math.atan2(-44,220)};
@@ -544,6 +549,8 @@ function renderBG(W){
     for(let y0=72;y0<360;y0+=8)for(let k=0;k<12;k++)px(Math.round(x1+2+k),Math.round(y0+k*.6),WH);
     x.fillStyle=YE;x.fillRect(SJP.cor.x-8,SJP.cor.end,17,2);ptext(x,'RETRO',SJP.cor.x-3,SJP.cor.end-36,WH,2);
     for(const s of W.hslots){x.fillStyle=WH;x.fillRect(s.x,s.y,s.w,1);x.fillRect(s.x,s.y+s.h,s.w,1);x.fillRect(s.x+s.w-1,s.y,1,s.h);if(s.target){x.fillStyle=YE;x.fillRect(s.x+s.w-3,s.y+1,2,s.h-1);x.fillRect(s.x,s.y+1,s.w,1);x.fillRect(s.x,s.y+s.h-1,s.w,1)}}
+    {const L=W.lim;x.fillStyle='#7a766c';x.beginPath();x.moveTo(L[0][0],L[0][1]);for(const q of L)x.lineTo(q[0],q[1]);x.lineTo(L[L.length-1][0],W.h);x.lineTo(0,W.h);x.fill();x.fillStyle='#8a867b';for(let i=0;i<300;i++){const X=(i*53)%300,Y=W.h-((i*37)%140);if(Y>L[0][1]+X*.3)x.fillRect(X,Y,2,1)}
+     for(const f of W.fences){const FL=Math.hypot(f[2]-f[0],f[3]-f[1]);for(let k=0;k<=FL;k++)px(Math.round(f[0]+(f[2]-f[0])*k/FL),Math.round(f[1]+(f[3]-f[1])*k/FL),k%6===0?'#5c677d':'#cfd6dd')}ptext(x,'LIMITE DEL PLANTEL',40,325,'#e6e6e6')}
     ptext(x,'PARQUEO',60,80,WH,1);ptext(x,'ZIGZAG',300,140,WH)}
   for(const rl of W.rails){const L=rl.o==='v'?W.h:W.w;
     for(let t=0;t<L;t+=4){const X=rl.o==='v'?rl.pos:t,Y=rl.o==='v'?t:rl.pos;if(!pavedW(W,X,Y)){x.fillStyle='#4a3626';if(rl.o==='v')x.fillRect(rl.pos-6,t,12,2);else x.fillRect(t,rl.pos-6,2,12)}}
