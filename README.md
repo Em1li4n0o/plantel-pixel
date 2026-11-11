@@ -30,7 +30,7 @@ y entre a http://localhost:8080
 ## Modos
 
 - **Examen teórico**: banco de práctica con explicaciones, examen de 40 preguntas en 50 minutos (nota mínima 70) y repaso de errores. Las preguntas son propias, no el banco oficial.
-- **Plantel San José**: aproximación hecha a partir de fotos aéreas: zona azul de salida, zigzag entre conos, mini rotonda de la caseta, rotonda grande con conos, retroceso y, de último, parqueo hacia atrás en la calle diagonal.
+- **Plantel San José**: trazado copiado de la foto aérea (aproximado): zona azul bajo los paneles solares, zigzag entre conos, mini rotonda de la caseta, rotonda grande con conos, retroceso en la vía de la derecha (carriles de ALTO) y, de último, parqueo hacia atrás en la plazoleta de la entrada.
 - **Licencia pixel**: se gana al aprobar teórico, plantel y prueba en calle.
 - **Vista de piloto** (tecla V) en primera persona.
 - **Examen en plantel**: 9 tareas con nota (empieza en 100, mínimo 80): incorporarse con direccional, parqueo en batería, ALTO en el cruce del tren, rotonda (3ª salida con direccionales), ALTO en intersección, retroceso entre conos, parqueo en paralelo y regreso al cuadro de inicio.

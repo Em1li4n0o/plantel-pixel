@@ -374,69 +374,71 @@ function buildPlantel(){
   W.spawn={x:108,y:61,h:0};
   return W}
 
-// Plantel de San José: aproximación hecha a partir de fotos aéreas (no es un plano oficial).
-const SJ={A:[400,42],d:[.8762,.4819],n:[.4819,-.8762]};
-function sjPt(s,u){return[SJ.A[0]+SJ.d[0]*s+SJ.n[0]*u,SJ.A[1]+SJ.d[1]*s+SJ.n[1]*u]}
+// Plantel de San José: trazado copiado de la foto aérea (aproximado; ~2.2 unidades por píxel de la foto).
+const SJP={slot:{x:64,y:259},cor:{top:202,end:335}};
 function buildSanJose(){
-  const W=newWorld('sanjose',900,540);W.limit=25;
-  const loop=[[230,440],[230,215],[240,150],[275,100],[330,62],[400,42],[490,91.5],[580,141],[670,190.5],[760,240],[810,270],[835,320],[835,420],[815,470],[770,495],[650,495],[500,495],[330,495],[270,490],[240,470],[230,440]];
-  addPath(W,loop);
-  addPath(W,[[40,215],[230,215]]);
-  const sc=[[300,83],[300,110],[310,128],[340,140],[375,152],[405,172],[410,200],[385,222],[350,240],[330,262],[330,296]];
-  addPath(W,sc);
-  addPath(W,[[560,130],[560,266]]);addPath(W,[[560,394],[560,495]]);addPath(W,[[624,330],[835,330]]);
-  addPath(W,[[364,330],[496,330]]);addPath(W,[[330,364],[330,495]]);addPath(W,[[230,330],[296,330]]);
-  W.paved.push({x:421,y:418,w:18,h:66,tag:'corr'});
-  const big=addRound(W,560,330,3,{R:64,r:38,arms:{N:true,S:true,E:true,W:true}});
-  addRound(W,330,330,1,{R:34,r:12,arms:{N:true,S:true,E:true,W:true}});
-  addStop(W,230,215,'E','stop');addStop(W,300,83,'N','stop');addStop(W,560,130,'N','stop');addStop(W,835,330,'E','stop');
-  addStop(W,560,495,'S','stop');addStop(W,330,495,'S','stop');addStop(W,230,330,'W','stop');
-  for(const[x,y]of[[230,215],[300,83],[560,130],[835,330],[560,495],[330,495],[230,330]])W.nodes.push({x,y,arms:{},n:3});
-  W.zebras.push(makeZebra('h',700,495));
-  // conos: zigzag (curva en S), rotonda grande y pasillo de reversa
-  const cone=(x,y)=>W.cones.push({x,y,vx:0,vy:0,hit:false});
-  for(let i=1;i<sc.length-2;i++){const[a,b]=[sc[i],sc[i+1]];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;for(let t=0;t<L;t+=13){const x=a[0]+ux*t,y=a[1]+uy*t;cone(x-uy*(HW+2),y+ux*(HW+2));cone(x+uy*(HW+2),y-ux*(HW+2))}}
-  for(let i=0;i<12;i++){const a=i/12*Math.PI*2+.26;cone(big.x+Math.cos(a)*(big.r+2),big.y+Math.sin(a)*(big.r+2))}
-  for(let y=424;y<=476;y+=10){cone(419,y);cone(441,y)}
-  // calle diagonal de parqueos: 8 espacios, los 4 del centro con conos (parqueo hacia atrás)
-  const ang=Math.atan2(SJ.n[1],SJ.n[0]),hRev=Math.atan2(-SJ.n[1],-SJ.n[0]);
-  const mid=sjPt(186,HW+12);W.opaved.push({cx:mid[0],cy:mid[1],ang,hl:12,hw:66});
-  for(let i=0;i<8;i++){const s=130+16*i;const[cx,cy]=sjPt(s,HW+12);W.oslots.push({cx,cy,ang,hl:12,hw:8,target:i===3});
-    if(i<2||i>5){const col=pick(CARCOLS),type=pick(['sedan','hatch','suv']);W.parked.push({x:cx,y:cy,h:hRev,col,type});for(const q of circles({x:cx,y:cy,h:hRev,L:VEH[type].L,Wd:VEH[type].Wd}))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'})}}
-  for(let i=2;i<=6;i++){const s=122+16*i;for(const u of[HW+4,HW+14,HW+23]){const[x,y]=sjPt(s,u);cone(x,y)}}
-  // malla y parqueo público detrás
-  const f0=sjPt(20,HW+27),f1=sjPt(405,HW+27);W.fences.push([f0[0],f0[1],f1[0],f1[1]]);
-  const FL=Math.hypot(f1[0]-f0[0],f1[1]-f0[1]);for(let k=0;k<=FL;k+=3)W.circObs.push({x:f0[0]+(f1[0]-f0[0])*k/FL,y:f0[1]+(f1[1]-f0[1])*k/FL,r:1.5,type:'fence'});
-  for(let i=0;i<14;i++){const[x,y]=sjPt(60+24*i,HW+50+(i%2)*4);if(x<890&&y>4)W.parked.push({x,y,h:ang+(i%3?0:Math.PI),col:pick(CARCOLS),type:pick(['sedan','hatch','suv','pickup'])})}
-  // edificios
+  const W=newWorld('sanjose',920,610);W.limit=25;
+  const way=(pts,o={})=>Object.assign(addPath(W,pts),o);
+  // vía de la derecha (un sentido, al norte; zona de retroceso) y vía superior (un sentido, al oeste)
+  way([[847,606],[847,150]],{oneway:1,noCenter:1,hidden:1});
+  way([[847,152],[845,92],[830,52],[792,30],[740,36],[242,148],[120,160],[0,168]],{oneway:1,noCenter:1});
+  way([[240,229],[700,124],[790,117]],{oneway:1,noCenter:1});            // bajo los paneles (zona azul)
+  way([[775,117],[822,104],[845,88]],{oneway:1,noCenter:1});             // enlace a la vía superior
+  const zz=[[790,117],[812,140],[812,300],[802,342],[776,362],[746,358],[724,338],[700,310],[672,295],[640,292],[606,303],[574,320],[540,328],[505,330],[476,338],[458,356],[452,380]];
+  way(zz,{oneway:1,noCenter:1});                                          // zigzag
+  way([[778,120],[748,190],[712,212],[660,228],[570,247],[495,266],[462,288],[452,320],[452,454]]); // vía interna y arco izquierdo
+  way([[486,488],[590,488]]);way([[418,488],[372,488]]);way([[452,522],[452,606]]);way([[682,580],[682,606]]);way([[774,488],[830,488]]);
+  W.paved.push({x:826,y:150,w:44,h:456,tag:'lanes'});
+  W.paved.push({x:12,y:150,w:232,h:128,tag:'plaza'});
+  W.paved.push({x:775,y:60,w:56,h:60});
+  const mini=addRound(W,452,488,1,{R:34,r:12,arms:{N:true,E:true,S:true,W:true}});
+  const big=addRound(W,682,488,2,{R:92,r:58,arms:{W:true,E:true,S:true}});
+  const s1=addStop(W,790,117,'E','stop',null,18);s1.a=103;s1.b=133;
+  const s2=addStop(W,847,SJP.cor.top,'N','stop',null,0);s2.a=826;s2.b=870;
+  addStop(W,826,488,'E','stop',null,24);
+  W.nodes.push({x:800,y:124,arms:{},n:3});W.nodes.push({x:847,y:488,arms:{},n:3});
+  W.zebras.push(makeZebra('h',540,488));
+  // marquesina de paneles solares (sólida)
+  W.canopy=[260,184,720,82];{const[a,b,e,f]=W.canopy,L=Math.hypot(e-a,f-b);for(let k=0;k<=L;k+=8)W.circObs.push({x:a+(e-a)*k/L,y:b+(f-b)*k/L,r:12,type:'bld'})}
   const B=(b)=>{W.obst.push(b);W.blds.push(b)};
-  B({x:40,y:160,w:170,h:34,type:'bld',col:'#2b4c7e',roof:'#3a6ea5',label:'PANELES SOLARES'});
-  B({x:40,y:92,w:160,h:56,type:'bld',col:'#d9d9d9',roof:'#c4c4c4',label:'EDUCACION VIAL'});
-  B({x:300,y:514,w:220,h:24,type:'bld',col:'#e6e6e6',roof:'#d0d0d0',label:'OFICINAS'});
-  B({x:560,y:514,w:120,h:24,type:'bld',col:'#e6e6e6',roof:'#d0d0d0'});
-  B({x:324,y:324,w:12,h:12,type:'bld',col:'#e9c46a',roof:'#bc4749'});
-  B({x:465,y:140,w:14,h:14,type:'bld',col:'#e9c46a',roof:'#bc4749'});
-  B({x:700,y:380,w:16,h:14,type:'bld',col:'#e9c46a',roof:'#bc4749'});
-  addTrees(W,rng(21),45,{x:0,y:0,w:900,h:540},12);
-  spawnOnLoop(W,makePathLoop(loop.slice(0,-1)),2,22);
-  W.spawn={x:70,y:222,h:0};
+  B({x:0,y:0,w:170,h:70,type:'bld',col:'#b23a3a',roof:'#8b1e1e'});
+  B({x:570,y:170,w:130,h:26,type:'bld',col:'#e6e6e6',roof:'#d0d0d0',label:'EDUCACION VIAL'});
+  B({x:455,y:196,w:100,h:26,type:'bld',col:'#e6e6e6',roof:'#d0d0d0'});
+  B({x:280,y:262,w:150,h:60,type:'bld',col:'#ededed',roof:'#dadada',label:'OFICINAS'});
+  B({x:300,y:322,w:120,h:130,type:'bld',col:'#ededed',roof:'#dadada'});
+  B({x:176,y:196,w:22,h:42,type:'bld',col:'#cfcfcf',roof:'#b9b9b9'});
+  B({x:796,y:400,w:16,h:14,type:'bld',col:'#e9c46a',roof:'#bc4749'});
+  B({x:446,y:482,w:12,h:12,type:'bld',col:'#e9c46a',roof:'#bc4749'});
+  const cone=(x,y)=>W.cones.push({x,y,vx:0,vy:0,hit:false});
+  // conos del zigzag (solo donde no estorban otra vía)
+  for(let i=3;i<zz.length-3;i++){const[a,b]=[zz[i],zz[i+1]];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;
+    for(let t=0;t<L;t+=13){const x=a[0]+ux*t,y=a[1]+uy*t;for(const sd of[1,-1]){const cx=x-sd*uy*(HW+2),cy=y+sd*ux*(HW+2);if(!pavedW(W,cx,cy))cone(cx,cy)}}}
+  for(let i=0;i<14;i++){const a=i/14*Math.PI*2+.2;cone(big.x+Math.cos(a)*(big.r+2),big.y+Math.sin(a)*(big.r+2))}
+  // pasillo de retroceso (cuadro rojo): conos a ambos lados del carril
+  for(let y=SJP.cor.top+12;y<=SJP.cor.end;y+=12){cone(831,y);cone(863,y)}
+  // parqueo hacia atrás (círculo rojo): 6 espacios, los 4 primeros con conos en las líneas
+  for(let i=0;i<6;i++){const x=40+16*i;W.slots.push({x,y:246,w:16,h:26});
+    if(i>=4){const cx=x+8,cy=259,h=-Math.PI/2,type=i===4?'sedan':'suv';W.parked.push({x:cx,y:cy,h,col:i===4?'#c0392b':'#2e86de',type});for(const q of circles({x:cx,y:cy,h,L:VEH[type].L,Wd:VEH[type].Wd}))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'})}}
+  for(let i=0;i<=4;i++)for(const y of[249,259,269])cone(40+16*i,y);
+  addTrees(W,rng(21),55,{x:0,y:0,w:920,h:610},12);
+  spawnOnLoop(W,makePathLoop([[240,229],[700,124],[775,116],[822,104],[842,80],[828,50],[792,30],[740,36],[242,148],[215,160],[232,215]]),2,22);
+  W.spawn={x:290,y:217,h:Math.atan2(-104,460)};
   return W}
-function sjTasks(){const T=sjPt(178,HW+12),hRev=Math.atan2(-SJ.n[1],-SJ.n[0]),ang=Math.atan2(SJ.n[1],SJ.n[0]);
+function sjTasks(){const T=SJP.slot,C=SJP.cor;
   const exitTask=(txt,tgt,want)=>({txt,tgt,start(){S.lastExit=null},check(){if(!S.lastExit)return false;const e=S.lastExit;S.lastExit=null;if(e.exit!==want)fault('exit','Tomó una salida equivocada en la rotonda','III',2);return true}});
   return[
-  {txt:'ZONA AZUL: póngase el cinturón [C], avance hasta la línea, haga ALTO y doble a la IZQUIERDA (norte) con direccional.',tgt:{x:237,y:170},check(){const P=S.P;return P.x>216&&P.x<252&&P.y<190}},
-  {txt:'ZIGZAG: siga el anillo y doble a la DERECHA a la curva en S. Recórrala entre los conos sin tocarlos.',tgt:{x:375,y:158},check(){const P=S.P;if(Math.hypot(P.x-375,P.y-152)<22)this.mid=true;if(this.mid)this.tgt={x:330,y:292};return this.mid&&P.y>284&&Math.abs(P.x-330)<18}},
-  exitTask('MINI ROTONDA (caseta): ceda el paso y tome la 3ª SALIDA (ESTE). Direccional IZQ. al circular y DER. al salir.',{x:430,y:337},'E'),
-  exitTask('ROTONDA GRANDE (con conos): ceda el paso y tome la 2ª SALIDA (ESTE). Direccional IZQ. al circular y DER. al salir.',{x:720,y:323},'E'),
-  {txt:'Haga ALTO al final, doble a la DERECHA (sur) y luego siga por la vía del fondo hacia el OESTE.',tgt:{x:620,y:488},check(){const P=S.P;return P.y>480&&P.x<640}},
-  {txt:'RETROCESO: entre de frente al pasillo de conos (a su derecha) hasta la línea amarilla y salga en REVERSA en línea recta.',tgt:{x:430,y:440},zone:{x:421,y:418,w:18,h:66},ok:'¡Retroceso completado!',
-   check(){const P=S.P;const inC=P.x>419&&P.x<441&&P.y>416&&P.y<484;
-     if(!this.ph){if(inC&&P.y<438){this.ph=1;toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto','info')}return false}
-     this.tgt={x:430,y:500};
+  {txt:'ZONA AZUL: póngase el cinturón [C] y avance bajo los paneles solares. Haga ALTO al final, direccional DERECHA y entre al zigzag.',tgt:{x:812,y:170},check(){const P=S.P;return P.x>796&&P.x<828&&P.y>165&&P.y<300}},
+  {txt:'ZIGZAG: recorra la curva en S entre los conos sin tocarlos, hasta la mini rotonda.',tgt:{x:640,y:292},check(){const P=S.P;if(P.x<660&&P.y>280)this.tgt={x:452,y:420};return P.x<470&&P.y>395&&P.y<450}},
+  exitTask('MINI ROTONDA (caseta): ceda el paso y tome la 3ª SALIDA (ESTE). Direccional IZQ. al circular y DER. al salir.',{x:540,y:495},'E'),
+  exitTask('ROTONDA GRANDE (con conos): ceda el paso y tome la 2ª SALIDA (ESTE). Direccional IZQ. al circular y DER. al salir.',{x:800,y:495},'E'),
+  {txt:'Haga ALTO antes de la vía de la derecha, direccional IZQUIERDA y doble al NORTE.',tgt:{x:847,y:440},check(){const P=S.P;return P.x>828&&P.y<450}},
+  {txt:'RETROCESO: avance entre los conos hasta la línea de ALTO y deténgase. Luego retroceda en línea recta hasta la línea amarilla.',tgt:{x:847,y:212},zone:{x:833,y:C.top,w:28,h:C.end-C.top},ok:'¡Retroceso completado!',
+   check(){const P=S.P;const inC=P.x>829&&P.x<865&&P.y>C.top-6&&P.y<C.end+10;
+     if(!this.ph){if(inC&&P.y<C.top+20&&Math.abs(P.v)<.5){this.ph=1;this.tgt={x:847,y:C.end};toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto hasta la línea amarilla','info')}return false}
      if(inC&&P.gear===-1){if(P.v<-1)this.mv=true;if(this.mv&&Math.abs(P.v)<.3){this.st=(this.st||0)+S.dt;if(this.st>1&&!this.fl){this.fl=1;fault('rstop','Detenerse durante el retroceso','IV')}}else this.st=0}
-     if(P.y>488){if(P.gear===1)fault('rnoret','No realizó el retroceso en reversa','III');return true}}},
-  {txt:'PARQUEO (de último): siga la ruta hasta la calle diagonal de parqueos y estaciónese HACIA ATRÁS en el espacio amarillo con conos.',tgt:{x:T[0],y:T[1]},zone:{o:1,cx:T[0],cy:T[1],ang,hl:12,hw:7.5},ok:'¡Parqueo hacia atrás correcto!',
-   check(){const P=S.P;const dx=P.x-T[0],dy=P.y-T[1];const u=dx*SJ.n[0]+dy*SJ.n[1],v=dx*SJ.d[0]+dy*SJ.d[1];return still('sjp',Math.abs(u)<5&&Math.abs(v)<3.2&&Math.cos(P.h-hRev)>.92,1.2)}}]}
+     if(P.y>C.end){if(P.gear===1)fault('rnoret','No realizó el retroceso en reversa','III');return true}}},
+  {txt:'PARQUEO (de último): suba al norte (ALTO otra vez), tome la vía superior al OESTE y estaciónese HACIA ATRÁS en el espacio amarillo con conos.',tgt:{x:T.x,y:T.y},zone:{x:T.x-8,y:T.y-13,w:16,h:26},ok:'¡Parqueo hacia atrás correcto!',
+   check(){const P=S.P;return still('sjp',Math.abs(P.x-T.x)<3.2&&Math.abs(P.y-T.y)<5&&Math.cos(P.h+Math.PI/2)>.92,1.2)}}]}
 
 function buildCity(){
   const W=newWorld('city',1040,800);W.limit=40;
@@ -485,9 +487,9 @@ function renderBG(W){
   for(const rl of W.rails){x.fillStyle='#7d6b58';if(rl.o==='v')x.fillRect(rl.pos-7,0,14,W.h);else x.fillRect(0,rl.pos-7,W.w,14)}
   for(const s of W.sidewalks){x.fillStyle='#a3a39b';x.fillRect(s.x,s.y,s.w,s.h);x.fillStyle='#c9c9bf';x.fillRect(s.x,s.y,s.w,1);x.fillRect(s.x,s.y,1,s.h);x.fillStyle='#7c7c74';x.fillRect(s.x,s.y+s.h-1,s.w,1);x.fillRect(s.x+s.w-1,s.y,1,s.h)}
   if(W.parks)for(const p of W.parks){x.fillStyle='#4a9b48';x.fillRect(p.x,p.y,p.w,p.h)}
-  for(const p of W.paved){x.fillStyle='#45454f';x.fillRect(p.x,p.y,p.w,p.h)}
+  if(W.paths.length){x.lineJoin='round';x.lineCap='round';const sa=(w,col)=>{x.strokeStyle=col;x.lineWidth=w;for(const p of W.paths){if(p.hidden)continue;x.beginPath();x.moveTo(p.pts[0][0],p.pts[0][1]);for(const q of p.pts.slice(1))x.lineTo(q[0],q[1]);x.stroke()}};sa(2*HW,'#ecece4');sa(2*HW-3,'#3a3a43');x.lineCap='butt'}
+  for(const p of W.paved){x.fillStyle=W.kind==='sanjose'?'#3a3a43':'#45454f';x.fillRect(p.x,p.y,p.w,p.h)}
   for(const o of W.opaved){x.save();x.translate(o.cx,o.cy);x.rotate(o.ang);x.fillStyle='#45454f';x.fillRect(-o.hl,-o.hw,2*o.hl,2*o.hw);x.restore()}
-  if(W.paths.length){x.lineJoin='round';x.lineCap='round';const sa=(w,col)=>{x.strokeStyle=col;x.lineWidth=w;for(const p of W.paths){x.beginPath();x.moveTo(p.pts[0][0],p.pts[0][1]);for(const q of p.pts.slice(1))x.lineTo(q[0],q[1]);x.stroke()}};sa(2*HW,'#ecece4');sa(2*HW-3,'#3a3a43');x.lineCap='butt'}
   x.fillStyle='#3a3a43';for(const r of W.roads){const q=r.rect;x.fillRect(q.x,q.y,q.w,q.h)}
   for(const Rd of W.rounds)fillCirc(x,Rd.x,Rd.y,Rd.R,'#3a3a43');
   const id=x.getImageData(0,0,W.w,W.h),d=id.data;for(let i=0;i<d.length;i+=4){const n=(R()*12-6)|0;d[i]+=n;d[i+1]+=n;d[i+2]+=n}x.putImageData(id,0,0);
@@ -533,7 +535,14 @@ function renderBG(W){
     ptext(x,'PARQUEO',398,92,WH);
     for(let i=0;i<W.w;i+=3){px(i,1,'#bbb');px(i,W.h-2,'#bbb')}for(let i=0;i<W.h;i+=3){px(1,i,'#bbb');px(W.w-2,i,'#bbb')}
   }else if(W.kind==='city'){ptext(x,'PARQUEO PUBLICO',851,518,WH)}
-  else if(W.kind==='sanjose'){x.fillStyle='rgba(42,90,200,.35)';x.fillRect(40,202,150,27);ptext(x,'ZONA AZUL',70,212,'#9cf');x.fillStyle=YE;x.fillRect(421,429,18,2);ptext(x,'RETRO',421,465,WH,2);ptext(x,'PARQUEO',520,40,WH)}
+  else if(W.kind==='sanjose'){
+    {const[a,b,e,f]=W.canopy,ca=Math.atan2(f-b,e-a),cl=Math.hypot(e-a,f-b);x.save();x.translate(a,b);x.rotate(ca);x.fillStyle='rgba(0,0,0,.3)';x.fillRect(-4,-8,cl+10,24);x.fillStyle='#ececec';x.fillRect(-8,-13,cl+16,26);x.fillStyle='#1f3f8f';x.fillRect(34,-11,cl-30,22);x.fillStyle='#5b80d4';for(let i=34;i<cl+4;i+=6)x.fillRect(i,-11,1,22);for(let j=-11;j<11;j+=5)x.fillRect(34,j,cl-30,1);x.restore()}
+    const uy=X=>228.5-.2261*(X-240);x.fillStyle='rgba(42,90,200,.42)';x.beginPath();x.moveTo(256,uy(256)-13);x.lineTo(420,uy(420)-13);x.lineTo(420,uy(420)+13);x.lineTo(256,uy(256)+13);x.fill();ptext(x,'ZONA AZUL',305,uy(330)-3,'#bfe0ff');
+    x.fillStyle=WH;x.fillRect(826,150,1,456);x.fillRect(869,150,1,456);for(let y=SJP.cor.top+6;y<604;y+=10)x.fillRect(847,y,1,5);
+    for(let y0=152;y0<600;y0+=9)for(let k=0;k<26;k++)px(872+k,y0+(k>>1),WH);x.fillStyle=WH;x.fillRect(871,150,1,456);x.fillRect(898,150,1,456);
+    x.fillStyle=YE;x.fillRect(833,SJP.cor.end,28,2);ptext(x,'RETRO',842,SJP.cor.end-40,WH,2);
+    const T=SJP.slot;x.fillStyle=YE;x.fillRect(T.x-7,T.y+11,15,2);x.fillRect(T.x-7,T.y-13,1,26);x.fillRect(T.x+7,T.y-13,1,26);
+    ptext(x,'PARQUEO',44,236,WH);ptext(x,'ZIGZAG',612,268,WH);ptext(x,'SALIDA',8,176,WH)}
   for(const rl of W.rails){const L=rl.o==='v'?W.h:W.w;
     for(let t=0;t<L;t+=4){const X=rl.o==='v'?rl.pos:t,Y=rl.o==='v'?t:rl.pos;if(!pavedW(W,X,Y)){x.fillStyle='#4a3626';if(rl.o==='v')x.fillRect(rl.pos-6,t,12,2);else x.fillRect(t,rl.pos-6,2,12)}}
     x.fillStyle='#c9c9d4';if(rl.o==='v'){x.fillRect(rl.pos-4,0,1,W.h);x.fillRect(rl.pos+3,0,1,W.h)}else{x.fillRect(0,rl.pos-4,W.w,1);x.fillRect(0,rl.pos+3,W.w,1)}
@@ -862,8 +871,8 @@ function rules(W,P,px,py,dt){
   if(!inRnd&&rs.length===1&&P.gear===1&&P.v>8){const r=rs[0];let wrong=false;
     if(r.o==='h'){if(c>.7&&P.y<r.c-2)wrong=true;if(c<-.7&&P.y>r.c+2)wrong=true}else{if(s>.7&&P.x>r.c+2)wrong=true;if(s<-.7&&P.x<r.c-2)wrong=true}
     if(wrong){S.wrongT+=dt;if(S.wrongT>.9)fault('wrong','Invadir el carril contrario','II',6)}else S.wrongT=0}else S.wrongT=0;
-  if(W.paths.length&&!inRnd&&P.gear===1&&P.v>8){let best=null,bd=1e9,cnt=0;for(const p of W.paths){let pb=1e9,pq=null;for(const q of p.segs){const t=clamp(((P.x-q.ax)*q.dx+(P.y-q.ay)*q.dy)/q.len2,0,1);const ex=q.ax+q.dx*t-P.x,ey=q.ay+q.dy*t-P.y;const d2=ex*ex+ey*ey;if(d2<pb){pb=d2;pq=q}}if(pb<HW*HW){cnt++;if(pb<bd){bd=pb;best=pq}}}
-    let wr=false;if(cnt===1&&best){const l=Math.sqrt(best.len2),ux=best.dx/l,uy=best.dy/l;const al=c*ux+s*uy,side=ux*(P.y-best.ay)-uy*(P.x-best.ax);if(Math.abs(al)>.6&&Math.abs(side)>2&&(al>0?side<0:side>0))wr=true}
+  if(W.paths.length&&!inRnd&&P.gear===1&&P.v>8){let best=null,bd=1e9,cnt=0;let bp=null;for(const p of W.paths){let pb=1e9,pq=null;for(const q of p.segs){const t=clamp(((P.x-q.ax)*q.dx+(P.y-q.ay)*q.dy)/q.len2,0,1);const ex=q.ax+q.dx*t-P.x,ey=q.ay+q.dy*t-P.y;const d2=ex*ex+ey*ey;if(d2<pb){pb=d2;pq=q}}if(pb<HW*HW){cnt++;if(pb<bd){bd=pb;best=pq;bp=p}}}
+    let wr=false;if(cnt===1&&best){const l=Math.sqrt(best.len2),ux=best.dx/l,uy=best.dy/l;const al=c*ux+s*uy,side=ux*(P.y-best.ay)-uy*(P.x-best.ax);if(bp.oneway){if(al<-.6)wr=true}else if(Math.abs(al)>.6&&Math.abs(side)>2&&(al>0?side<0:side>0))wr=true}
     if(wr){S.wrongT2=(S.wrongT2||0)+dt;if(S.wrongT2>.9)fault('wrong','Invadir el carril contrario','II',6)}else S.wrongT2=0}
   for(const st of W.stops){const hz=st.dir==='E'||st.dir==='W';const lat=hz?P.y:P.x;if(lat<st.a-3||lat>st.b+3){st.minV=999;continue}
     const sg=(st.dir==='E'||st.dir==='S')?1:-1;const d=(st.pos-(hz?P.x:P.y))*sg,dPrev=(st.pos-(hz?px:py))*sg;
