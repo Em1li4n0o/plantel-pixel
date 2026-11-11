@@ -34,6 +34,9 @@ y entre a http://localhost:8080
 
 ## Modos
 
+- **Tutorial (0)**: enseña los controles paso a paso (cinturón, pedales, volante, direccionales, reversa, freno de mano, marcha baja, bocina, vistas y espejos).
+- **Celular / tablet**: botones en pantalla (volante, pedales, direccionales, pito, vista, freno de mano). Se juega en horizontal.
+
 - **Examen teórico**: banco de práctica con explicaciones, examen de 40 preguntas en 50 minutos (nota mínima 70) y repaso de errores. Las preguntas son propias, no el banco oficial.
 - **Plantel San José**: trazado copiado de la foto aérea (aproximado): fila de carros de 40 m bajo los paneles solares, zigzag en diagonal con hileras de conos alternadas (−12 cada uno), rotonda con vuelta completa y una sola salida al sur que sube a la vía de la derecha (2 carriles), retroceso de 40 m y, de último, parqueo hacia atrás en uno de 4 espacios de la plazoleta de la entrada (tocar un cono ahí pierde la prueba).
 - **Mi progreso (9)**: el simulador guarda cada intento (nota, faltas, duración). El alumno genera un código de reporte y lo envía a su instructor (copiar o compartir por WhatsApp).

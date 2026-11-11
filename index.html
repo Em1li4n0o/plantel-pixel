@@ -74,6 +74,18 @@ button:hover,button:focus-visible{background:var(--acc);color:#000;outline:none}
 .lic{width:calc(var(--u)*192);image-rendering:pixelated;animation:win .7s steps(8)}
 #prgScr button{min-width:0;font-size:calc(var(--u)*3.6);padding:calc(var(--u)*2.5) calc(var(--u)*3)}
 #prgCode{width:calc(var(--u)*300);height:calc(var(--u)*22);font-family:monospace;font-size:calc(var(--u)*3.4);background:#0b0b10;color:#9cf;border:calc(var(--u)*1) solid #4a4a6a;word-break:break-all;resize:none}
+#touch{position:absolute;inset:0;pointer-events:none}
+#touch .tb{position:absolute;pointer-events:auto;touch-action:none;user-select:none;-webkit-user-select:none;min-width:0;padding:0;font-family:inherit;color:#fff;background:rgba(20,20,40,.55);border:calc(var(--u)*.6) solid rgba(255,255,255,.35);border-radius:calc(var(--u)*3);box-shadow:none;line-height:1.2}
+#touch .tb.on{background:rgba(255,210,63,.55);color:#000}
+#touch .steer{width:calc(var(--u)*40);height:calc(var(--u)*50);font-size:calc(var(--u)*14)}
+#touch .ped{width:calc(var(--u)*40);height:calc(var(--u)*52);font-size:calc(var(--u)*4)}
+#touch .gas{background:rgba(61,220,132,.35)}#touch .brk{background:rgba(255,77,77,.35)}
+#touch .sm{width:calc(var(--u)*24);height:calc(var(--u)*14);font-size:calc(var(--u)*3.2)}
+#touch .look{display:none}#hud.fp #touch .look{display:block}
+body.touch #toasts{right:auto;left:calc(var(--u)*120);width:calc(var(--u)*144)}
+body.touch #keys{display:none}
+#rotate{display:none;position:fixed;inset:0;z-index:50;background:#0d0d16;color:var(--acc);align-items:center;justify-content:center;text-align:center;font-size:14px;line-height:2;padding:20px}
+@media (orientation:portrait){body.touch #rotate{display:flex}}
 input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5);background:#111;color:var(--fg);border:calc(var(--u)*1) solid #6a6a9a;width:calc(var(--u)*130);text-transform:uppercase}
 .col{display:flex;flex-direction:column;align-items:center;gap:calc(var(--u)*3.5);width:100%;max-width:calc(var(--u)*320)}
 .qrow{display:flex;gap:calc(var(--u)*5);align-items:center;width:100%;text-align:left}
@@ -90,9 +102,28 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
 </style>
 </head>
 <body>
+<div id="rotate">GIRE EL TELÉFONO<br>(modo horizontal)<br>para manejar</div>
 <div id="wrap">
   <canvas id="game" width="384" height="216"></canvas>
   <div id="hud" class="hidden">
+    <div id="touch" class="hidden">
+      <button data-k="a" class="tb steer" style="left:4px;top:118px">◀</button>
+      <button data-k="d" class="tb steer" style="left:48px;top:118px">▶</button>
+      <button data-k="s" class="tb ped brk" style="left:296px;top:82px">FRENO<br>▼</button>
+      <button data-k="w" class="tb ped gas" style="left:340px;top:82px">GAS<br>▲</button>
+      <button data-k="q" class="tb sm" style="left:4px;top:50px">◀ Q</button>
+      <button data-k="e" class="tb sm" style="left:30px;top:50px">E ▶</button>
+      <button data-k="h" class="tb sm" style="left:4px;top:66px">⚠ H</button>
+      <button data-k="c" class="tb sm" style="left:30px;top:66px">CINT</button>
+      <button data-k="b" class="tb sm" style="left:4px;top:82px">PITO</button>
+      <button data-k="g" class="tb sm" style="left:30px;top:82px">L/D</button>
+      <button data-k="v" class="tb sm" style="left:4px;top:98px">VISTA</button>
+      <button data-k=" " class="tb sm" style="left:30px;top:98px">MANO</button>
+      <button data-k="p" class="tb sm" style="left:282px;top:4px">II</button>
+      <button data-k="z" class="tb sm look" style="left:236px;top:190px">◀ESP</button>
+      <button data-k="f" class="tb sm look" style="left:256px;top:174px">ARRIBA</button>
+      <button data-k="x" class="tb sm look" style="left:268px;top:190px">ESP▶</button>
+    </div>
     <div id="taskbox" class="box"><div id="tasknum"></div><div id="tasktxt"></div></div>
     <div id="scorebox" class="box"><div id="scoreLbl">PUNTOS</div><div id="score">100</div><div id="time">00:00</div></div>
     <div id="dash" class="box">
@@ -123,9 +154,10 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <button id="b4">6 · GARAJE</button>
       <button id="b5">7 · MI LICENCIA</button>
       <button id="b6">8 · REGLAS</button>
-      <button id="b7" style="grid-column:span 2">9 · MI PROGRESO · ENVIAR AL INSTRUCTOR</button>
+      <button id="b7">9 · MI PROGRESO</button>
+      <button id="bT" style="background:#2d4a22">0 · TUTORIAL: CÓMO JUGAR</button>
     </div>
-    <div class="blink sub">PRESIONE 1 AL 9</div>
+    <div class="blink sub">PRESIONE 0 AL 9 · ¿PRIMERA VEZ? PULSE 0</div>
     <a href="instructor.html" class="sub" style="color:var(--info);pointer-events:auto">PANEL DEL INSTRUCTOR ›</a>
   </div>
 
@@ -192,6 +224,8 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <h3>LICENCIA</h3>
       <ul><li>Apruebe el EXAMEN EN PLANTEL y la PRUEBA EN CALLE (80 puntos o más en cada una) y gane su licencia pixel.</li>
       <li>Si le cierra el paso a otro conductor, frena de golpe y se enoja. ¡Eso también es falta!</li></ul>
+      <h3>TUTORIAL Y CELULAR</h3>
+      <ul><li>¿Primera vez? En el menú pulse <b>0 · TUTORIAL</b>: le enseña los controles paso a paso.</li><li>En celular o tablet aparecen botones en pantalla (volante, pedales, direccionales, pito, vista). Juegue con el teléfono en horizontal.</li></ul>
       <h3>PENDIENTES</h3>
       <ul><li>Para bajar una cuesta pronunciada ponga marcha baja (<b>G</b>) y deje que el motor frene: eso es compresionar. Abusar del freno es falta.</li>
       <li>Para arrancar en subida sostenga <b>ESPACIO</b> (freno de mano), acelere con <b>W</b> y suelte. Si el carro se va hacia atrás es falta.</li></ul>
@@ -354,7 +388,7 @@ function addNode(W,x,y,type){
   if(n===4){node.light={off:Math.floor(Math.random()*20)};for(const a of['W','E','N','S'])addStop(W,x,y,armDir[a],'light',node.light)}
   else{const stem=['W','E','N','S'].find(a=>arms[a]&&!arms[opp[a]]);addStop(W,x,y,armDir[stem],'stop')}
   return node}
-function mkCar(type,extra){const v=VEH[type];return Object.assign({type,L:v.L,Wd:v.Wd,col:v.fixed||pick(CARCOLS),angryT:0,say:''},extra)}
+let CARID=0;function mkCar(type,extra){const v=VEH[type];return Object.assign({id:++CARID,type,L:v.L,Wd:v.Wd,col:v.fixed||pick(CARCOLS),angryT:0,say:''},extra)}
 function addRound(W,x,y,cars,opt={}){const R={x,y,R:opt.R||46,r:opt.r||20};W.rounds.push(R);let node;if(opt.arms){node={x,y,arms:opt.arms,n:4,round:true};W.nodes.push(node)}else node=addNode(W,x,y,'round');
   for(const a in node.arms)if(node.arms[a])addStop(W,x,y,armDir[a],'yield',null,R.R+3,W.yields);
   for(let i=0;i<cars;i++)W.ringCars.push(mkCar(pick(['sedan','hatch','taxi','sedan']),{R,a:i*2*Math.PI/cars,r:R.R-8,v:0,vmax:28,x:0,y:0,h:0,ring:true}));
@@ -722,7 +756,7 @@ function angerNear(W,x,y,r){for(const c of W.ai.concat(W.ringCars))if(Math.hypot
 // ===================== HISTORIAL Y REPORTE PARA EL INSTRUCTOR =====================
 function sid(){let s=store.get('pp_sid',null);if(!s){s=Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);store.set('pp_sid',s)}return s}
 function logAttempt(a){const h=store.get('pp_hist',[]);h.push(Object.assign({d:Date.now()},a));while(h.length>300)h.shift();store.set('pp_hist',h)}
-function logDrive(){if(!S||S.logged||S.t<15)return;S.logged=true;
+function logDrive(){if(!S||S.logged||S.t<15||S.mode==='tuto')return;S.logged=true;
   logAttempt({m:S.mode,s:S.exam?Math.max(0,S.score):S.pts,ok:S.exam?S.okRes===true:null,fin:S.exam?S.over:true,t:Math.round(S.t),tk:S.exam?[Math.min(S.task,S.tasks.length),S.tasks.length]:[S.deliv,0],
     f:S.faults.slice(0,25).map(f=>[f.text,f.cat,Math.round(f.t),f.x,f.y]),car:CAR.type,fp:!!S.fp})}
 addEventListener('pagehide',()=>logDrive());
@@ -751,17 +785,17 @@ $('prgBack').onclick=()=>back();
 // ===================== ESTADO =====================
 let S=null,A=null,ui='menu';
 function spawnState(W){const v=VEH[CAR.type];return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,thr:0,bp:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:carCol(),type:CAR.type,sp:v,L:v.L,Wd:v.Wd,player:true}}
-const MODES={sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'CALLE LIBRE'};
+const MODES={tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'CALLE LIBRE'};
 function start(mode){
   logDrive();
-  const W=mode==='plantel'?buildPlantel():mode==='sanjose'?buildSanJose():buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
+  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode==='sanjose'?buildSanJose():buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);
-  S.tasks=mode==='plantel'?plantelTasks():mode==='sanjose'?sjTasks():mode==='street'?streetTasks():[];if(mode==='city')newDest();
+  S.tasks=mode==='tuto'?tutoTasks():mode==='plantel'?plantelTasks():mode==='sanjose'?sjTasks():mode==='street'?streetTasks():[];if(mode==='city')newDest();
   const mw=W.kind==='city'?170:130,mh=Math.round(mw*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
   for(const id of['menu','rules','end','pause','garage','licScr','theory','prgScr'])$(id).classList.add('hidden');$('hud').classList.remove('hidden');ui=null;
   $('banner').textContent='';$('toasts').innerHTML='';
-  toast(MODES[mode],S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
+  toast(MODES[mode],mode==='tuto'?'Siga las instrucciones de arriba, paso a paso.':S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
 }
 function show(id){for(const s of['menu','rules','end','pause','garage','licScr','theory','prgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
 function toMenu(){logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0}
@@ -770,16 +804,17 @@ function newDest(){const W=S.W,P=S.P;let i;do{i=Math.random()*W.dests.length|0}w
 
 function toast(title,txt,kind='info'){const d=document.createElement('div');d.className='toast '+kind;d.innerHTML=`<b>${title}</b>${txt||''}`;const T=$('toasts');T.prepend(d);while(T.children.length>3)T.lastChild.remove();setTimeout(()=>d.remove(),3800)}
 const QUIET=new Set(['belt','off','speed','inc','exit','rnoret','cut']);
-function fault(code,text,cat,cdSec=5){if(!S||S.over)return;if(S.cd[code]&&S.t<S.cd[code])return;S.cd[code]=S.t+cdSec;const pts=CAT[cat];
+function fault(code,text,cat,cdSec=5){if(!S||S.over)return;if(S.mode==='tuto'){if(!S.cd[code]||S.t>S.cd[code]){S.cd[code]=S.t+4;toast('OJO',text,'info')}return}if(S.cd[code]&&S.t<S.cd[code])return;S.cd[code]=S.t+cdSec;const pts=CAT[cat];
   S.faults.push({t:S.t,text,cat,pts,x:Math.round(S.P.x),y:Math.round(S.P.y)});
   if(S.exam){S.score-=pts;if(S.score<80&&!S.failed){S.failed=true;$('banner').textContent='REPROBADO · siga practicando o pulse R'}toast(`FALTA CAT. ${cat} · −${pts}`,text,'bad')}
   else{S.infr++;const lost=S.streak>0;S.streak=0;S.pts=Math.max(0,S.pts-50);toast(`INFRACCIÓN · CAT. ${cat}`,text+` · −50 pts${lost?' · ¡RACHA PERDIDA!':''}`,'bad')}
   if(!QUIET.has(code.replace(/\d+$/,'')))angerNear(S.W,S.P.x,S.P.y,95);
   sfx.bad()}
-function fatal(text){if(S.over)return;sfx.crash();angerNear(S.W,S.P.x,S.P.y,120);
+function fatal(text){if(S.over)return;if(S.mode==='tuto'){toast('¡CUIDADO!',text,'bad');S.P.v=0;return}sfx.crash();angerNear(S.W,S.P.x,S.P.y,120);
   if(S.exam){S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});S.score-=32;endExam('crash',text)}
   else{S.infr++;S.streak=0;S.pts=Math.max(0,S.pts-100);S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});toast('¡ACCIDENTE!',text+' · −100 pts','bad');S.respawn=1.6;S.P.v=0}}
 function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
+  if(S.mode==='tuto'){$('endTitle').textContent='¡TUTORIAL COMPLETADO!';$('endTitle').style.color='var(--good)';$('endLic').classList.add('hidden');$('endSub').textContent='Ya sabe manejar el simulador. Siga con el EXAMEN TEÓRICO (1) o practique en CALLE LIBRE (5). Las reglas completas están en REGLAS (8).';$('endList').innerHTML='';show('end');ui='end';sfx.fanfare();return}
   const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   let extra='';const prog=store.get('pp_prog',{});
   const pk=S.mode==='sanjose'?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
@@ -977,6 +1012,22 @@ function plantelTasks(){return[
    check(){const P=S.P;return still('par',P.x>56&&P.x<68&&P.y>318&&P.y<334&&Math.abs(Math.cos(P.h))<.35,1.2)}},
   {txt:'Regrese al cuadro de INICIO/FIN (arriba a la izquierda) y deténgase dentro.',tgt:{x:108,y:61},zone:{x:92,y:54,w:32,h:14},
    check(){const P=S.P;return still('fin',P.x>97&&P.x<119&&P.y>56&&P.y<66,1)}}]}
+function tutoTasks(){const T=TOUCH,k=(key,btn)=>T?btn:key;const P=()=>S.P;
+  return[
+  {txt:`¡Bienvenido! Primero póngase el CINTURÓN con ${k('[C]','el botón CINT')}. Sin cinturón no puede manejar.`,check(){return P().belt}},
+  {txt:`Acelere con ${k('[W]','el pedal GAS')}. El pedal se hunde poco a poco: llegue a 15 km/h.`,check(){return Math.abs(P().v)*KMH>=15}},
+  {txt:`Ahora frene con ${k('[S]','el pedal FRENO')} hasta detenerse por completo.`,check(){return Math.abs(P().v)<.3}},
+  {txt:`Gire el volante con ${k('[A] y [D]','◀ y ▶')}. Avance y dé media vuelta (gire 180°).`,start(){this.h0=P().h;this.acc=0;this.prev=P().h},check(){const h=P().h;this.acc+=Math.abs(nA(h-this.prev));this.prev=h;return this.acc>2.8}},
+  {txt:`Direccionales: ${k('[Q] izquierda y [E] derecha','◀Q izquierda y E▶ derecha')}. Ponga la DERECHA. (Se apaga sola al enderezar.)`,check(){return P().blinkR}},
+  {txt:`Reversa: deténgase con ${k('[S]','FRENO')}, SUELTE y tóquelo OTRA VEZ. En el tablero verá R.`,check(){return P().gear===-1}},
+  {txt:`En reversa, ${k('[S]','FRENO')} lo mueve hacia atrás y ${k('[W]','GAS')} frena. Retroceda un poco y luego, detenido, toque ${k('[W]','GAS')} para volver a D.`,start(){this.mv=0},check(){if(P().v<-2)this.mv=1;return this.mv&&P().gear===1}},
+  {txt:`Freno de mano: ${k('[ESPACIO]','MANO')}. Sirve para arrancar en subidas. Sosténgalo 1 segundo.`,start(){this.t=0},check(){if(keys[' '])this.t+=S.dt;return this.t>1}},
+  {txt:`Marcha baja (compresionar) con ${k('[G]','L/D')}: para bajar cuestas. Póngala y quítela.`,start(){this.on=0},check(){if(P().low)this.on=1;return this.on&&!P().low}},
+  {txt:`Bocina: ${k('[B]','PITO')}. Úsela SOLO para evitar un accidente (en el examen pitar sin motivo es falta). Pruébela.`,check(){return P().hornT>0}},
+  {txt:`Cambie a la VISTA DE PILOTO con ${k('[V]','VISTA')}.`,check(){return !!S.fp}},
+  {txt:`En vista de piloto mire el espejo izquierdo: mantenga ${k('[Z]','◀ESP')}. (${k('[X] derecho, [F] arriba','ESP▶ derecho, ARRIBA para semáforos')}.)`,check(){return (S.look||0)<-.6}},
+  {txt:`Vuelva a la vista desde arriba con ${k('[V]','VISTA')}. Pausa con ${k('[P] o [ESC]','II')}.`,check(){return !S.fp}},
+  {txt:'¡Último paso! Maneje hasta la flecha amarilla y deténgase ahí. En las pruebas siempre siga la flecha y las instrucciones de arriba.',tgt:{x:320,y:47},check(){const p=P();return Math.hypot(p.x-320,p.y-47)<18&&Math.abs(p.v)<.5}}]}
 function streetTasks(){return[
   {txt:'PRUEBA EN CALLE: póngase el cinturón [C] y maneje hasta LA ESCUELA. Respete la zona escolar de 25 km/h.',tgt:{x:200,y:287},check(){const P=S.P;return Math.hypot(P.x-200,P.y-287)<16}},
   {txt:'Vaya a la ROTONDA y tome la salida SUR. Ceda el paso, direccional IZQ. al circular y DER. al salir.',tgt:{x:533,y:345},start(){S.lastExit=null},
@@ -1180,6 +1231,14 @@ function updateWorld(W,P,dt,t){
       const pts=o.player?[[o.x,o.y],[o.x+Math.cos(o.h)*o.v*.35,o.y+Math.sin(o.h)*o.v*.35],[o.x+Math.cos(o.h)*o.v*.7,o.y+Math.sin(o.h)*o.v*.7]]:[[o.x,o.y]];
       for(const[ox,oy]of pts){const rx=ox-c.x,ry=oy-c.y;const f=rx*hx+ry*hy;if(f<=0||f>look)continue;const l=Math.abs(-rx*hy+ry*hx);if(l>(c.Wd+(o.Wd||8))/2+(o.player?4:1))continue;
         if(!o.player&&!o.static&&Math.cos(o.h-c.h)<.2)continue;const gap=f-(c.L+(o.L||14))/2-3;const want=Math.max(0,gap*2.2);if(want<tgt){tgt=want;pl=!!o.player;blk=o}}}
+    // tráfico cruzado muy cerca: el que está más lejos del punto de cruce cede (desempate por id para no trabarse)
+    for(const o of W.ai){if(o===c||Math.abs(o.x-c.x)>45||Math.abs(o.y-c.y)>45)continue;const cs=Math.cos(o.h-c.h);if(cs>.5)continue;
+      const rx=o.x-c.x,ry=o.y-c.y,f=rx*hx+ry*hy;if(f<=0)continue;const lat=Math.abs(-rx*hy+ry*hx);if(cs<-.5&&lat>8)continue;
+      const ax=c.x+hx*(c.v*.7+c.L/2),ay=c.y+hy*(c.v*.7+c.L/2),ox=o.x+Math.cos(o.h)*o.v*.7,oy=o.y+Math.sin(o.h)*o.v*.7;
+      if(Math.hypot(ax-ox,ay-oy)>(c.L+o.L)/2+3&&Math.hypot(ax-o.x,ay-o.y)>(c.L+o.L)/2+2&&lat>(c.Wd+o.L)/2+2)continue;
+      const of=(c.x-o.x)*Math.cos(o.h)+(c.y-o.y)*Math.sin(o.h);
+      if(of>0&&(f+2<of||(Math.abs(f-of)<=2&&c.id<o.id)))continue;
+      tgt=Math.min(tgt,Math.max(0,(f-(c.L+o.L)/2-3)*1.8))}
     // de frente en el carril contrario (mientras adelanta)
     if(c.off>2)for(const o of others){if(o===c||o.static)continue;if(Math.cos(o.h-c.h)>-.5)continue;const rx=o.x-c.x,ry=o.y-c.y,f=rx*hx+ry*hy,l=Math.abs(-rx*hy+ry*hx);if(f>0&&f<45+c.v&&l<10){tgt=Math.min(tgt,Math.max(0,(f-22)*1.5));if(c.ovt)c.ovt.st='back'}}
     // decidir adelantar a un vehículo detenido (obra, carro varado, camión de basura recogiendo)
@@ -1200,6 +1259,11 @@ function updateWorld(W,P,dt,t){
     c.bl=c.br=false;
     if(c.haz){c.bl=c.br=true}else if(c.ovt){if(!c.bad){c.bl=c.ovt.st==='out';c.br=c.ovt.st==='back'}}
     else if(wp.sig){c.bl=wp.sig==='L';c.br=wp.sig==='R'}else if(dist<50){if(tn>.5)c.br=true;else if(tn<-.5)c.bl=true}}
+  // separación física: dos carros nunca quedan uno encima del otro
+  {const act=P?W.ai.filter(c=>Math.abs(c.x-P.x)+Math.abs(c.y-P.y)<950):W.ai;
+    for(let i=0;i<act.length;i++)for(let j=i+1;j<act.length;j++){const a=act[i],b=act[j];if(Math.abs(b.x-a.x)>30||Math.abs(b.y-a.y)>30)continue;let hit=false;
+      for(const p of circles(a))for(const q of circles(b)){const ex=q.x-p.x,ey=q.y-p.y,d=Math.hypot(ex,ey),m=p.r+q.r;if(d<m&&d>.01){const k=(m-d)/2;a.x-=ex/d*k;a.y-=ey/d*k;b.x+=ex/d*k;b.y+=ey/d*k;hit=true}}
+      if(hit){const bk=(b.x-a.x)*Math.cos(a.h)+(b.y-a.y)*Math.sin(a.h)>0?a:b;bk.v=Math.min(bk.v,1.5)}}}
   for(const k of W.cones){k.x+=k.vx*dt;k.y+=k.vy*dt;k.vx*=.9;k.vy*=.9}
 }
 
@@ -1402,7 +1466,7 @@ function onKey(k){
     if(ui==='prg'){if(k==='escape')back();return}
     if(ui==='garage'){if(k==='a'||k==='arrowleft')garage(-1,0);if(k==='d'||k==='arrowright')garage(1,0);if(k==='w'||k==='arrowup')garage(0,-1);if(k==='s'||k==='arrowdown')garage(0,1);if(k==='enter'||k==='escape')back();return}
     if(ui==='theory'){theoryKey(k);return}
-    if(k==='1')openTheory();if(k==='2')start('sanjose');if(k==='3')start('plantel');if(k==='4')start('street');if(k==='5')start('city');if(k==='6')openGarage();if(k==='7')showLicense();if(k==='8'){show('rules');ui='rules'}if(k==='9')openProgress();return}
+    if(k==='1')openTheory();if(k==='2')start('sanjose');if(k==='3')start('plantel');if(k==='4')start('street');if(k==='5')start('city');if(k==='6')openGarage();if(k==='7')showLicense();if(k==='8'){show('rules');ui='rules'}if(k==='9')openProgress();if(k==='0')start('tuto');return}
   if(S.over){if(k==='enter')start(S.mode);if(k==='escape')toMenu();return}
   if(k==='escape'||k==='p'){togglePause();return}
   if(S.paused)return;
@@ -1419,7 +1483,7 @@ function onKey(k){
 function back(){show('menu');ui='menu';refreshMenu()}
 function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);if(engG&&S.paused)engG.gain.value=0}
 $('b0').onclick=openTheory;$('bSJ').onclick=()=>{audioInit();start('sanjose')};$('b1').onclick=()=>{audioInit();start('plantel')};$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
-$('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bBack').onclick=back;$('licBack').onclick=back;
+$('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
 $('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bMenu2').onclick=toMenu;
 
@@ -1440,7 +1504,7 @@ function step(dt){
   for(const R of W.rails){const tr=trainRect(W,R,S.t);if(tr){const d=Math.hypot(tr.x+tr.w/2-P.x,tr.y+tr.h/2-P.y);if(d<320&&S.horned!==Math.floor((S.t+R.off)/R.period)){S.horned=Math.floor((S.t+R.off)/R.period);sfx.horn()}}
     for(const cr of R.cross)if(railWarn(W,R,cr.ca,S.t)&&Math.hypot(cr.x-P.x,cr.y-P.y)<150){S.bellT-=dt;if(S.bellT<=0){S.bellT=.45;sfx.bell()}}}
 }
-function updateHUD(){const P=S.P;let tg=null;
+function updateHUD(){const P=S.P;let tg=null;$('touch').classList.toggle('hidden',!TOUCH||S.over);
   if(S.exam){const tk=S.tasks[S.task];$('tasknum').textContent=tk?`${S.mode==='street'?'CALLE':'TAREA'} ${S.task+1}/${S.tasks.length}`:'FIN';$('tasktxt').textContent=tk?tk.txt:'';tg=tk?tk.tgt:null;
     $('scoreLbl').textContent='PUNTOS';$('score').textContent=Math.max(0,S.score);$('score').classList.toggle('low',S.score<80);$('time').textContent=fmtT(S.t)}
   else{const left=Math.max(0,Math.ceil(S.destPar-(S.t-S.destT)));$('tasknum').textContent=`DESTINO ${S.deliv+1} · BONO: ${left}s`;$('tasktxt').textContent='Maneje hasta '+S.dest.n+' sin infracciones. ¡Rápido pero legal!';tg=S.dest;
@@ -1480,7 +1544,13 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     A.t+=dt;updateWorld(A.W,null,dt,A.t);A.cx=330+Math.sin(A.t*.05)*300;A.cy=380+Math.cos(A.t*.07)*230;
     drawWorld(A.W,null,Math.round(clamp(A.cx,0,A.W.w-VW)),Math.round(clamp(A.cy,0,A.W.h-VH)),A.t);
   }}
-function fit(){const w=$('wrap').getBoundingClientRect().width;$('wrap').style.setProperty('--u',(w/VW)+'px')}
+function fit(){const w=$('wrap').getBoundingClientRect().width;$('wrap').style.setProperty('--u',(w/VW)+'px');const u=w/VW;
+  for(const b of document.querySelectorAll('#touch .tb')){if(!b.dataset.l){b.dataset.l=parseFloat(b.style.left);b.dataset.t=parseFloat(b.style.top)}b.style.left=(b.dataset.l*u)+'px';b.style.top=(b.dataset.t*u)+'px'}}
+const TOUCH=matchMedia('(pointer:coarse)').matches||navigator.maxTouchPoints>0;if(TOUCH)document.body.classList.add('touch');
+for(const b of document.querySelectorAll('#touch [data-k]')){const k=b.dataset.k;
+  const down=e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}audioInit();if(!keys[k])pressed[k]=true;keys[k]=true;b.classList.add('on');onKey(k)};
+  const up=e=>{keys[k]=false;b.classList.remove('on')};
+  b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault())}
 addEventListener('resize',fit);fit();refreshMenu();
 requestAnimationFrame(frame);
 </script>
