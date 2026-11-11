@@ -378,39 +378,37 @@ function buildPlantel(){
 // Plantel de San José: trazado copiado de la foto aérea (aproximado). K = unidades del juego por píxel de la foto;
 // la fila de carros bajo los paneles mide ~40 m (1 unidad ≈ 0,3 m; el plantel queda ~1,3 veces el tamaño real para que se pueda manejar).
 const SJK=1.15,sjq=a=>a.map(([x,y])=>[x*SJK,y*SJK]);
-const SJP={slot:{x:109,y:110},cor:{x:444,top:106,end:228},T:255};
+const SJP={slot:{x:109,y:110},cor:{x:459,top:106,end:250}};
 function buildSanJose(){
   HW=9;const K=SJK;
-  const W=newWorld('sanjose',Math.round(405*K),Math.round(300*K));W.limit=25;
+  const W=newWorld('sanjose',492,392);W.limit=25;
   const way=(pts,o={})=>Object.assign(addPath(W,pts),o);
   // vía de la derecha (al norte; retroceso de 40 m) y vía superior (al oeste, regreso a la plazoleta)
-  way([[444,282],[444,69]],{oneway:1,noCenter:1,hidden:1});
-  way(sjq([[386,61],[386,45],[377,28],[360,18],[340,16],[250,34],[110,64],[0,76]]),{oneway:1,noCenter:1});
+  way([[450,372],[450,69]],{oneway:1,noCenter:1,hidden:1});
+  way([[450,72],[448,50],[435,31],[414,21],[391,18]].concat(sjq([[250,34],[110,64],[0,76]])),{oneway:1,noCenter:1});
   way(sjq([[130,101],[335,60],[352,58]]),{oneway:1,noCenter:1});          // fila de carros bajo los paneles (40 m)
   way([[92,165],[130,158],[150,128]],{oneway:1,noCenter:1});              // salida de la plazoleta a la fila
   way(sjq([[343,59],[362,52],[380,40]]),{oneway:1,noCenter:1});           // enlace a la vía superior
   // zigzag: calle diagonal ancha con hileras de conos alternadas
-  const zz=[[400,67],[418,84],[418,112],[392,134],[312,160],[258,180],[242,200],[246,222],[262,245],[285,256],[306,256]];
+  const zz=[[400,67],[418,84],[418,112],[392,134],[312,160],[258,180],[240,202],[240,232],[250,252],[266,262],[292,262]];
   way(zz,{oneway:1,noCenter:1,hw:12});
-  way([[409,255],[432,255]]);                                             // salida única de la rotonda, hacia la vía de la derecha
-  W.paved.push({x:431,y:69,w:25,h:213,tag:'lanes'});
+  way([[350,322],[352,346],[366,362],[392,371],[424,371],[442,362],[450,344]],{oneway:1,noCenter:1}); // salida única (sur): baja y entra a la vía de la derecha
+  W.paved.push({x:432,y:69,w:36,h:304,tag:'lanes'});
   W.paved.push({x:6,y:72,w:124,h:100,tag:'plaza'});
-  W.paved.push({x:345*K,y:22*K,w:42*K,h:40*K});
-  const rd=addRound(W,310*K,222*K,2,{R:46*K,r:29*K,arms:{W:true,E:true}});
-  const sA=addStop(W,SJP.cor.x,SJP.cor.top,'N','stop',null,0);sA.a=431;sA.b=456;
-  addStop(W,432,SJP.T,'E','stop',null,6);
-  W.nodes.push({x:444,y:SJP.T,arms:{},n:3});W.nodes.push({x:412,y:76,arms:{},n:3});
+  W.paved.push({x:397,y:25,w:50,h:46});
+  const rd=addRound(W,350,262,3,{R:62,r:38,arms:{W:true,S:true}});W.yields=W.yields.filter(s=>s.dir!=='N');
+  const sA=addStop(W,450,SJP.cor.top,'N','stop',null,0);sA.a=432;sA.b=468;W.nodes.push({x:412,y:76,arms:{},n:3});
   // marquesina de paneles solares (sólida)
   W.canopy=[130*K,79*K,340*K,33*K];{const[a,b,e,f]=W.canopy,L=Math.hypot(e-a,f-b);for(let k=0;k<=L;k+=5)W.circObs.push({x:a+(e-a)*k/L,y:b+(f-b)*k/L,r:7,type:'bld'})}
   const B=(x0,y0,x1,y1,o={})=>{const b=Object.assign({x:x0*K,y:y0*K,w:(x1-x0)*K,h:(y1-y0)*K,type:'bld',col:'#ececec',roof:'#d6d6d6'},o);W.obst.push(b);W.blds.push(b)};
   B(0,0,80,35,{col:'#b23a3a',roof:'#8b1e1e'});
   B(205,98,250,112);B(258,88,325,100,{label:'EDUCACION VIAL'});
-  B(140,122,196,215,{label:'OFICINAS'});B(150,215,212,255);
-  B(257,172,269,184,{col:'#e9c46a',roof:'#bc4749'});B(360,184,372,196,{col:'#e9c46a',roof:'#bc4749'});
+  B(140,122,196,215,{label:'OFICINAS'});B(150,215,198,262);
+  B(240,170,250,180,{col:'#e9c46a',roof:'#bc4749'});B(362,186,372,196,{col:'#e9c46a',roof:'#bc4749'});
   const cone=(x,y,o={})=>W.cones.push(Object.assign({x,y,vx:0,vy:0,hit:false},o));
   const near=(x,y,d)=>W.cones.some(k=>Math.hypot(k.x-x,k.y-y)<d);
   // conos a ambos lados del zigzag
-  for(let i=1;i<zz.length-3;i++){const[a,b]=[zz[i],zz[i+1]];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;
+  for(let i=1;i<zz.length-4;i++){const[a,b]=[zz[i],zz[i+1]];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;
     for(let t=0;t<L;t+=9){const x=a[0]+ux*t,y=a[1]+uy*t;for(const sd of[1,-1]){const cx=x-sd*uy*13.5,cy=y+sd*ux*13.5;if(!pavedW(W,cx,cy)&&!near(cx,cy,5))cone(cx,cy)}}}
   // hileras dentro de la calle, alternando lado (norte, sur, norte): obligan a zigzaguear
   {const[a,b]=[zz[3],zz[4]],[c2,d2]=[zz[4],zz[5]];const gate=(P0,P1,f,side)=>{const L=Math.hypot(P1[0]-P0[0],P1[1]-P0[1]),ux=(P1[0]-P0[0])/L,uy=(P1[1]-P0[1])/L;let nx=-uy,ny=ux;if((ny<0)!==(side<0)){nx=-nx;ny=-ny}
@@ -418,7 +416,7 @@ function buildSanJose(){
     gate(a,b,.22,-1);gate(a,b,.75,1);gate(c2,d2,.45,-1)}
   for(let i=0;i<12;i++){const a=i/12*Math.PI*2+.2;cone(rd.x+Math.cos(a)*(rd.r+2),rd.y+Math.sin(a)*(rd.r+2))}
   // retroceso (cuadro rojo): pasillo de conos en la vía de la derecha
-  for(let y=SJP.cor.top+10;y<=SJP.cor.end;y+=12){cone(SJP.cor.x-11,y);cone(SJP.cor.x+11,y)}
+  for(let y=SJP.cor.top+10;y<=SJP.cor.end;y+=12){cone(SJP.cor.x-8.5,y);cone(SJP.cor.x+8.5,y)}
   // parqueo hacia atrás (círculo rojo): 4 espacios uno al lado del otro, conos en las líneas (tocar uno = prueba perdida)
   W.hslots=[];for(let i=0;i<4;i++){const y=86+16*i;W.hslots.push({x:98,y,w:22,h:16,target:i===1});
     if(i===3){const cx=110,cy=y+8,h=Math.PI;W.parked.push({x:cx,y:cy,h,col:'#c0392b',type:'sedan'});for(const q of circles({x:cx,y:cy,h,L:VEH.sedan.L,Wd:VEH.sedan.Wd}))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'})}}
@@ -432,11 +430,11 @@ function sjTasks(){const T=SJP.slot,C=SJP.cor;
   return[
   {txt:'FILA DE CARROS: póngase el cinturón [C] y avance por la fila bajo los paneles. Al final ponga direccional DERECHA y entre al zigzag.',tgt:{x:418,y:95},check(){const P=S.P;return P.x>404&&P.x<431&&P.y>92&&P.y<140}},
   {txt:'ZIGZAG: pase entre las hileras de conos sin tocarlos (cada cono = −12 puntos).',tgt:{x:352,y:147},check(){const P=S.P;if(P.x<330)this.tgt={x:244,y:205};return P.x<262&&P.y>192}},
-  {txt:'ROTONDA: ceda el paso, entre, dé UNA VUELTA COMPLETA (direccional izq.) y salga por la única salida, al ESTE (direccional der.).',tgt:{x:300,y:258},start(){S.lastExit=null},
-   check(){if(!S.lastExit)return false;const e=S.lastExit;S.lastExit=null;if(e.exit!=='E')fault('exit','Tomó una salida equivocada en la rotonda','III',2);else if(e.trav<5.6)fault('lap','No dio la vuelta completa a la rotonda','III',2);return true}},
-  {txt:'Haga ALTO antes de la vía de la derecha, direccional IZQUIERDA y doble al NORTE.',tgt:{x:444,y:245},check(){const P=S.P;return P.x>432&&P.y<244}},
-  {txt:'RETROCESO (40 m): avance entre los conos hasta la línea de ALTO y deténgase. Luego retroceda en línea recta hasta la línea amarilla.',tgt:{x:C.x,y:C.top+8},zone:{x:C.x-10,y:C.top,w:20,h:C.end-C.top},ok:'¡Retroceso completado!',
-   check(){const P=S.P;const inC=Math.abs(P.x-C.x)<14&&P.y>C.top-6&&P.y<C.end+10;
+  {txt:'ROTONDA: ceda el paso, entre, dé UNA VUELTA COMPLETA (direccional izq.) y salga por la única salida, al SUR (direccional der.).',tgt:{x:280,y:266},start(){S.lastExit=null},
+   check(){if(!S.lastExit)return false;const e=S.lastExit;S.lastExit=null;if(e.exit!=='S')fault('exit','Tomó una salida equivocada en la rotonda','III',2);else if(e.trav<5.6)fault('lap','No dio la vuelta completa a la rotonda','III',2);return true}},
+  {txt:'Siga la curva y suba por la vía de la derecha (2 carriles), en el CARRIL DERECHO.',tgt:{x:420,y:371},check(){const P=S.P;if(P.x>400)this.tgt={x:459,y:300};return P.x>432&&P.y<330}},
+  {txt:'RETROCESO (40 m): por el carril derecho, avance entre los conos hasta la línea de ALTO y deténgase. Luego retroceda en línea recta hasta la línea amarilla.',tgt:{x:C.x,y:C.top+8},zone:{x:C.x-7,y:C.top,w:14,h:C.end-C.top},ok:'¡Retroceso completado!',
+   check(){const P=S.P;const inC=Math.abs(P.x-C.x)<11&&P.y>C.top-6&&P.y<C.end+10;
      if(!this.ph){if(inC&&P.y<C.top+16&&Math.abs(P.v)<.5){this.ph=1;this.tgt={x:C.x,y:C.end};toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto hasta la línea amarilla','info')}return false}
      if(inC&&P.gear===-1){if(P.v<-1)this.mv=true;if(this.mv&&Math.abs(P.v)<.3){this.st=(this.st||0)+S.dt;if(this.st>1&&!this.fl){this.fl=1;fault('rstop','Detenerse durante el retroceso','IV')}}else this.st=0}
      if(P.y>C.end){if(P.gear===1)fault('rnoret','No realizó el retroceso en reversa','III');return true}}},
@@ -542,9 +540,9 @@ function renderBG(W){
   else if(W.kind==='sanjose'){const K=SJK;
     {const[a,b,e,f]=W.canopy,ca=Math.atan2(f-b,e-a),cl=Math.hypot(e-a,f-b);x.save();x.translate(a,b);x.rotate(ca);x.fillStyle='rgba(0,0,0,.3)';x.fillRect(-3,-5,cl+6,14);x.fillStyle='#ececec';x.fillRect(-6,-8,cl+12,16);x.fillStyle='#1f3f8f';x.fillRect(24,-7,cl-22,14);x.fillStyle='#5b80d4';for(let i=24;i<cl+2;i+=5)x.fillRect(i,-7,1,14);for(let j=-7;j<7;j+=4)x.fillRect(24,j,cl-22,1);x.restore()}
     const uy=X=>(104-.2*(X/K-115))*K;x.fillStyle='rgba(42,90,200,.42)';x.beginPath();x.moveTo(150*K,uy(150*K)-8);x.lineTo(330*K,uy(330*K)-8);x.lineTo(330*K,uy(330*K)+8);x.lineTo(150*K,uy(150*K)+8);x.fill();ptext(x,'FILA DE CARROS 40M',190*K,uy(240*K)-3,'#bfe0ff');
-    const x0=375*K,x1=397*K;x.fillStyle=WH;x.fillRect(x0,60*K,1,213);x.fillRect(x1,60*K,1,213);
-    for(let y0=62*K;y0<278;y0+=8)for(let k=0;k<12;k++)px(Math.round(x1+2+k),Math.round(y0+k*.6),WH);
-    x.fillStyle=YE;x.fillRect(SJP.cor.x-10,SJP.cor.end,20,2);ptext(x,'RETRO',SJP.cor.x-3,SJP.cor.end-36,WH,2);
+    const x0=432,x1=467;x.fillStyle=WH;x.fillRect(x0,69,1,276);x.fillRect(x1,69,1,290);for(let y=SJP.cor.top+4;y<372;y+=10)x.fillRect(450,y,1,5);
+    for(let y0=72;y0<360;y0+=8)for(let k=0;k<12;k++)px(Math.round(x1+2+k),Math.round(y0+k*.6),WH);
+    x.fillStyle=YE;x.fillRect(SJP.cor.x-8,SJP.cor.end,17,2);ptext(x,'RETRO',SJP.cor.x-3,SJP.cor.end-36,WH,2);
     for(const s of W.hslots){x.fillStyle=WH;x.fillRect(s.x,s.y,s.w,1);x.fillRect(s.x,s.y+s.h,s.w,1);x.fillRect(s.x+s.w-1,s.y,1,s.h);if(s.target){x.fillStyle=YE;x.fillRect(s.x+s.w-3,s.y+1,2,s.h-1);x.fillRect(s.x,s.y+1,s.w,1);x.fillRect(s.x,s.y+s.h-1,s.w,1)}}
     ptext(x,'PARQUEO',60,80,WH,1);ptext(x,'ZIGZAG',300,140,WH)}
   for(const rl of W.rails){const L=rl.o==='v'?W.h:W.w;
