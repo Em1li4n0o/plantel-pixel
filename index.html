@@ -225,7 +225,7 @@ function makeLoop(nodes){const n=nodes.length,pts=[],turn=[];const nm=(x,y)=>{co
   return{pts,turn}}
 function spawnOnLoop(W,loop,count,vmax){const P=loop.pts,n=P.length;const seg=[];let tot=0;for(let i=0;i<n;i++){const a=P[i],b=P[(i+1)%n];const l=Math.hypot(b.x-a.x,b.y-a.y);seg.push(l);tot+=l}
   for(let k=0;k<count;k++){let d=(k+.35)/count*tot;let i=0;while(d>seg[i]){d-=seg[i];i++}const a=P[i],b=P[(i+1)%n];const f=d/seg[i];
-    W.ai.push({loop,wi:(i+1)%n,x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,h:Math.atan2(b.y-a.y,b.x-a.x),v:vmax*.6,vmax,col:CARCOLS[(W.ai.length*7+1)%CARCOLS.length],ok:{},wait:0})}}
+    W.ai.push({loop,wi:(i+1)%n,x:a.x+(b.x-a.x)*f,y:a.y+(b.y-a.y)*f,h:Math.atan2(b.y-a.y,b.x-a.x),v:vmax*.6,vmax:vmax*(.85+Math.random()*.3),col:CARCOLS[(W.ai.length*7+1)%CARCOLS.length],ok:{},wait:0})}}
 function addTrees(W,R,n,box,minD){for(let i=0,tries=0;i<n&&tries<n*40;tries++){const x=box.x+R()*box.w,y=box.y+R()*box.h;let ok=true;
   for(let a=0;a<6&&ok;a++){const an=a/6*Math.PI*2;if(pavedW(W,x+Math.cos(an)*minD,y+Math.sin(an)*minD))ok=false}
   if(!ok)continue;if(W.obst.some(o=>x>o.x-8&&x<o.x+o.w+8&&y>o.y-8&&y<o.y+o.h+8))continue;
@@ -241,7 +241,7 @@ function buildPlantel(){
   W.paved.push({x:372,y:54,w:96,h:36,tag:'lot'});
   W.paved.push({x:114,y:336,w:18,h:90,tag:'corr'});
   W.paved.push({x:54,y:288,w:16,h:84,tag:'bay'});
-  addRound(W,320,240,2);
+  addRound(W,320,240,3);
   for(const[x,y]of[[320,40],[320,440],[40,240],[600,240]])addNode(W,x,y);
   addRail(W,'v',480,{len:110,speed:70,period:34,off:14});
   W.zebras.push(makeZebra('h',220,40));
@@ -253,7 +253,7 @@ function buildPlantel(){
   const off={x:150,y:118,w:84,h:44,type:'bld',col:'#d9cba3',roof:'#b5533c',label:'EDUCACION VIAL'};W.obst.push(off);W.blds.push(off);
   const st={x:420,y:330,w:70,h:30,type:'bld',col:'#8d99ae',roof:'#5c677d',label:'GRADERIAS'};W.obst.push(st);W.blds.push(st);
   const R=rng(11);addTrees(W,R,70,{x:0,y:0,w:640,h:480},11);
-  W.ai=[];spawnOnLoop(W,makeLoop([[40,40],[600,40],[600,440],[40,440]]),1,22);
+  W.ai=[];spawnOnLoop(W,makeLoop([[40,40],[600,40],[600,440],[40,440]]),2,25);
   W.ai[0].x=400;W.ai[0].y=433;W.ai[0].h=Math.PI;W.ai[0].wi=3;
   W.spawn={x:108,y:61,h:0};
   return W}
@@ -293,9 +293,13 @@ function buildCity(){
   for(const[t,x,y]of lbl){const b=W.blds.find(b=>inR(x,y,b));if(b)b.label=t}
   addTrees(W,R,140,{x:0,y:0,w:1040,h:800},12);
   if(W.parks)for(const p of W.parks)addTrees(W,R,18,Object.assign({inside:true},p),3);
-  const L=[[[[60,60],[300,60],[300,280],[60,280]],1],[[[780,280],[780,500],[980,500],[980,280]],1],[[[300,500],[540,500],[540,740],[300,740]],2],
-    [[[60,60],[980,60],[980,740],[60,740]],4],[[[780,60],[980,60],[980,280],[780,280]],1],[[[60,500],[60,740],[300,740],[300,500]],2]];
-  for(const[n,c]of L)spawnOnLoop(W,makeLoop(n),c,34);
+  const L=[[[[60,60],[300,60],[300,280],[60,280]],2,34],[[[780,280],[780,500],[980,500],[980,280]],2,36],[[[300,500],[540,500],[540,740],[300,740]],3,36],
+    [[[60,60],[980,60],[980,740],[60,740]],7,52],[[[780,60],[980,60],[980,280],[780,280]],2,36],[[[60,500],[60,740],[300,740],[300,500]],3,36],
+    [[[540,500],[540,740],[780,740],[780,500]],3,36],[[[780,500],[980,500],[980,740],[780,740]],2,34],[[[60,280],[60,500],[300,500],[300,280]],2,34]];
+  for(const[n,c,v]of L)spawnOnLoop(W,makeLoop(n),c,v);
+  // avenida perimetral rápida
+  for(const z of[{x:74,y:46,w:892,h:28},{x:74,y:726,w:892,h:28},{x:46,y:74,w:28,h:652},{x:966,y:74,w:28,h:652}])W.zones.push(Object.assign(z,{limit:60,name:'AVENIDA'}));
+  for(const c of W.ringCars)c.vmax=32;
   W.spawn={x:130,y:507,h:0};
   W.dests=[{n:'LA ESCUELA',x:200,y:287},{n:'EL PARQUEO PÚBLICO',x:880,y:545},{n:'EL MERCADO',x:640,y:507},{n:'LA ESTACIÓN DEL TREN',x:293,y:590},{n:'EL HOSPITAL',x:973,y:390},{n:'LA ROTONDA (SALIDA SUR)',x:533,y:345},{n:'EL BANCO',x:420,y:273}];
   return W}
@@ -345,7 +349,9 @@ function renderBG(W){
   }
   for(const z of W.zebras){x.fillStyle=WH;if(z.o==='h'){for(let y=z.rect.y+2;y<z.rect.y+z.rect.h-2;y+=3)x.fillRect(z.rect.x,y,z.rect.w,2)}else{for(let X=z.rect.x+2;X<z.rect.x+z.rect.w-2;X+=3)x.fillRect(X,z.rect.y,2,z.rect.h)}}
   for(const s of W.slots){x.fillStyle=WH;x.fillRect(s.x,s.y,1,s.h);x.fillRect(s.x+s.w,s.y,1,s.h);x.fillRect(s.x,s.y+s.h-1,s.w+1,1)}
-  for(const zn of W.zones){ptext(x,zn.name,zn.x+6,zn.y+2,YE);ptext(x,'25',zn.x+zn.w-14,zn.y+zn.h-7,YE)}
+  for(const zn of W.zones){const L=String(zn.limit);
+    if(zn.w>zn.h){for(let xx=zn.x+60;xx<zn.x+zn.w-30;xx+=(zn.name==='AVENIDA'?220:999)){ptext(x,zn.name,xx-30,zn.y+2,YE);ptext(x,L,xx+8,zn.y+zn.h-7,YE)}}
+    else{for(let yy=zn.y+60;yy<zn.y+zn.h-30;yy+=220){ptext(x,zn.name,zn.x+zn.w-7,yy-30,YE,1);ptext(x,L,zn.x+2,yy+8,YE,1)}}}
   if(W.kind==='plantel'){
     x.fillStyle=WH;x.fillRect(92,54,32,1);x.fillRect(92,67,32,1);x.fillRect(92,54,1,14);ptext(x,'INICIO',96,56,WH);ptext(x,'FIN',103,61,YE);
     x.fillStyle=YE;x.fillRect(114,346,18,2);ptext(x,'RETRO',113,400,WH,2);
@@ -383,7 +389,7 @@ let S=null,A=null;
 function spawnState(W){return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:'#ff3b30',player:true}}
 function start(mode){
   const W=mode==='plantel'?buildPlantel():buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
-  S={mode,W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,speedT:0,offT:0,wrongT:0,respawn:0,beltWarned:false,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
+  S={mode,W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,speedT:0,offT:0,wrongT:0,respawn:0,beltWarned:false,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;
   S.tasks=mode==='plantel'?plantelTasks():[];if(mode==='city')newDest();
   const mw=130,mh=Math.round(130*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
@@ -392,15 +398,16 @@ function start(mode){
   toast(mode==='plantel'?'EXAMEN EN PLANTEL':'MODO CALLE',mode==='plantel'?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Ande libre: respete semáforos, ALTO, tren y peatones.','info');
 }
 function toMenu(){S=null;$('hud').classList.add('hidden');$('end').classList.add('hidden');$('pause').classList.add('hidden');$('rules').classList.add('hidden');$('menu').classList.remove('hidden');if(engG)engG.gain.value=0}
-function newDest(){const W=S.W;let i;do{i=Math.random()*W.dests.length|0}while(S.dest&&W.dests[i]===S.dest&&W.dests.length>1);S.dest=W.dests[i]}
+function newDest(){const W=S.W,P=S.P;let i;do{i=Math.random()*W.dests.length|0}while(S.dest&&W.dests[i]===S.dest&&W.dests.length>1);S.dest=W.dests[i];
+  S.destT=S.t;S.destPar=Math.round(12+(Math.abs(S.dest.x-P.x)+Math.abs(S.dest.y-P.y))/30)}
 
 function toast(title,txt,kind='info'){const d=document.createElement('div');d.className='toast '+kind;d.innerHTML=`<b>${title}</b>${txt||''}`;const T=$('toasts');T.prepend(d);while(T.children.length>3)T.lastChild.remove();setTimeout(()=>d.remove(),3800)}
 function fault(code,text,cat,cdSec=5){if(!S||S.over)return;if(S.cd[code]&&S.t<S.cd[code])return;S.cd[code]=S.t+cdSec;const pts=CAT[cat];
   S.faults.push({t:S.t,text,cat,pts});
   if(S.mode==='plantel'){S.score-=pts;if(S.score<80&&!S.failed){S.failed=true;$('banner').textContent='REPROBADO · siga practicando o pulse R'}toast(`FALTA CAT. ${cat} · −${pts}`,text,'bad')}
-  else{S.infr++;toast(`INFRACCIÓN · CAT. ${cat}`,text,'bad')}
+  else{S.infr++;const lost=S.streak>0;S.streak=0;S.pts=Math.max(0,S.pts-50);toast(`INFRACCIÓN · CAT. ${cat}`,text+` · −50 pts${lost?' · ¡RACHA PERDIDA!':''}`,'bad')}
   sfx.bad()}
-function fatal(text){if(S.over)return;sfx.crash();if(S.mode==='plantel'){S.faults.push({t:S.t,text,cat:'I',pts:32});S.score-=32;endExam('crash',text)}else{S.infr++;S.faults.push({t:S.t,text,cat:'I',pts:32});toast('¡ACCIDENTE!',text,'bad');S.respawn=1.6;S.P.v=0}}
+function fatal(text){if(S.over)return;sfx.crash();if(S.mode==='plantel'){S.faults.push({t:S.t,text,cat:'I',pts:32});S.score-=32;endExam('crash',text)}else{S.infr++;S.streak=0;S.pts=Math.max(0,S.pts-100);S.faults.push({t:S.t,text,cat:'I',pts:32});toast('¡ACCIDENTE!',text+' · −100 pts','bad');S.respawn=1.6;S.P.v=0}}
 function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
   const ok=reason==='done'&&S.score>=80;$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   $('endSub').textContent=(reason==='crash'?txt+' · ':'')+`Nota: ${Math.max(0,S.score)}/100 · Tiempo ${fmtT(S.t)}`;
@@ -650,7 +657,9 @@ function step(dt){
   updateWorld(W,P,dt,S.t);
   if(S.mode==='plantel'){const tk=S.tasks[S.task];if(tk){if(!tk.started){tk.started=true;tk.start&&tk.start()}
       if(tk.check()){toast('✔ '+(tk.ok||'¡LISTO!'),'','good');sfx.good();S.task++;if(S.task>=S.tasks.length)endExam('done')}}}
-  else{const d=S.dest;if(Math.hypot(P.x-d.x,P.y-d.y)<16){S.deliv++;toast('✔ LLEGÓ A '+d.n,'','good');sfx.good();newDest()}}
+  else{const d=S.dest;if(Math.hypot(P.x-d.x,P.y-d.y)<16){S.deliv++;const el=S.t-S.destT,bonus=Math.max(0,Math.round((S.destPar-el)*5)),mult=1+Math.min(S.streak,6)*.5;
+      const gain=Math.round((100+bonus)*mult);S.pts+=gain;S.streak++;S.best=Math.max(S.best,S.pts);
+      toast('✔ LLEGÓ A '+d.n,`+${gain} pts (bono tiempo ${bonus}, x${mult})`+(S.streak>1?` · RACHA ${S.streak}`:''),'good');sfx.good();newDest()}}
   // sonidos
   const bp=Math.floor(S.t*2.6)%2;if((P.blinkL||P.blinkR||P.haz)&&bp!==S.blinkPh)(bp?sfx.tock:sfx.tick)();S.blinkPh=bp;
   for(const R of W.rails){const tr=trainRect(W,R,S.t);if(tr){const d=Math.hypot(tr.x+tr.w/2-P.x,tr.y+tr.h/2-P.y);if(d<320&&S.horned!==Math.floor((S.t+R.off)/R.period)){S.horned=Math.floor((S.t+R.off)/R.period);sfx.horn()}}
@@ -660,8 +669,9 @@ function updateHUD(){const P=S.P;
   let tg=null;
   if(S.mode==='plantel'){const tk=S.tasks[S.task];$('tasknum').textContent=tk?`TAREA ${S.task+1}/${S.tasks.length}`:'FIN';$('tasktxt').textContent=tk?tk.txt:'';tg=tk?tk.tgt:null;
     $('score').textContent=Math.max(0,S.score);$('score').classList.toggle('low',S.score<80)}
-  else{$('tasknum').textContent=`DESTINO · LLEGADAS: ${S.deliv}`;$('tasktxt').textContent='Maneje hasta '+S.dest.n+'. Siga la flecha amarilla.';tg=S.dest;$('score').textContent=S.infr;$('score').classList.toggle('low',S.infr>0)}
-  $('time').textContent=fmtT(S.t);$('spd').textContent=Math.round(Math.abs(P.v)*KMH);
+  else{const left=Math.max(0,Math.ceil(S.destPar-(S.t-S.destT)));$('tasknum').textContent=`DESTINO ${S.deliv+1} · BONO: ${left}s`;$('tasktxt').textContent='Maneje hasta '+S.dest.n+' sin infracciones. ¡Rápido pero legal!';tg=S.dest;
+    $('scoreLbl').textContent=`PUNTOS · RACHA x${1+Math.min(S.streak,6)*.5}`;$('score').textContent=S.pts;$('score').classList.toggle('low',false)}
+  $('time').textContent=S.mode==='city'?`${S.infr} INFRAC · ${fmtT(S.t)}`:fmtT(S.t);$('spd').textContent=Math.round(Math.abs(P.v)*KMH);
   $('gear').textContent=P.gear===1?'D':'R';$('gear').classList.toggle('r',P.gear===-1);$('lim').textContent=S.lim||S.W.limit;
   $('belt').className=P.belt?'on':'off';$('belt').textContent=P.belt?'CINTURÓN ✔':'CINTURÓN [C]';
   const on=Math.floor(S.t*2.6)%2===0;$('sigL').classList.toggle('on',(P.blinkL||P.haz)&&on);$('sigR').classList.toggle('on',(P.blinkR||P.haz)&&on);
