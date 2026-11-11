@@ -232,7 +232,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
 <script>
 'use strict';
 // ===================== CONSTANTES =====================
-const VW=384,VH=216,HW=14,KMH=1.08;
+const VW=384,VH=216,KMH=1.08;let HW=14;
 const CAT={I:32,II:12,III:8,IV:4};
 const $=id=>document.getElementById(id);
 const game=$('game'),g=game.getContext('2d');g.imageSmoothingEnabled=false;
@@ -304,7 +304,7 @@ function pavedW(W,x,y){for(const R of W.rounds){const d=Math.hypot(x-R.x,y-R.y);
   return false}
 function addPath(W,pts){const p={pts,segs:[]};for(let i=0;i<pts.length-1;i++){const[ax,ay]=pts[i],[bx,by]=pts[i+1];const dx=bx-ax,dy=by-ay;p.segs.push({ax,ay,dx,dy,len2:dx*dx+dy*dy||1})}W.paths.push(p);return p}
 function zonePts(z){if(z.o){const cc=Math.cos(z.ang),ss=Math.sin(z.ang);return[[-1,-1],[1,-1],[1,1],[-1,1]].map(([a,b])=>[z.cx+cc*a*z.hl-ss*b*z.hw,z.cy+ss*a*z.hl+cc*b*z.hw])}return[[z.x,z.y],[z.x+z.w,z.y],[z.x+z.w,z.y+z.h],[z.x,z.y+z.h]]}
-function makePathLoop(pts){const n=pts.length,out=[],curv=[],turn=[];for(let i=0;i<n;i++){const p=pts[(i-1+n)%n],q=pts[i],r=pts[(i+1)%n];const a1=Math.atan2(q[1]-p[1],q[0]-p[0]),a2=Math.atan2(r[1]-q[1],r[0]-q[0]);const am=a1+nA(a2-a1)/2;out.push({x:q[0]-Math.sin(am)*7,y:q[1]+Math.cos(am)*7});curv.push(Math.abs(nA(a2-a1)));turn.push(0)}return{pts:out,turn,curv}}
+function makePathLoop(pts,off=7){const n=pts.length,out=[],curv=[],turn=[];for(let i=0;i<n;i++){const p=pts[(i-1+n)%n],q=pts[i],r=pts[(i+1)%n];const a1=Math.atan2(q[1]-p[1],q[0]-p[0]),a2=Math.atan2(r[1]-q[1],r[0]-q[0]);const am=a1+nA(a2-a1)/2;out.push({x:q[0]-Math.sin(am)*off,y:q[1]+Math.cos(am)*off});curv.push(Math.abs(nA(a2-a1)));turn.push(0)}return{pts:out,turn,curv}}
 function addStop(W,x,y,dir,kind,light,extra=16,list=W.stops){let s;
   if(dir==='E')s={pos:x-extra,a:y,b:y+HW};if(dir==='W')s={pos:x+extra,a:y-HW,b:y};
   if(dir==='S')s={pos:y-extra,a:x-HW,b:x};if(dir==='N')s={pos:y+extra,a:x,b:x+HW};
@@ -350,6 +350,7 @@ function addTrees(W,R,n,box,minD){for(let i=0,tries=0;i<n&&tries<n*40;tries++){c
   W.trees.push({x,y,r:4+(R()*3|0)});W.obst.push({x:x-2,y:y-2,w:4,h:4,type:'tree'});i++}}
 
 function buildPlantel(){
+  HW=14;
   const W=newWorld('plantel',640,480);W.limit=25;
   addRoad(W,'h',40,26,614);addRoad(W,'h',440,26,614);addRoad(W,'v',40,26,454);addRoad(W,'v',600,26,454);
   addRoad(W,'h',240,26,614);addRoad(W,'v',320,26,454);
@@ -374,73 +375,73 @@ function buildPlantel(){
   W.spawn={x:108,y:61,h:0};
   return W}
 
-// Plantel de San José: trazado copiado de la foto aérea (aproximado; ~2.2 unidades por píxel de la foto).
-const SJP={slot:{x:64,y:259},cor:{top:202,end:335}};
+// Plantel de San José: trazado copiado de la foto aérea (aproximado). K = unidades del juego por píxel de la foto;
+// la fila de carros bajo los paneles mide ~40 m (1 unidad ≈ 0,3 m; el plantel queda ~1,3 veces el tamaño real para que se pueda manejar).
+const SJK=1.15,sjq=a=>a.map(([x,y])=>[x*SJK,y*SJK]);
+const SJP={slot:{x:40,y:134},cor:{x:444,top:106,end:240}};
 function buildSanJose(){
-  const W=newWorld('sanjose',920,610);W.limit=25;
-  const way=(pts,o={})=>Object.assign(addPath(W,pts),o);
-  // vía de la derecha (un sentido, al norte; zona de retroceso) y vía superior (un sentido, al oeste)
-  way([[847,606],[847,150]],{oneway:1,noCenter:1,hidden:1});
-  way([[847,152],[845,92],[830,52],[792,30],[740,36],[242,148],[120,160],[0,168]],{oneway:1,noCenter:1});
-  way([[240,229],[700,124],[790,117]],{oneway:1,noCenter:1});            // bajo los paneles (zona azul)
-  way([[775,117],[822,104],[845,88]],{oneway:1,noCenter:1});             // enlace a la vía superior
-  const zz=[[790,117],[812,140],[812,300],[802,342],[776,362],[746,358],[724,338],[700,310],[672,295],[640,292],[606,303],[574,320],[540,328],[505,330],[476,338],[458,356],[452,380]];
-  way(zz,{oneway:1,noCenter:1});                                          // zigzag
-  way([[778,120],[748,190],[712,212],[660,228],[570,247],[495,266],[462,288],[452,320],[452,454]]); // vía interna y arco izquierdo
-  way([[486,488],[590,488]]);way([[418,488],[372,488]]);way([[452,522],[452,606]]);way([[682,580],[682,606]]);way([[774,488],[830,488]]);
-  W.paved.push({x:826,y:150,w:44,h:456,tag:'lanes'});
-  W.paved.push({x:12,y:150,w:232,h:128,tag:'plaza'});
-  W.paved.push({x:775,y:60,w:56,h:60});
-  const mini=addRound(W,452,488,1,{R:34,r:12,arms:{N:true,E:true,S:true,W:true}});
-  const big=addRound(W,682,488,2,{R:92,r:58,arms:{W:true,E:true,S:true}});
-  const s1=addStop(W,790,117,'E','stop',null,18);s1.a=103;s1.b=133;
-  const s2=addStop(W,847,SJP.cor.top,'N','stop',null,0);s2.a=826;s2.b=870;
-  addStop(W,826,488,'E','stop',null,24);
-  W.nodes.push({x:800,y:124,arms:{},n:3});W.nodes.push({x:847,y:488,arms:{},n:3});
-  W.zebras.push(makeZebra('h',540,488));
+  HW=9;const K=SJK;
+  const W=newWorld('sanjose',Math.round(405*K),Math.round(320*K));W.limit=25;
+  const way=(pts,o={})=>Object.assign(addPath(W,sjq(pts)),o);
+  // vía de la derecha (al norte; retroceso de 40 m) y vía superior (al oeste, regreso al parqueo)
+  way([[386,300],[386,60]],{oneway:1,noCenter:1,hidden:1});
+  way([[386,61],[386,45],[377,28],[360,18],[340,16],[250,34],[110,64],[0,76]],{oneway:1,noCenter:1});
+  way([[115,104],[335,60],[352,58]],{oneway:1,noCenter:1});              // fila de carros bajo los paneles (40 m)
+  way([[343,59],[362,52],[380,40]],{oneway:1,noCenter:1});               // enlace a la vía superior
+  const zzO=[[348,58],[366,72],[366,140],[360,158],[347,166],[332,160],[318,146],[300,135],[282,134],[264,142],[246,150],[228,152],[214,162],[208,180],[210,198],[222,222]];
+  way(zzO,{oneway:1,noCenter:1});                                         // zigzag
+  way([[222,222],[264,222]]);                                             // brazo único de la rotonda
+  way([[222,222],[222,262],[236,284],[262,290],[386,290]],{oneway:1,noCenter:1}); // vía de abajo
+  W.paved.push({x:375*K,y:60*K,w:22*K,h:240*K,tag:'lanes'});
+  W.paved.push({x:6,y:72,w:120,h:80,tag:'plaza'});
+  W.paved.push({x:345*K,y:22*K,w:42*K,h:40*K});
+  const rd=addRound(W,310*K,222*K,2,{R:46*K,r:29*K,arms:{W:true}});rd.lap=true;
+  const sA=addStop(W,SJP.cor.x,SJP.cor.top,'N','stop',null,0);sA.a=375*K;sA.b=397*K;
+  addStop(W,375*K,290*K,'E','stop',null,6);
+  W.nodes.push({x:222*K,y:222*K,arms:{},n:3});W.nodes.push({x:386*K,y:290*K,arms:{},n:3});W.nodes.push({x:358*K,y:62*K,arms:{},n:3});
+  W.zebras.push(makeZebra('h',320*K,290*K));
   // marquesina de paneles solares (sólida)
-  W.canopy=[260,184,720,82];{const[a,b,e,f]=W.canopy,L=Math.hypot(e-a,f-b);for(let k=0;k<=L;k+=8)W.circObs.push({x:a+(e-a)*k/L,y:b+(f-b)*k/L,r:12,type:'bld'})}
-  const B=(b)=>{W.obst.push(b);W.blds.push(b)};
-  B({x:0,y:0,w:170,h:70,type:'bld',col:'#b23a3a',roof:'#8b1e1e'});
-  B({x:570,y:170,w:130,h:26,type:'bld',col:'#e6e6e6',roof:'#d0d0d0',label:'EDUCACION VIAL'});
-  B({x:455,y:196,w:100,h:26,type:'bld',col:'#e6e6e6',roof:'#d0d0d0'});
-  B({x:280,y:262,w:150,h:60,type:'bld',col:'#ededed',roof:'#dadada',label:'OFICINAS'});
-  B({x:300,y:322,w:120,h:130,type:'bld',col:'#ededed',roof:'#dadada'});
-  B({x:176,y:196,w:22,h:42,type:'bld',col:'#cfcfcf',roof:'#b9b9b9'});
-  B({x:796,y:400,w:16,h:14,type:'bld',col:'#e9c46a',roof:'#bc4749'});
-  B({x:446,y:482,w:12,h:12,type:'bld',col:'#e9c46a',roof:'#bc4749'});
-  const cone=(x,y)=>W.cones.push({x,y,vx:0,vy:0,hit:false});
-  // conos del zigzag (solo donde no estorban otra vía)
-  for(let i=3;i<zz.length-3;i++){const[a,b]=[zz[i],zz[i+1]];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;
-    for(let t=0;t<L;t+=13){const x=a[0]+ux*t,y=a[1]+uy*t;for(const sd of[1,-1]){const cx=x-sd*uy*(HW+2),cy=y+sd*ux*(HW+2);if(!pavedW(W,cx,cy))cone(cx,cy)}}}
-  for(let i=0;i<14;i++){const a=i/14*Math.PI*2+.2;cone(big.x+Math.cos(a)*(big.r+2),big.y+Math.sin(a)*(big.r+2))}
-  // pasillo de retroceso (cuadro rojo): conos a ambos lados del carril
-  for(let y=SJP.cor.top+12;y<=SJP.cor.end;y+=12){cone(831,y);cone(863,y)}
-  // parqueo hacia atrás (círculo rojo): 6 espacios, los 4 primeros con conos en las líneas
-  for(let i=0;i<6;i++){const x=40+16*i;W.slots.push({x,y:246,w:16,h:26});
-    if(i>=4){const cx=x+8,cy=259,h=-Math.PI/2,type=i===4?'sedan':'suv';W.parked.push({x:cx,y:cy,h,col:i===4?'#c0392b':'#2e86de',type});for(const q of circles({x:cx,y:cy,h,L:VEH[type].L,Wd:VEH[type].Wd}))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'})}}
-  for(let i=0;i<=4;i++)for(const y of[249,259,269])cone(40+16*i,y);
-  addTrees(W,rng(21),55,{x:0,y:0,w:920,h:610},12);
-  spawnOnLoop(W,makePathLoop([[240,229],[700,124],[775,116],[822,104],[842,80],[828,50],[792,30],[740,36],[242,148],[215,160],[232,215]]),2,22);
-  W.spawn={x:290,y:217,h:Math.atan2(-104,460)};
+  W.canopy=[130*K,79*K,340*K,33*K];{const[a,b,e,f]=W.canopy,L=Math.hypot(e-a,f-b);for(let k=0;k<=L;k+=5)W.circObs.push({x:a+(e-a)*k/L,y:b+(f-b)*k/L,r:7,type:'bld'})}
+  const B=(x0,y0,x1,y1,o={})=>{const b=Object.assign({x:x0*K,y:y0*K,w:(x1-x0)*K,h:(y1-y0)*K,type:'bld',col:'#ececec',roof:'#d6d6d6'},o);W.obst.push(b);W.blds.push(b)};
+  B(0,0,80,35,{col:'#b23a3a',roof:'#8b1e1e'});
+  B(205,98,250,112);B(258,88,325,100,{label:'EDUCACION VIAL'});
+  B(140,120,196,215,{label:'OFICINAS'});B(150,215,212,255);
+  B(250,302,340,318);
+  B(257,170,269,182,{col:'#e9c46a',roof:'#bc4749'});B(364,184,376,196,{col:'#e9c46a',roof:'#bc4749'});
+  W.blds.push(Object.assign({x:104,y:96,w:12,h:34,type:'bld',col:'#cfcfcf',roof:'#b9b9b9'}));W.obst.push(W.blds[W.blds.length-1]);
+  const cone=(x,y,o={})=>W.cones.push(Object.assign({x,y,vx:0,vy:0,hit:false},o));
+  // zigzag: muchos conos a ambos lados (−12 cada uno)
+  const zz=sjq(zzO);
+  for(let i=1;i<zz.length-2;i++){const[a,b]=[zz[i],zz[i+1]];const L=Math.hypot(b[0]-a[0],b[1]-a[1]);const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;
+    for(let t=0;t<L;t+=8){const x=a[0]+ux*t,y=a[1]+uy*t;for(const sd of[1,-1]){const cx=x-sd*uy*(HW+1.5),cy=y+sd*ux*(HW+1.5);if(!pavedW(W,cx,cy)&&!W.cones.some(k=>Math.hypot(k.x-cx,k.y-cy)<5))cone(cx,cy)}}}
+  for(let i=0;i<12;i++){const a=i/12*Math.PI*2+.2;cone(rd.x+Math.cos(a)*(rd.r+2),rd.y+Math.sin(a)*(rd.r+2))}
+  // retroceso (cuadro rojo): pasillo de conos en la vía de la derecha
+  for(let y=SJP.cor.top+10;y<=SJP.cor.end;y+=12){cone(SJP.cor.x-11,y);cone(SJP.cor.x+11,y)}
+  // parqueo hacia atrás (círculo rojo): 4 espacios con conos en las líneas (tocar uno = prueba perdida) y uno ocupado
+  for(let i=0;i<5;i++){const x=16+16*i;W.slots.push({x,y:124,w:16,h:20});
+    if(i===4){const cx=x+8,cy=134,h=-Math.PI/2;W.parked.push({x:cx,y:cy,h,col:'#c0392b',type:'sedan'});for(const q of circles({x:cx,y:cy,h,L:VEH.sedan.L,Wd:VEH.sedan.Wd}))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'})}}
+  for(let i=0;i<=4;i++)for(const y of[126,134,142])cone(16+16*i,y,{fatal:1});
+  addTrees(W,rng(21),30,{x:0,y:0,w:W.w,h:W.h},9);
+  spawnOnLoop(W,makePathLoop(sjq([[115,104],[335,60],[345,59],[362,52],[380,40],[377,28],[360,18],[340,16],[250,34],[112,64],[104,72],[108,94]]),0),1,20);
+  W.spawn={x:160*K,y:96*K,h:Math.atan2(-44,220)};
   return W}
-function sjTasks(){const T=SJP.slot,C=SJP.cor;
-  const exitTask=(txt,tgt,want)=>({txt,tgt,start(){S.lastExit=null},check(){if(!S.lastExit)return false;const e=S.lastExit;S.lastExit=null;if(e.exit!==want)fault('exit','Tomó una salida equivocada en la rotonda','III',2);return true}});
+function sjTasks(){const T=SJP.slot,C=SJP.cor,K=SJK;
   return[
-  {txt:'ZONA AZUL: póngase el cinturón [C] y avance bajo los paneles solares. Haga ALTO al final, direccional DERECHA y entre al zigzag.',tgt:{x:812,y:170},check(){const P=S.P;return P.x>796&&P.x<828&&P.y>165&&P.y<300}},
-  {txt:'ZIGZAG: recorra la curva en S entre los conos sin tocarlos, hasta la mini rotonda.',tgt:{x:640,y:292},check(){const P=S.P;if(P.x<660&&P.y>280)this.tgt={x:452,y:420};return P.x<470&&P.y>395&&P.y<450}},
-  exitTask('MINI ROTONDA (caseta): ceda el paso y tome la 3ª SALIDA (ESTE). Direccional IZQ. al circular y DER. al salir.',{x:540,y:495},'E'),
-  exitTask('ROTONDA GRANDE (con conos): ceda el paso y tome la 2ª SALIDA (ESTE). Direccional IZQ. al circular y DER. al salir.',{x:800,y:495},'E'),
-  {txt:'Haga ALTO antes de la vía de la derecha, direccional IZQUIERDA y doble al NORTE.',tgt:{x:847,y:440},check(){const P=S.P;return P.x>828&&P.y<450}},
-  {txt:'RETROCESO: avance entre los conos hasta la línea de ALTO y deténgase. Luego retroceda en línea recta hasta la línea amarilla.',tgt:{x:847,y:212},zone:{x:833,y:C.top,w:28,h:C.end-C.top},ok:'¡Retroceso completado!',
-   check(){const P=S.P;const inC=P.x>829&&P.x<865&&P.y>C.top-6&&P.y<C.end+10;
-     if(!this.ph){if(inC&&P.y<C.top+20&&Math.abs(P.v)<.5){this.ph=1;this.tgt={x:847,y:C.end};toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto hasta la línea amarilla','info')}return false}
+  {txt:'FILA DE CARROS: póngase el cinturón [C] y avance por la fila bajo los paneles. Al final ponga direccional DERECHA y entre al zigzag.',tgt:{x:366*K,y:80*K},check(){const P=S.P;return P.x>358*K&&P.x<375*K&&P.y>78*K&&P.y<150*K}},
+  {txt:'ZIGZAG: recórralo entre los conos sin tocarlos (cada cono = −12 puntos).',tgt:{x:300*K,y:135*K},check(){const P=S.P;if(P.x<300*K&&P.y>120*K)this.tgt={x:212*K,y:195*K};return P.x<232*K&&P.y>185*K&&P.y<212*K}},
+  {txt:'ROTONDA: direccional IZQUIERDA y doble hacia la rotonda. Ceda el paso, dé UNA VUELTA COMPLETA (direccional izq.) y salga por la misma salida (direccional der.).',tgt:{x:262*K,y:226*K},start(){S.lastExit=null},
+   check(){if(!S.lastExit)return false;const e=S.lastExit;S.lastExit=null;if(e.trav<4.6)fault('lap','No dio la vuelta completa a la rotonda','III',2);return true}},
+  {txt:'En el cruce doble a la IZQUIERDA (sur), siga por la vía de abajo, haga ALTO y doble a la IZQUIERDA (norte).',tgt:{x:386*K,y:280*K},check(){const P=S.P;if(P.y>275*K)this.tgt={x:386*K,y:280*K};return P.x>376*K&&P.y<282*K}},
+  {txt:'RETROCESO (40 m): avance entre los conos hasta la línea de ALTO y deténgase. Luego retroceda en línea recta hasta la línea amarilla.',tgt:{x:C.x,y:C.top+8},zone:{x:C.x-10,y:C.top,w:20,h:C.end-C.top},ok:'¡Retroceso completado!',
+   check(){const P=S.P;const inC=Math.abs(P.x-C.x)<14&&P.y>C.top-6&&P.y<C.end+10;
+     if(!this.ph){if(inC&&P.y<C.top+16&&Math.abs(P.v)<.5){this.ph=1;this.tgt={x:C.x,y:C.end};toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto hasta la línea amarilla','info')}return false}
      if(inC&&P.gear===-1){if(P.v<-1)this.mv=true;if(this.mv&&Math.abs(P.v)<.3){this.st=(this.st||0)+S.dt;if(this.st>1&&!this.fl){this.fl=1;fault('rstop','Detenerse durante el retroceso','IV')}}else this.st=0}
      if(P.y>C.end){if(P.gear===1)fault('rnoret','No realizó el retroceso en reversa','III');return true}}},
-  {txt:'PARQUEO (de último): suba al norte (ALTO otra vez), tome la vía superior al OESTE y estaciónese HACIA ATRÁS en el espacio amarillo con conos.',tgt:{x:T.x,y:T.y},zone:{x:T.x-8,y:T.y-13,w:16,h:26},ok:'¡Parqueo hacia atrás correcto!',
-   check(){const P=S.P;return still('sjp',Math.abs(P.x-T.x)<3.2&&Math.abs(P.y-T.y)<5&&Math.cos(P.h+Math.PI/2)>.92,1.2)}}]}
+  {txt:'PARQUEO (de último): suba (ALTO otra vez), tome la vía de arriba al OESTE y estaciónese HACIA ATRÁS en el espacio amarillo. ¡Tocar un cono aquí pierde la prueba!',tgt:{x:T.x,y:T.y},zone:{x:T.x-8,y:T.y-10,w:16,h:20},ok:'¡Parqueo hacia atrás correcto!',
+   check(){const P=S.P;return still('sjp',Math.abs(P.x-T.x)<3.2&&Math.abs(P.y-T.y)<4&&Math.cos(P.h+Math.PI/2)>.92,1.2)}}]}
 
 function buildCity(){
+  HW=14;
   const W=newWorld('city',1040,800);W.limit=40;
   const xs=[60,300,540,780,980],ys=[60,280,500,740];
   for(const y of ys)addRoad(W,'h',y,46,994);for(const x of xs)addRoad(W,'v',x,46,754);
@@ -535,14 +536,14 @@ function renderBG(W){
     ptext(x,'PARQUEO',398,92,WH);
     for(let i=0;i<W.w;i+=3){px(i,1,'#bbb');px(i,W.h-2,'#bbb')}for(let i=0;i<W.h;i+=3){px(1,i,'#bbb');px(W.w-2,i,'#bbb')}
   }else if(W.kind==='city'){ptext(x,'PARQUEO PUBLICO',851,518,WH)}
-  else if(W.kind==='sanjose'){
-    {const[a,b,e,f]=W.canopy,ca=Math.atan2(f-b,e-a),cl=Math.hypot(e-a,f-b);x.save();x.translate(a,b);x.rotate(ca);x.fillStyle='rgba(0,0,0,.3)';x.fillRect(-4,-8,cl+10,24);x.fillStyle='#ececec';x.fillRect(-8,-13,cl+16,26);x.fillStyle='#1f3f8f';x.fillRect(34,-11,cl-30,22);x.fillStyle='#5b80d4';for(let i=34;i<cl+4;i+=6)x.fillRect(i,-11,1,22);for(let j=-11;j<11;j+=5)x.fillRect(34,j,cl-30,1);x.restore()}
-    const uy=X=>228.5-.2261*(X-240);x.fillStyle='rgba(42,90,200,.42)';x.beginPath();x.moveTo(256,uy(256)-13);x.lineTo(420,uy(420)-13);x.lineTo(420,uy(420)+13);x.lineTo(256,uy(256)+13);x.fill();ptext(x,'ZONA AZUL',305,uy(330)-3,'#bfe0ff');
-    x.fillStyle=WH;x.fillRect(826,150,1,456);x.fillRect(869,150,1,456);for(let y=SJP.cor.top+6;y<604;y+=10)x.fillRect(847,y,1,5);
-    for(let y0=152;y0<600;y0+=9)for(let k=0;k<26;k++)px(872+k,y0+(k>>1),WH);x.fillStyle=WH;x.fillRect(871,150,1,456);x.fillRect(898,150,1,456);
-    x.fillStyle=YE;x.fillRect(833,SJP.cor.end,28,2);ptext(x,'RETRO',842,SJP.cor.end-40,WH,2);
-    const T=SJP.slot;x.fillStyle=YE;x.fillRect(T.x-7,T.y+11,15,2);x.fillRect(T.x-7,T.y-13,1,26);x.fillRect(T.x+7,T.y-13,1,26);
-    ptext(x,'PARQUEO',44,236,WH);ptext(x,'ZIGZAG',612,268,WH);ptext(x,'SALIDA',8,176,WH)}
+  else if(W.kind==='sanjose'){const K=SJK;
+    {const[a,b,e,f]=W.canopy,ca=Math.atan2(f-b,e-a),cl=Math.hypot(e-a,f-b);x.save();x.translate(a,b);x.rotate(ca);x.fillStyle='rgba(0,0,0,.3)';x.fillRect(-3,-5,cl+6,14);x.fillStyle='#ececec';x.fillRect(-6,-8,cl+12,16);x.fillStyle='#1f3f8f';x.fillRect(24,-7,cl-22,14);x.fillStyle='#5b80d4';for(let i=24;i<cl+2;i+=5)x.fillRect(i,-7,1,14);for(let j=-7;j<7;j+=4)x.fillRect(24,j,cl-22,1);x.restore()}
+    const uy=X=>(104-.2*(X/K-115))*K;x.fillStyle='rgba(42,90,200,.42)';x.beginPath();x.moveTo(150*K,uy(150*K)-8);x.lineTo(330*K,uy(330*K)-8);x.lineTo(330*K,uy(330*K)+8);x.lineTo(150*K,uy(150*K)+8);x.fill();ptext(x,'FILA DE CARROS 40M',190*K,uy(240*K)-3,'#bfe0ff');
+    const x0=375*K,x1=397*K;x.fillStyle=WH;x.fillRect(x0,60*K,1,240*K);x.fillRect(x1,60*K,1,240*K);
+    for(let y0=62*K;y0<298*K;y0+=8)for(let k=0;k<12;k++)px(Math.round(x1+2+k),Math.round(y0+k*.6),WH);
+    x.fillStyle=YE;x.fillRect(SJP.cor.x-10,SJP.cor.end,20,2);ptext(x,'RETRO',SJP.cor.x-3,SJP.cor.end-36,WH,2);
+    const T=SJP.slot;x.fillStyle=YE;x.fillRect(T.x-7,T.y+8,15,2);x.fillRect(T.x-7,T.y-10,1,20);x.fillRect(T.x+7,T.y-10,1,20);
+    ptext(x,'PARQUEO',18,114,WH);ptext(x,'ZIGZAG',280*K,152*K,WH)}
   for(const rl of W.rails){const L=rl.o==='v'?W.h:W.w;
     for(let t=0;t<L;t+=4){const X=rl.o==='v'?rl.pos:t,Y=rl.o==='v'?t:rl.pos;if(!pavedW(W,X,Y)){x.fillStyle='#4a3626';if(rl.o==='v')x.fillRect(rl.pos-6,t,12,2);else x.fillRect(t,rl.pos-6,2,12)}}
     x.fillStyle='#c9c9d4';if(rl.o==='v'){x.fillRect(rl.pos-4,0,1,W.h);x.fillRect(rl.pos+3,0,1,W.h)}else{x.fillRect(0,rl.pos-4,W.w,1);x.fillRect(0,rl.pos+3,W.w,1)}
@@ -846,7 +847,7 @@ function updatePlayer(W,P,dt){
     for(const o of W.circObs){if(Math.abs(o.x-P.x)>14||Math.abs(o.y-P.y)>14)continue;for(const c of circles(P)){const dx=c.x-o.x,dy=c.y-o.y,d=Math.hypot(dx,dy),m=c.r+o.r;if(d<m&&d>.01){P.x+=dx/d*(m-d);P.y+=dy/d*(m-d);hit=o}}}}
   if(hit){P.v*=-.15;if(spd>2){if(spd>48)fatal('Choque fuerte a alta velocidad');else fault('crash',hit.type==='car'?'Golpear un vehículo estacionado':hit.type==='fence'?'Chocar contra la malla':'Chocar contra un obstáculo','I',3);sfx.crash()}}
   P.x=clamp(P.x,6,W.w-6);P.y=clamp(P.y,6,W.h-6);
-  for(const k of W.cones){for(const c of circles(P)){const dx=k.x-c.x,dy=k.y-c.y,d=Math.hypot(dx,dy);if(d<c.r+2&&d>0){k.x+=dx/d*(c.r+2-d);k.y+=dy/d*(c.r+2-d);k.vx+=dx/d*Math.abs(P.v)*.6;k.vy+=dy/d*Math.abs(P.v)*.6;if(!k.hit){k.hit=true;fault('cone'+W.cones.indexOf(k),'Tocar o botar un cono (baliza)','II',99)}}}}
+  for(const k of W.cones){for(const c of circles(P)){const dx=k.x-c.x,dy=k.y-c.y,d=Math.hypot(dx,dy);if(d<c.r+2&&d>0){k.x+=dx/d*(c.r+2-d);k.y+=dy/d*(c.r+2-d);k.vx+=dx/d*Math.abs(P.v)*.6;k.vy+=dy/d*Math.abs(P.v)*.6;if(!k.hit){k.hit=true;if(k.fatal)fatal('Tocó un cono en el parqueo: prueba perdida');else fault('cone'+W.cones.indexOf(k),'Tocar o botar un cono (baliza)','II',99)}}}}
   for(const o of W.ai.concat(W.ringCars)){if(Math.abs(o.x-P.x)>30||Math.abs(o.y-P.y)>30)continue;let pushed=false;
     for(const a of circles(P))for(const b of circles(o)){const dx=a.x-b.x,dy=a.y-b.y,d=Math.hypot(dx,dy),m=a.r+b.r;if(d<m&&d>0){P.x+=dx/d*(m-d)*.6;P.y+=dy/d*(m-d)*.6;pushed=true}}
     if(pushed){const rel=Math.abs(P.v)+o.v*.5;P.v*=-.2;o.v=0;o.stun=1.2;if(rel>3)anger(o,true);if(rel>40)fatal('Choque fuerte contra otro vehículo');else if(rel>2){fault('carhit','Colisión con otro vehículo','I',3);sfx.crash()}}}
