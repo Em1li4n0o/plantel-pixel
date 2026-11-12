@@ -40,10 +40,14 @@ y entre a http://localhost:8080
 - **Celular / tablet**: botones en pantalla (volante, pedales, direccionales, pito, vista, freno de mano). Se juega en horizontal.
 
 - **Examen teórico**: banco de práctica con explicaciones, examen de 40 preguntas en 50 minutos (nota mínima 70) y repaso de errores. Las preguntas son propias, no el banco oficial.
-- **Menú**: 1 examen teórico · 2 planteles oficiales · 3 prueba en calle · 4 manejo libre; abajo: 0 tutorial · 5 progreso · 6 licencia · 7 garaje · 8 reglas.
+- **Menú**: 1 examen teórico · 2 planteles oficiales · 3 rutas emblemáticas · 4 prueba en calle · 5 manejo libre; abajo: 0 tutorial · 6 progreso · 7 licencia · 8 garaje · 9 reglas.
+- **Rutas emblemáticas**:
+  - **Centro de San José**: cuadrícula real de avenidas y calles (Av. 7 a Av. 10, Calle 12 a Calle 15) con sus sentidos de UNA VÍA tomados de OpenStreetMap, bulevares peatonales de Avenida Central y Avenida 4, Paseo de los Estudiantes, Teatro Nacional, Plaza de la Cultura, Catedral, Parque Central, Mercado Central, Correos, Banco Central, Parque Morazán, Plaza de la Democracia y Museo Nacional. Recorrido guiado de 10 tareas; circular en contravía es falta grave.
+  - **Ruta 27** (resumida): rampa de Escazú, autopista de dos carriles por sentido con curvas, peajes de Escazú, San Rafael y Atenas (hay que detenerse a pagar) y salida a Atenas.
+  - Mapa del centro: © colaboradores de OpenStreetMap, licencia ODbL.
 - **Planteles oficiales**: solo se incluyen planteles reales. Hoy está San José; Heredia, Alajuela, Cartago, Limón, Liberia, Puntarenas y Pérez Zeledón aparecen como “próximamente”. El plantel inventado ya no está en el menú (su mapa solo se usa para el tutorial).
 - **Plantel San José**: trazado copiado de la foto aérea (aproximado): fila de carros de 40 m bajo los paneles solares, zigzag en diagonal con hileras de conos alternadas (−12 cada uno), rotonda con vuelta completa y una sola salida al sur que sube a la vía de la derecha (2 carriles), retroceso de 40 m y, de último, parqueo hacia atrás en uno de 4 espacios de la plazoleta de la entrada (tocar un cono ahí pierde la prueba).
-- **Mi progreso (5)**: el simulador guarda cada intento (nota, faltas, duración). El alumno genera un código de reporte y lo envía a su instructor (copiar o compartir por WhatsApp).
+- **Mi progreso (6)**: el simulador guarda cada intento (nota, faltas, duración). El alumno genera un código de reporte y lo envía a su instructor (copiar o compartir por WhatsApp).
 - **Panel del instructor** (`instructor.html`): el instructor pega los códigos y ve a todos sus alumnos: mejores notas por prueba, estado (listo / en progreso / necesita práctica), evolución de notas, faltas más repetidas, temas del teórico con más errores e historial de intentos. Exporta a CSV. Los datos quedan solo en el navegador del instructor (sin servidor).
 - **Licencia pixel**: se gana al aprobar teórico, plantel y prueba en calle.
 - **Vista de piloto** (tecla V) en primera persona.
