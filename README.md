@@ -47,6 +47,7 @@ y entre a http://localhost:8080
 - **Voz**: el instructor lee cada tarea y anuncia las faltas (voz del navegador en español). Radio con locutor, música, consejos viales, reportes de tránsito y anuncios de Pulzar.
 - **Repetición de faltas**: al terminar una prueba, VER REPETICIÓN muestra los segundos antes de cada falta desde arriba, con los carros alrededor.
 - **Reto del día**: un reto distinto cada día con racha de días seguidos (se ve en el menú).
+- **Modo arcade** (garaje, solo manejo libre): hiperdeportivo, muscle car, rally 4x4, kart, monster truck y tuner, con TURBO (Shift), sin multas y choques que rebotan y mandan a volar a los otros carros.
 - **Policía de tránsito** (manejo libre): con 4 infracciones en 90 segundos llega una patrulla con sirena que lo alcanza y lo detiene, con diálogo del oficial y −300 puntos.
 
 - **Tutorial (0)**: enseña los controles paso a paso (cinturón, pedales, volante, direccionales, reversa, freno de mano, marcha baja, bocina, vistas y espejos).
@@ -58,6 +59,7 @@ y entre a http://localhost:8080
   - **Centro de San José**: cuadrícula real de avenidas y calles (Av. 7 a Av. 10, Calle 12 a Calle 15) con sus sentidos de UNA VÍA tomados de OpenStreetMap, bulevares peatonales de Avenida Central y Avenida 4, Paseo de los Estudiantes, Teatro Nacional, Plaza de la Cultura, Catedral, Parque Central, Mercado Central, Correos, Banco Central, Parque Morazán, Plaza de la Democracia y Museo Nacional. Recorrido guiado de 10 tareas; circular en contravía es falta grave.
   - El centro tiene edificios emblemáticos en 3D en su cuadra real: Teatro Nacional (columnas, estatuas y bandera), Gran Hotel, Teatro Melico Salazar, Catedral con cúpula, kiosco del Parque Central, Templo de la Música, Mercado Central y Mercado Borbón con puestos, Correos, torres del Banco Nacional y del Banco Central, La Caja (CCSS), INS, Edificio Metálico, Parque España, Casa Amarilla, Asamblea Legislativa con el Castillo Azul, Museo Nacional con sus almenas e Iglesia de La Merced. Además: torre Pulzar Solutions, vallas Pulzar, palomas que vuelan al acercarse, motos y bicicletas en el tráfico.
   - **San José libre**: el mismo centro sin examen; destinos emblemáticos, se puede caminar y viajar por el mapa.
+  - **Ruta 32 · Braulio Carrillo** (resumida): carretera de montaña con curvas de verdad, doble raya amarilla (invadir el carril contrario es falta), subida del 7 % al Zurquí, túnel con luces (entrar sin luces es falta), neblina, bajada del 10 % donde hay que compresionar con marcha baja, puente del Río Sucio (agua amarilla junto a la oscura), camiones de carga y llegada a Guápiles.
   - **Ruta 27** (resumida): rampa de Escazú, autopista de dos carriles por sentido con curvas, peajes de Escazú, San Rafael y Atenas (hay que detenerse a pagar) y salida a Atenas.
   - Mapa del centro: © colaboradores de OpenStreetMap, licencia ODbL.
 - **Planteles oficiales**: solo se incluyen planteles reales. Hoy está San José; Heredia, Alajuela, Cartago, Limón, Liberia, Puntarenas y Pérez Zeledón aparecen como “próximamente”. El plantel inventado ya no está en el menú (su mapa solo se usa para el tutorial).
