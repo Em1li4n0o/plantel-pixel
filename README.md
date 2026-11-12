@@ -24,7 +24,7 @@ y entre a http://localhost:8080
 | C | Cinturón (en moto o bici: casco), con el vehículo detenido |
 | T | Bajarse del vehículo / subirse (manejo libre y rutas). A pie: WASD caminar, Espacio o Shift correr |
 | Espacio | Freno de mano |
-| V | Vista de piloto |
+| V | Cambia la vista: desde arriba → piloto (primera persona) → desde atrás del carro |
 | Z / X | (Piloto) mirar a la izquierda / derecha: espejos laterales |
 | F | (Piloto) mirar hacia arriba; también se inclina sola al detenerse en un semáforo |
 | B | Pitar (solo para evitar accidentes; nunca en zona escolar) |
@@ -48,6 +48,8 @@ y entre a http://localhost:8080
 - **Repetición de faltas**: al terminar una prueba, VER REPETICIÓN muestra los segundos antes de cada falta desde arriba, con los carros alrededor.
 - **Reto del día**: un reto distinto cada día con racha de días seguidos (se ve en el menú).
 - **Modo arcade** (garaje, solo manejo libre): hiperdeportivo, muscle car, rally 4x4, kart, monster truck y tuner, con TURBO (Shift), sin multas y choques que rebotan y mandan a volar a los otros carros.
+- **Relieve en 3D**: la Ruta 32 y la ciudad tienen terreno con alturas reales: cerros, subidas, bajadas y el valle del río bajo el puente se ven en la vista de piloto y desde atrás; el mapa de arriba tiene sombreado de relieve.
+- **Carros en 3D** con llantas, bumpers, espejos y parabrisas inclinado; más tráfico en la ciudad y el centro.
 - **Policía de tránsito** (manejo libre): con 4 infracciones en 90 segundos llega una patrulla con sirena que lo alcanza y lo detiene, con diálogo del oficial y −300 puntos.
 
 - **Tutorial (0)**: enseña los controles paso a paso (cinturón, pedales, volante, direccionales, reversa, freno de mano, marcha baja, bocina, vistas y espejos).
