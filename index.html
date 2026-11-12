@@ -55,6 +55,8 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .toast.good{background:#0d5a32;box-shadow:inset 0 0 0 calc(var(--u)*1) var(--good)}
 .toast.info{background:#0d3a5a;box-shadow:inset 0 0 0 calc(var(--u)*1) var(--info)}
 .toast b{display:block;margin-bottom:calc(var(--u)*1.5)}
+#evBox{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:calc(var(--u)*300);max-height:92%;overflow-y:auto;background:rgba(12,12,28,.95);border:calc(var(--u)*1) solid #ffd23f;padding:calc(var(--u)*5);font-size:calc(var(--u)*4.2);line-height:1.5;pointer-events:auto;z-index:30;text-align:left}
+#evBox p{margin:calc(var(--u)*2) 0}#evBox button{display:block;width:100%;text-align:left;margin:calc(var(--u)*2) 0;font-size:calc(var(--u)*3.8);padding:calc(var(--u)*2.5);min-width:0;line-height:1.4}
 #dlg{position:absolute;left:50%;bottom:calc(var(--u)*40);transform:translateX(-50%);width:calc(var(--u)*210);background:#fff8e7;color:#222;border:calc(var(--u)*1) solid #000;box-shadow:0 calc(var(--u)*1.5) 0 #000;padding:calc(var(--u)*3);font-size:calc(var(--u)*3.8);line-height:1.35;pointer-events:auto;cursor:pointer}#dlg b{color:#b8341b}#dlg small{display:block;color:#777;font-size:.75em;margin-top:calc(var(--u)*1)}
 #banner{position:absolute;left:50%;bottom:calc(var(--u)*36);transform:translateX(-50%);color:var(--bad);font-size:calc(var(--u)*5);text-shadow:calc(var(--u)*1) calc(var(--u)*1) 0 #000;white-space:nowrap}
 #keys{position:absolute;left:50%;bottom:calc(var(--u)*1);transform:translateX(-50%);font-size:calc(var(--u)*2.4);color:#ccc;text-shadow:calc(var(--u)*.6) calc(var(--u)*.6) 0 #000;white-space:nowrap}
@@ -163,6 +165,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <div id="toasts"></div>
     <div id="banner"></div>
     <div id="dlg" class="hidden"></div>
+    <div id="evBox" class="hidden"></div>
     <div id="keys">WASD manejar · S freno (otro toque = reversa) · Q/E direccionales · H intermitentes · C cinturón · B pitar · G marcha baja · V vista piloto (Z/X lados · F arriba) · T bajarse/subirse · ARRASTRE mirar alrededor · SHIFT turbo (arcade) · L luces · O radio · I voz del instructor · ESPACIO freno de mano · P pausa · M mapa · +/- zoom · N sonido · R reiniciar</div>
   </div>
 
@@ -1579,7 +1582,7 @@ function renderBG(W){
   }
   for(const r of W.roads)if(r.ow)for(let t=r.a+70;t<r.b-40;t+=150){if(W.nodes.some(n=>Math.abs((r.o==='h'?n.x:n.y)-t)<40&&(r.o==='h'?n.y:n.x)===r.c))continue;
     for(const off of[-7,7]){const[ax,ay]=r.o==='h'?[t,r.c+off]:[r.c+off,t];arrowPx(x,ax,ay,r.o==='h'?r.ow:0,r.o==='v'?r.ow:0,WH)}}
-  if(W.drawExtra)W.drawExtra(x);
+  if(W.drawExtra)W.drawExtra(x);evDraw2D(x,W);
   if(W.labels)for(const l of W.labels)ptext(x,l.t,Math.round(l.x),Math.round(l.y),l.col||'#f2f2f2',l.rot||0);
   for(const b of W.blds){if(b.parts){b.ht=b.H;parts2D(x,b);continue}if(b.H){b.ht=b.H;bld2D(x,b);continue}
     b.ht=b.tower?96:b.booth?7:b.pillar?8:b.house?9:b.pulzar?16:b.label==='GRADERIAS'?6:12+((b.x*7+b.y*13)%22);
@@ -1653,7 +1656,7 @@ const MODES={manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERT
 for(const k in SEDES){MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';MNAME['pl_'+k]='PLANTEL '+SEDES[k].n}
 function start(mode){
   logDrive();ARCOK=mode==='city'||mode==='sjlibre'||mode==='alajuela';MODE_NOW=mode;
-  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
+  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();if(mode==='city')addEvents(W,['llanta','derrape','hidro','varado','nino']);if(mode==='sjlibre')addEvents(W,['llanta','varado','nino','hidro']);if(mode==='alajuela')addEvents(W,['llanta','varado','hidro','nino']);W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city'&&mode!=='sjlibre'&&mode!=='alajuela',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);S.chase=S.fp&&store.get('pp_chase',false);S.camH=S.P.h;S.zoom=store.get('pp_zoom',1.5);S.mapOpen=false;
   S.tasks=mode==='tuto'?tutoTasks():(mode==='plantel'||mode.startsWith('pl_'))?plantelTasks():mode.startsWith('of_')?oficialTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
@@ -2201,6 +2204,9 @@ function drawWorld(W,P,ix,iy,t){
   if(S&&S.cop&&S.W===W){const C=S.cop,fl=Math.floor(t*8)%2===0;g.fillStyle=fl?'rgba(47,107,255,.28)':'rgba(255,42,74,.28)';g.fillRect(X(C.x)-12,Y(C.y)-12,24,24);drawCar(g,C.x,C.y,C.h,C.col,{on:fl,brake:C.arrest},ix,iy,'police')}
   if(P&&P.hornT>0){P.hornT-=1/60;const sx=X(P.x),sy=Y(P.y)-16;g.fillStyle='#000';g.fillRect(sx-12,sy-1,25,9);g.fillStyle='#fff';g.fillRect(sx-11,sy,23,7);ptext(g,'PIII!',sx-9,sy+1,'#1b4965')}
   if(P&&!(S&&S.respawn>0&&blinkOn))drawCar(g,P.x,P.y,P.h,P.col,{boost:P.boost&&Math.floor(t*20)%2,brake:P.brake,rev:P.gear===-1,bl:P.blinkL||P.haz,br:P.blinkR||P.haz,on:blinkOn},ix,iy,P.type);
+  if(S&&S.W===W&&S.ev&&S.ev.ty==='nino'){const e=S.ev.e,k2=Math.min(1,S.ev.t/1.2),bx=e.x+e.ux*34-e.uy*(26-22*k2),by=e.y+e.uy*34+e.ux*(26-22*k2);fillCirc(g,X(bx),Y(by),2,'#ff7b00');g.fillStyle='#fff';g.fillRect(X(bx),Y(by)-1,1,1);if(S.ev.t>.5)ped({x:bx-e.uy*(-9),y:by+e.ux*(-9),an:S.t,col:'#e63946'})}
+  if(S&&S.W===W&&S.tire){const T=S.tire;if(T.tri){const tx=X(T.tri.x),ty=Y(T.tri.y);if(T.placed){g.fillStyle='#e63946';g.beginPath();g.moveTo(tx,ty-4);g.lineTo(tx+4,ty+3);g.lineTo(tx-4,ty+3);g.fill();g.fillStyle='#fff';g.fillRect(tx-1,ty,2,1)}else if(T.st===2&&Math.floor(t*4)%2){g.strokeStyle='#ffd23f';g.strokeRect(tx-5,ty-5,10,10)}}
+    if(T.st===3&&T.wh){const wx=X(T.wh.x),wy=Y(T.wh.y);g.strokeStyle='#ffd23f';g.strokeRect(wx-4,wy-4,8,8);if(T.t>0){g.fillStyle='#000';g.fillRect(wx-8,wy-9,16,3);g.fillStyle='#3ddc84';g.fillRect(wx-8,wy-9,16*Math.min(1,T.t/3),3)}}}
   if(S&&S.foot&&S.W===W){const F=S.foot;drawWalker2D(g,X(F.x),Y(F.y),F.face!=null?F.face:F.h,F.an,F.v,F);const bx=X(F.x),by=Y(F.y)-9+Math.round(Math.sin(t*5));g.fillStyle='#000';g.fillRect(bx-3,by-1,7,4);g.fillStyle='#ffd23f';g.fillRect(bx-2,by,5,1);g.fillRect(bx-1,by+1,3,1);g.fillRect(bx,by+2,1,1)}
   for(const R of W.rails){
     for(const s of W.stops){if(s.kind!=='rail'||s.light!==R)continue;const warn=railWarn(W,R,s.ca,t);const p=polePos(s);
@@ -2249,6 +2255,8 @@ function drawFullMap(W,P,t,tg){g.fillStyle='#0d0d16';g.fillRect(0,0,VW,VH);
   let ox=VW/2-P.x*k,oy=VH/2+1-P.y*k;ox=mw<=VW-12?(VW-mw)/2:clamp(ox,VW-6-mw,6);oy=mh<=VH-36?19+(VH-36-mh)/2:clamp(oy,VH-17-mh,19);
   S.mapT={ox,oy,k};g.imageSmoothingEnabled=k<1;g.drawImage(W.bg,ox,oy,mw,mh);if(S.foot){g.fillStyle='#ffd23f';g.fillRect(Math.round(ox+S.foot.x*k)-2,Math.round(oy+S.foot.y*k)-2,4,4)}g.imageSmoothingEnabled=false;g.strokeStyle='#6a6a9a';g.lineWidth=1;g.strokeRect(Math.round(ox)-.5,Math.round(oy)-.5,Math.round(mw)+1,Math.round(mh)+1);
   for(const c of W.ai){g.fillStyle=c.angryT>0?'#ff4d4d':'#e8e8e8';g.fillRect(Math.round(ox+c.x*k)-1,Math.round(oy+c.y*k)-1,2,2)}
+  if(W.events){for(const e of W.events){const X=Math.round(ox+e.x*k),Y=Math.round(oy+e.y*k);g.fillStyle='#000';g.fillRect(X-4,Y-4,9,9);g.fillStyle=e.done?'#3ddc84':SCEN[e.ty].col;g.fillRect(X-3,Y-3,7,7)}
+    let lx=6;for(const ty of[...new Set(W.events.map(e=>e.ty))]){g.fillStyle=SCEN[ty].col;g.fillRect(lx,20,5,5);const t=SCEN[ty].n.split(' ')[0].normalize('NFD').replace(/[̀-ͯ]/g,'');ptext(g,t,lx+7,20,'#fff');lx+=t.length*4+16}}
   if(tg){const X=ox+tg.x*k,Y=oy+tg.y*k,r=3+(Math.sin(t*6)+1)*1.5;g.strokeStyle='#ffd23f';g.beginPath();g.arc(X,Y,r+3,0,7);g.stroke();g.fillStyle='#000';g.fillRect(X-3,Y-3,7,7);g.fillStyle='#ffd23f';g.fillRect(X-2,Y-2,5,5)}
   g.save();g.translate(ox+P.x*k,oy+P.y*k);g.rotate(P.h);g.fillStyle='#000';g.beginPath();g.moveTo(8,0);g.lineTo(-5,-6);g.lineTo(-2,0);g.lineTo(-5,6);g.fill();g.fillStyle='#ff3b30';g.beginPath();g.moveTo(6,0);g.lineTo(-4,-4);g.lineTo(-1,0);g.lineTo(-4,4);g.fill();g.restore();
   g.fillStyle='rgba(10,10,20,.9)';g.fillRect(0,0,VW,16);g.fillRect(0,VH-14,VW,14);
@@ -2263,6 +2271,7 @@ function drawTarget(tg,ix,iy,t,zm=1){const sx=(tg.x-ix)*zm,sy=(tg.y-iy)*zm;
 function drawMini(W,P,tg){const mw=mini.width,mh=mini.height,k=mw/W.w;mg.imageSmoothingEnabled=true;mg.drawImage(W.bg,0,0,mw,mh);
   for(const c of W.ai.concat(W.ringCars)){mg.fillStyle=c.angryT>0?'#ff4d4d':'#ddd';mg.fillRect(c.x*k-1,c.y*k-1,2,2)}
   for(const R of W.rails){const tr=trainRect(W,R,S.t);if(tr){mg.fillStyle='#f4c430';mg.fillRect(tr.x*k,tr.y*k,Math.max(2,tr.w*k),Math.max(2,tr.h*k))}}
+  if(W.events)for(const e of W.events){mg.fillStyle=e.done?'#3ddc84':SCEN[e.ty].col;mg.fillRect(e.x*k-2,e.y*k-2,4,4);if(!e.done&&Math.floor(S.t*2)%2){mg.strokeStyle='#fff';mg.strokeRect(e.x*k-3,e.y*k-3,6,6)}}
   if(tg&&Math.floor(S.t*3)%2){mg.fillStyle='#ffd23f';mg.fillRect(tg.x*k-2,tg.y*k-2,5,5)}
   if(S.cop&&Math.floor(S.t*6)%2){mg.fillStyle='#2f6bff';mg.fillRect(S.cop.x*k-2,S.cop.y*k-2,5,5)}
   mg.fillStyle='#ff3b30';mg.fillRect(P.x*k-2,P.y*k-2,4,4);mg.strokeStyle='#fff';mg.strokeRect(P.x*k-2.5,P.y*k-2.5,5,5)}
@@ -2520,6 +2529,64 @@ function drawWalker2D(g,x,y,h,an,v,F){if(!F.skin){F.skin='#e0ac69';F.hair='#2b1b
   g.fillStyle=F.col;g.fillRect(-1.6,-2.6,3.2,5.2);g.fillStyle=shade(F.col,-.25);g.fillRect(-1.6,1.6,3.2,1);
   g.fillStyle=F.skin;g.beginPath();g.arc(.3,0,1.5,0,7);g.fill();g.fillStyle=F.hair;g.beginPath();g.arc(-.1,0,1.5,Math.PI*.55,Math.PI*1.45);g.fill();g.restore()}
 
+// ===================== SITUACIONES DE RIESGO =====================
+// Puntos marcados en el mapa. Al llegar, el tiempo se pone lento, aparece la situación y el jugador elige qué hacer.
+// Si elige bien, el carro se controla (y en la llanta reventada hay que orillarse, poner el triángulo y cambiarla);
+// si elige mal, ocurre el accidente y aparece GAME OVER con la explicación. Consejos basados en las recomendaciones de seguridad vial.
+const SCEN={
+  llanta:{n:'LLANTA REVENTADA',col:'#e63946',intro:'¡PUM! Se reventó la llanta delantera izquierda y el carro se jala hacia un lado.',
+    opts:[['Sujetar firme el volante con las dos manos, soltar el acelerador sin frenar de golpe y orillarse poco a poco',1,'Correcto: con el volante firme y sin frenazos el carro sigue recto mientras pierde velocidad. Ahora toca orillarse y cambiar la llanta.'],
+      ['Frenar a fondo de inmediato',0,'Al frenar de golpe con una llanta reventada, el peso se va hacia esa rueda y el carro se cruza: terminó fuera de la vía. Primero se sujeta el volante y se suelta el acelerador; el freno se usa suave, cuando el carro ya está controlado.'],
+      ['Dar un volantazo hacia el otro lado para enderezar',0,'Un volantazo brusco con una llanta reventada hace que el carro gire sin control. Se corrige suave, con las dos manos firmes en el volante.']]},
+  derrape:{n:'DERRAPE EN CURVA MOJADA',col:'#ff9f1c',intro:'La calle está mojada y la parte trasera del carro empieza a irse de lado.',
+    opts:[['Soltar el acelerador, no frenar y girar el volante suavemente hacia donde quiere ir (mirando hacia allá)',1,'Correcto: al soltar el acelerador y "contravolantear" suave hacia donde quiere ir, las llantas recuperan agarre.'],
+      ['Frenar fuerte',0,'Frenar en pleno derrape bloquea las llantas y el carro sigue de lado sin poder girar: se salió de la vía.'],
+      ['Acelerar para salir rápido del derrape',0,'Acelerar hace que las llantas patinen más: el carro dio un trompo.']]},
+  hidro:{n:'HIDROPLANEO',col:'#2a9df4',intro:'Pasó sobre un charco grande: el volante se siente liviano porque las llantas flotan sobre el agua.',
+    opts:[['Soltar el acelerador suavemente y mantener el volante recto, sin frenar, hasta recuperar el agarre',1,'Correcto: sin frenazos ni volantazos, las llantas vuelven a tocar el asfalto en pocos segundos. Con lluvia, baje la velocidad.'],
+      ['Frenar de golpe',0,'Frenar mientras las llantas flotan las bloquea y el carro se va de lado al salir del agua: chocó contra el borde.'],
+      ['Girar el volante para salirse del charco',0,'Con las llantas sin agarre el volante no responde; cuando vuelven a tocar el suelo, el giro acumulado lo lanza fuera de la vía.']]},
+  varado:{n:'CARRO VARADO ADELANTE',col:'#ffd23f',intro:'Adelante, en su carril, hay un carro varado con las intermitentes encendidas.',
+    opts:[['Bajar la velocidad, mirar el espejo, poner la direccional y pasarlo con buena distancia solo cuando sea seguro',1,'Correcto: reducir, revisar espejos y señalizar evita sorpresas. Si no hay espacio, se espera detrás.'],
+      ['Cambiarse de carril de golpe sin mirar',0,'No miró el espejo ni señalizó: otro carro venía por el carril de al lado y lo chocó.'],
+      ['Seguir igual y pitarle para que se quite',0,'Un carro varado no se puede mover: no frenó a tiempo y chocó por detrás.']]},
+  nino:{n:'NIÑO EN LA VÍA',col:'#c77dff',intro:'Una bola sale rodando a la calle... y detrás viene un niño corriendo.',
+    opts:[['Frenar fuerte en línea recta hasta detenerse',1,'Correcto: frenar en línea recta es lo más seguro. Cuando vea una bola en la calle, espere que detrás venga un niño.'],
+      ['Esquivarlo con un volantazo a toda velocidad',0,'El volantazo lo sacó de la vía y chocó contra un poste. Con un obstáculo repentino, primero se frena en línea recta.'],
+      ['Pitar y seguir',0,'El niño no reacciona a tiempo al pito: no logró detenerse. Cerca de escuelas, parques y zonas residenciales hay que ir despacio.']]}};
+function addEvents(W,types){if(!W.roads||!W.roads.length)return;W.events=[];W.broken=W.broken||[];W.roadObs=W.roadObs||[];const R=rng(77);
+  for(const ty of types){for(let tr=0;tr<200;tr++){const r=W.roads[R()*W.roads.length|0];if(r.b-r.a<220)continue;const dir=r.ow?r.ow:(R()<.5?1:-1);const along=r.a+80+R()*(r.b-r.a-160);
+      const x=r.o==='h'?along:r.c,y=r.o==='h'?r.c:along;if(W.nodes.some(n=>Math.hypot(n.x-x,n.y-y)<70))continue;if(W.events.some(e=>Math.hypot(e.x-x,e.y-y)<300))continue;if(W.spawn&&Math.hypot(W.spawn.x-x,W.spawn.y-y)<250)continue;if(W.zebras.some(z=>Math.hypot(z.x-x,z.y-y)<60))continue;
+      const ux=r.o==='h'?dir:0,uy=r.o==='h'?0:dir,lx=-uy*7,ly=ux*7;const e={ty,x:x+lx,y:y+ly,ux,uy,done:false};
+      if(ty==='varado'){const b={x:e.x+ux*40,y:e.y+uy*40,h:Math.atan2(uy,ux),col:'#8d99ae',type:'sedan',L:14,Wd:8,v:0,static:true,haz:true};W.broken.push(b);W.roadObs.push(b);for(const q of circles(b))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'});e.car=b}
+      W.events.push(e);break}}}
+function evDraw2D(x,W){if(!W.events)return;for(const e of W.events){if(e.ty==='hidro'){x.fillStyle='rgba(60,120,190,.55)';x.beginPath();x.ellipse(e.x+e.ux*10,e.y+e.uy*10,e.ux?16:7,e.ux?7:16,0,0,7);x.fill();x.fillStyle='rgba(180,220,255,.5)';x.fillRect(e.x+e.ux*10-3,e.y+e.uy*10-1,5,1)}
+  if(e.ty==='derrape'){x.fillStyle='rgba(40,60,90,.25)';x.fillRect(e.x-20,e.y-20,40,40)}}}
+function evStep(W,P,dt){const E=S.ev;
+  if(S.tire)return tireStep(W,P,dt);
+  if(E){E.t+=dt;if(E.ph==='slow'){if(E.ty==='llanta')P.h=nA(P.h+.12*dt);if(E.ty==='derrape')P.h=nA(P.h+.35*dt);if(E.t>.9){E.ph='ask';evAsk(E)}}return}
+  if(S.foot||Math.abs(P.v)<12)return;for(const e of W.events||[]){if(e.done||(e.cool&&S.t<e.cool))continue;const rx=P.x-e.x,ry=P.y-e.y;if(Math.hypot(rx,ry)>22)continue;if(Math.cos(P.h)*e.ux+Math.sin(P.h)*e.uy<.7)continue;
+    S.ev={e,ty:e.ty,ph:'slow',t:0};sfx.bad();if(e.ty==='llanta'){beep(90,.3,'sawtooth',.2,-40);S.shake=.5}if(e.ty==='nino')e.kid={t:0};return}}
+function evAsk(E){const D=SCEN[E.ty],box=$('evBox');const ord=shuffle([0,1,2]);E.ord=ord;
+  box.innerHTML=`<b style="color:${D.col}">⚠ ${D.n}</b><p>${D.intro}</p><p style="color:#ffd23f">¿Qué hace?</p>`+ord.map((k,i)=>`<button data-k="${i}">${i+1} · ${D.opts[k][0]}</button>`).join('');
+  box.classList.remove('hidden');for(const b of box.querySelectorAll('button'))b.onclick=()=>evAnswer(+b.dataset.k);say(D.intro+' ¿Qué hace?',true)}
+function evAnswer(i){const E=S.ev;if(!E||E.ph!=='ask')return;const D=SCEN[E.ty],o=D.opts[E.ord[i]];$('evBox').classList.add('hidden');E.ok=!!o[1];E.msg=o[2];E.t=0;
+  if(E.ok){E.ph='safe';toast('¡BIEN HECHO!',o[2],'good');say(o[2],true);sfx.good()}else{E.ph='crash';say('¡Cuidado!',true)}}
+function evAnim(W,P,dt){const E=S.ev;E.t+=dt;
+  if(E.ph==='safe'){P.v=Math.max(0,P.v-(E.ty==='nino'?40:18)*dt);P.steer*=.9;P.brake=true;P.x+=Math.cos(P.h)*P.v*dt;P.y+=Math.sin(P.h)*P.v*dt;
+    if(P.v<=.2&&E.t>1){P.v=0;E.e.done=true;S.pts+=150;S.ev=null;if(E.ty==='llanta'){S.tire={st:0,t:0};toast('LLANTA REVENTADA','Ahora: intermitentes [H], bájese [T], coloque el triángulo y cambie la llanta','info')}else toast('SITUACIÓN SUPERADA','+150 pts','good')}return}
+  if(E.ph==='crash'){P.spin=E.t<1.2?4.5:0;P.h=nA(P.h+P.spin*dt);P.v=Math.max(0,P.v-10*dt);P.x+=Math.cos(P.h)*P.v*dt+(E.ty==='derrape'||E.ty==='hidro'?Math.cos(P.h+1.5)*12*dt:0);P.y+=Math.sin(P.h)*P.v*dt;
+    if(E.t>1.3&&!E.over){E.over=true;sfx.crash();S.shake=.8;const D=SCEN[E.ty],box=$('evBox');S.pts=Math.max(0,S.pts-150);
+      box.innerHTML=`<b style="color:#ff4d4d;font-size:150%">GAME OVER</b><p style="color:${D.col}">${D.n}</p><p>${E.msg}</p><p style="color:#9cf">Lo correcto: ${D.opts.find(o=>o[1])[0]}.</p><button id="evRetry">1 · INTENTAR DE NUEVO</button><button id="evGo">2 · SEGUIR MANEJANDO</button>`;
+      box.classList.remove('hidden');$('evRetry').onclick=()=>evRetry(true);$('evGo').onclick=()=>evRetry(false)}}}
+function evRetry(again){const E=S.ev;if(!E)return;$('evBox').classList.add('hidden');const P=S.P,e=E.e;S.ev=null;P.spin=0;P.v=0;
+  if(again){P.x=e.x-e.ux*120;P.y=e.y-e.uy*120;P.h=Math.atan2(e.uy,e.ux);P.v=18;toast('INTÉNTELO DE NUEVO','Acérquese otra vez a la situación','info')}else{e.cool=S.t+60;P.x=e.x-e.ux*60;P.y=e.y-e.uy*60;P.h=Math.atan2(e.uy,e.ux)}}
+// cambio de llanta: intermitentes, bajarse, triángulo detrás del carro, cambiar la llanta y subirse
+function tireStep(W,P,dt){const T=S.tire,c=Math.cos(P.h),s=Math.sin(P.h);T.tri=T.tri||{x:P.x-c*45,y:P.y-s*45};T.wh={x:P.x+c*4+s*6,y:P.y+s*4-c*6};const F=S.foot;
+  if(T.st===0&&P.haz)T.st=1;else if(T.st===1&&F)T.st=2;else if(T.st===2&&F&&Math.hypot(F.x-T.tri.x,F.y-T.tri.y)<9){T.st=3;T.placed=true;sfx.gear();toast('TRIÁNGULO COLOCADO','Así los demás conductores lo ven a tiempo','good')}
+  else if(T.st===3&&F){if(Math.hypot(F.x-T.wh.x,F.y-T.wh.y)<9&&F.v<1){T.t+=dt;if(T.t>3){T.st=4;sfx.good();toast('LLANTA CAMBIADA','Apriete bien las tuercas y revise la presión del repuesto','good')}}else T.t=Math.max(0,T.t-dt)}
+  else if(T.st===4&&!F){S.tire=null;S.pts+=200;toast('¡LISTO PARA SEGUIR!','+200 pts · Recuerde reparar la llanta pinchada pronto','good')}}
+function tireText(){const T=S.tire;return['Encienda las luces INTERMITENTES '+(TOUCH?'(⚠ H)':'[H]'),'Bájese del carro '+(TOUCH?'(A PIE)':'[T]'),'Coloque el TRIÁNGULO: camine al punto amarillo detrás del carro','Cambie la llanta: quédese junto a la llanta delantera (punto amarillo) 3 segundos','Súbase al carro '+(TOUCH?'(A PIE)':'[T]')+' para seguir'][T.st]}
 // ===================== POLICÍA DE TRÁNSITO =====================
 // En manejo libre: 4 infracciones en 90 s y llega una patrulla que no se detiene por nada hasta alcanzarlo.
 const OFI='OFICIAL DE TRÁNSITO';
@@ -2685,6 +2752,7 @@ function onKey(k){
   if(k==='escape'||k==='p'){togglePause();return}
   if(S.paused)return;
   const P=S.P;
+  if(S.ev&&S.ev.ph==='ask'&&'123'.includes(k)){evAnswer(+k-1);return}if(S.ev&&S.ev.over){if(k==='1')evRetry(true);if(k==='2')evRetry(false);return}
   if(k==='t'){toggleFoot();return}
   if(k==='l'&&!S.foot){P.lights=!P.lights;sfx.gear();toast(P.lights?'LUCES ENCENDIDAS':'LUCES APAGADAS','',P.lights?'good':'info');return}
   if(k==='i'){VOZ=!VOZ;store.set('pp_voz',VOZ);if(!VOZ)shush();toast(VOZ?'VOZ DEL INSTRUCTOR ACTIVADA':'VOZ DEL INSTRUCTOR APAGADA','','info');return}
@@ -2717,6 +2785,8 @@ function step(dt){
   if(S.respawn>0){S.respawn-=dt;if(S.respawn<=0){const b=P.belt;Object.assign(P,spawnState(W));P.belt=b}updateWorld(W,P,dt,S.t);return}
   if(S.cop&&S.cop.arrest){updateCop(dt);updateWorld(W,P,dt,S.t);return}
   if(!S.exam){copWanted();updateCop(dt)}if(!S.exam||S.mode==='street')emergStep(W,P,dt);
+  if(S.ev&&(S.ev.ph==='safe'||S.ev.ph==='crash')){evAnim(W,P,dt);updateWorld(W,P,dt,S.t);return}
+  if(W.events&&!S.exam)evStep(W,P,dt);
   if(S.foot){updateFoot(W,dt);P.v=0;P.thr=0;updateWorld(W,P,dt,S.t);return}
   const px=P.x,py=P.y;
   updatePlayer(W,P,dt);if(S.over)return;
@@ -2735,6 +2805,7 @@ function step(dt){
 function updateHUD(){const P=S.P;let tg=null;{const ct=clockTxt();if(ct&&!S.mapOpen){const w=ct.length*4+5;g.fillStyle='rgba(10,10,20,.75)';g.fillRect(292,128,w,9);ptext(g,ct,295,130,S.wx.n>.5?'#9cf':'#ffd23f')}}$('dlg').classList.toggle('hidden',!S.dlg);if(S.dlg){const d=S.dlg,l=d.lines[Math.min(d.i,d.lines.length-1)];const h='<b>'+l[0]+':</b> '+l[1]+'<small>'+(TOUCH?'Toque para seguir':'ENTER para seguir')+'</small>';if($('dlg').innerHTML!==h)$('dlg').innerHTML=h}$('touch').classList.toggle('hidden',!TOUCH||S.over);$('tbTurbo').style.display=S.arcade?'':'none';
   if(S.exam){const tk=S.tasks[S.task];$('tasknum').textContent=tk?`${S.mode==='street'?'CALLE':'TAREA'} ${S.task+1}/${S.tasks.length}`:'FIN';$('tasktxt').textContent=tk?tk.txt:'';tg=tk?tk.tgt:null;
     $('scoreLbl').textContent='PUNTOS';$('score').textContent=Math.max(0,S.score);$('score').classList.toggle('low',S.score<80);$('time').textContent=fmtT(S.t)}
+  else if(S.tire){$('tasknum').textContent='LLANTA REVENTADA · PASO '+(S.tire.st+1)+'/5';$('tasktxt').textContent=tireText();tg=S.tire.st===2?S.tire.tri:S.tire.st===3?S.tire.wh:null;$('scoreLbl').textContent='PUNTOS';$('score').textContent=S.pts;$('time').textContent=`${S.infr} INFRAC`}
   else if(S.W.taxi&&S.tx){const T=S.tx;$('tasknum').textContent=`TAXI · VIAJE ${T.n}`+(S.lapStart!=null&&S.lapI!=null?` · VUELTA ${fmtLap(S.t-S.lapStart)}`:'');$('tasktxt').textContent=T.ph==='pick'?'Recoja al pasajero en '+T.from.n+' (deténgase a su lado)':'Lleve al pasajero a '+T.to.n+'. Sin infracciones = propina.';tg=S.dest;
     $('scoreLbl').textContent='GANANCIAS';$('score').textContent='₡'+S.pts;$('score').classList.toggle('low',false);$('time').textContent=`${S.deliv} VIAJES · ${S.infr} INFRAC`}
   else{const left=Math.max(0,Math.ceil(S.destPar-(S.t-S.destT)));$('tasknum').textContent=`DESTINO ${S.deliv+1} · BONO: ${left}s`;$('tasktxt').textContent='Maneje hasta '+S.dest.n+' sin infracciones. ¡Rápido pero legal!';tg=S.dest;
@@ -2755,7 +2826,7 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   if(S&&S.replay){drawReplay(dt);return}
   lookRelax(dt);
   if(S){
-    if(!S.paused&&!S.over&&!S.mapOpen){acc+=dt;while(acc>=1/60){step(1/60);acc-=1/60;for(const k in pressed)delete pressed[k];if(S.over)break}}else{acc=0;for(const k in pressed)delete pressed[k]}
+    if(!S.paused&&!S.over&&!S.mapOpen&&!(S.ev&&(S.ev.ph==='ask'||S.ev.over))){acc+=dt*(S.ev&&S.ev.ph==='slow'?.22:1);while(acc>=1/60){step(1/60);acc-=1/60;for(const k in pressed)delete pressed[k];if(S.over)break}}else{acc=0;for(const k in pressed)delete pressed[k]}
     const W=S.W,P=S.P;const sh=S.shake>0?(S.shake-=dt,S.shake*6):0;// cámara: el carro siempre al centro de la pantalla; zoom con + / -
     const zm=S.zoom||1,vw=VW/zm,vh=VH/zm,FC=S.foot||P;S.cx=FC.x-vw/2+(Math.random()-.5)*sh;S.cy=FC.y-vh/2+(Math.random()-.5)*sh;
     const ix=Math.round(S.cx*zm)/zm,iy=Math.round(S.cy*zm)/zm;$('hud').classList.toggle('fp',!!S.fp&&!S.chase);$('hud').classList.toggle('map',!!S.mapOpen);
