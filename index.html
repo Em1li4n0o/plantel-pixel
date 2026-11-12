@@ -952,7 +952,7 @@ function buildCentro(){HW=14;
         PB(1413,882,1.4,1.4,33,39,'#e9e2c8',{s:'stat'}),PB(1413,870,1.4,1.4,33,37.5,'#e9e2c8',{s:'stat'}),PB(1413,896,1.4,1.4,33,37.5,'#e9e2c8',{s:'stat'}),
         ...pCols(1412,917,1500,917,10,22,WH)],{label:'TEATRO NACIONAL'});W.flags.push({x:1486,y:882,z:44})},
     '1366,940':(ix1,iy1,ix2,iy2,mx,my)=>{// TORRE PULZAR SOLUTIONS (rascacielos moderno al sur del Teatro)
-      W.plazas.push({x:ix1,y:iy1,w:ix2-ix1,h:iy2-iy1});W.fountains.push({x:ix1+12,y:iy1+12},{x:ix2-12,y:iy2-12});W.tower=addLM(W,pulzarParts(mx,my),{tower:true});W.flags.push({x:mx,y:my,z:214})},
+      W.plazas.push({x:ix1,y:iy1,w:ix2-ix1,h:iy2-iy1});W.fountains.push({x:ix1+12,y:iy1+12},{x:ix2-12,y:iy2-12});W.tower=addLM(W,pulzarParts(mx,my),{tower:true});0},
     '1225,757':(ix1,iy1,ix2,iy2)=>{// GRAN HOTEL COSTA RICA frente a la plaza
       fillBlock(W,R,ix1,iy1,1294,iy2);addLM(W,[PB(1300,782,42,134,0,32,'#f4f1e8',{top:'#a9a39a',win:'grid',shop:'#7a1f2b'}),PB(1300,830,42,40,32,36,'#ece7da')],{label:'GRAN HOTEL'});stalls(1349,800,1349,900,4)},
     '883,757':(ix1,iy1,ix2,iy2)=>{// TEATRO MELICO SALAZAR frente al Parque Central
@@ -1229,27 +1229,34 @@ function pRing(cx,cy,r,n,z0,z1,col){const o=[];for(let i=0;i<n;i++){const a=i/n*
 function pCren(x,y,w,h,z,col,st=5){const o=[];const L=2*(w+h);for(let s=0;s<L;s+=st){let px,py;if(s<w){px=x+s;py=y}else if(s<w+h){px=x+w;py=y+s-w}else if(s<2*w+h){px=x+w-(s-w-h);py=y+h}else{px=x;py=y+h-(s-2*w-h)}o.push(PB(px-.8,py-.8,1.6,1.6,z,z+2.5,col,{s:'col'}))}return o}
 const octPts=(cx,cy,r)=>{const o=[];for(let i=0;i<8;i++){const a=(i+.5)/8*6.283;o.push([cx+Math.cos(a)*r,cy+Math.sin(a)*r])}return o};
 function prepPart(p){p.cx=p.x+p.w/2;p.cy=p.y+p.h/2;const rect=(x,y,w,h)=>[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
+  if(p.s==='pg'){const xs=p.cs.map(q=>q[0]),ys=p.cs.map(q=>q[1]);p.x=Math.min(...xs);p.y=Math.min(...ys);p.w=Math.max(...xs)-p.x;p.h=Math.max(...ys)-p.y;p.cx=p.x+p.w/2;p.cy=p.y+p.h/2;p.tiers=[{cs:p.cs,z0:p.z0,z1:p.z1,win:true}];return p}
   if(p.s==='oct')p.tiers=[{cs:octPts(p.cx,p.cy,p.r),z0:p.z0,z1:p.z1,win:true}];
   else if(p.s==='dome'){const dz=(p.z1-p.z0)/3;p.tiers=[1,.84,.5].map((f,i)=>({cs:octPts(p.cx,p.cy,p.r*f),z0:p.z0+dz*i,z1:p.z0+dz*(i+1)}))}
   else if(p.s==='spire'){const dz=(p.z1-p.z0)/4;p.tiers=[1,.72,.45,.18].map((f,i)=>({cs:rect(p.cx-p.w*f/2,p.cy-p.h*f/2,p.w*f,p.h*f),z0:p.z0+dz*i,z1:p.z0+dz*(i+1)}))}
   else p.tiers=[{cs:rect(p.x,p.y,p.w,p.h),z0:p.z0,z1:p.z1,win:p.s==='box'}];return p}
 // TORRE PULZAR SOLUTIONS: vestíbulo de vidrio, tres cuerpos escalonados, aletas LED en las esquinas, corona de cristal y antena
-function pulzarParts(cx,cy){const G='#1f3b73',L='#3df2ff',o=[PB(cx-40,cy-34,80,68,0,10,'#dfe7f2',{win:'glass',top:'#c9d6e6',shop:'#3d63f2'}),
-    PB(cx-30,cy-26,60,52,10,96,G,{win:'glass',top:'#2a4d8f'}),PB(cx-24,cy-20,48,40,96,156,'#24478a',{win:'glass',top:'#3060b0'}),PB(cx-17,cy-14,34,28,156,206,'#2b56a8',{win:'glass',top:'#4a7fd0'}),
-    PB(cx-19,cy-16,38,32,96,99,'#e6eefc'),PB(cx-26,cy-22,52,44,93,96,'#e6eefc'),PB(cx-19,cy-16,38,32,153,156,'#e6eefc'),
-    PS(cx-13,cy-11,26,22,206,232,'#9cc4ff'),PB(cx-.6,cy-.6,1.2,1.2,232,258,'#e0e6ef',{s:'col'})];
-  for(const[x,y,z1]of[[cx-30,cy-26,96],[cx+30,cy-26,96],[cx-30,cy+26,96],[cx+30,cy+26,96],[cx-24,cy-20,156],[cx+24,cy-20,156],[cx-24,cy+20,156],[cx+24,cy+20,156],[cx-17,cy-14,206],[cx+17,cy-14,206],[cx-17,cy+14,206],[cx+17,cy+14,206]])
-    o.push(PB(x-1,y-1,2,2,z1===96?10:z1===156?96:156,z1,L,{s:'col'}));return o}
+// TORRE PULZAR SOLUTIONS: rascacielos torcido de 22 niveles redondeados que giran sobre sí mismos, franjas LED cian,
+// vestíbulo elíptico de vidrio, cuatro pantallas con el logo, corona de cristal, anillo flotante y antena.
+function pulzarParts(cx,cy){const o=[],ring=(rx,ry,rot,n=14,bump=0)=>{const pts=[];for(let i=0;i<n;i++){const a=rot+i/n*6.283,k=1+(i%2?-bump:0);pts.push([cx+Math.cos(a)*rx*k,cy+Math.sin(a)*ry*k])}return pts};
+  o.push({s:'pg',cs:ring(46,38,0,18),z0:0,z1:11,col:'#dfe7f2',win:'glass',top:'#c9d6e6',shop:'#3d63f2'});
+  const N=22,dz=9.5;for(let k=0;k<N;k++){const t=k/(N-1),r=31*(1-.42*t)*(1+.1*Math.sin(t*3.1)),band=k%4===3;
+    o.push({s:'pg',cs:ring(r,r*.8,k*.15,6,.0),z0:11+k*dz,z1:11+(k+1)*dz,col:band?'#3df2ff':k%2?'#1f3b73':'#24478a',win:band?'none':'glass',top:band?'#bff8ff':'#2a4d8f'})}
+  const zt=11+N*dz;for(let k=0;k<5;k++){const r=17*(1-k/5.2);o.push({s:'pg',cs:ring(r,r*.8,N*.085+k*.2,10),z0:zt+k*6,z1:zt+(k+1)*6,col:k%2?'#bfe0ff':'#9cc4ff',win:'none',top:'#e6f4ff'})}
+  o.push(PB(cx-.6,cy-.6,1.2,1.2,zt+30,zt+58,'#e0e6ef',{s:'col'}));
+  for(let i=0;i<20;i++){const a=i/20*6.283;o.push(PB(cx+Math.cos(a)*25-1,cy+Math.sin(a)*21-1,2,2,zt-10,zt-8,'#3df2ff',{s:'col'}))}
+  o.push(PB(cx-16,cy-26,32,1.2,150,172,'#0b1022'),PB(cx-16,cy+24.8,32,1.2,150,172,'#0b1022'),PB(cx-26,cy-14,1.2,28,150,170,'#0b1022'),PB(cx+24.8,cy-14,1.2,28,150,170,'#0b1022'));
+  return o}
 function addLM(W,parts,o={}){parts.forEach(prepPart);const g=parts.filter(p=>p.z0<.5);const x0=Math.min(...g.map(p=>p.x)),y0=Math.min(...g.map(p=>p.y)),x1=Math.max(...g.map(p=>p.x+p.w)),y1=Math.max(...g.map(p=>p.y+p.h));
   const b=Object.assign({x:x0,y:y0,w:x1-x0,h:y1-y0,type:'bld',parts,H:Math.max(...parts.map(p=>p.z1)),col:parts[0].col,roof:parts[0].top||shade(parts[0].col,-.2)},o);
   W.obst.push({x:x0,y:y0,w:x1-x0,h:y1-y0,type:'bld'});W.blds.push(b);return b}
 function parts3D(ctx,C,V,b,near){const g0=[],up=[];for(const p of b.parts){const d=Math.hypot(p.cx-C.x,p.cy-C.y);(p.z0>.5?up:g0).push([d,p])}
-  g0.sort((a,c)=>c[0]-a[0]);up.sort((a,c)=>c[0]-a[0]);
+  g0.sort((a,c)=>c[0]-a[0]);up.sort((a,c)=>Math.abs(c[0]-a[0])>.5?c[0]-a[0]:a[1].z0-c[1].z0);
   for(const[,p]of g0.concat(up))for(const t of p.tiers)box(ctx,C,V,t.cs,t.z0,t.z1,p.col,{win:t.win&&p.win&&p.win!=='none'?p.win:null,top:p.top,near,shop:p.shop})}
 // sombra proyectada hacia el sureste, más larga cuanto más alto
-function shadowPath(x,p){const s=Math.min(22,2+p.z1/7);if(p.s==='oct'||p.s==='dome'){for(let k=0;k<=s;k+=1.5){x.moveTo(p.cx+k+p.r,p.cy+k);x.arc(p.cx+k,p.cy+k,p.r,0,6.283)}return}
+function shadowPath(x,p){const s=Math.min(22,2+p.z1/7);if(p.s==='pg'){for(const k of[0,s/3,2*s/3,s]){x.moveTo(p.cs[0][0]+k,p.cs[0][1]+k);for(const q of p.cs)x.lineTo(q[0]+k,q[1]+k);x.closePath()}return}if(p.s==='oct'||p.s==='dome'){for(let k=0;k<=s;k+=1.5){x.moveTo(p.cx+k+p.r,p.cy+k);x.arc(p.cx+k,p.cy+k,p.r,0,6.283)}return}
   x.moveTo(p.x,p.y);x.lineTo(p.x+p.w,p.y);x.lineTo(p.x+p.w+s,p.y+s);x.lineTo(p.x+p.w+s,p.y+p.h+s);x.lineTo(p.x+s,p.y+p.h+s);x.lineTo(p.x,p.y+p.h);x.closePath()}
 function roof2D(x,p){const top=p.top||shade(p.col,-.15),X=Math.round(p.x),Y=Math.round(p.y),w=Math.round(p.w),h=Math.round(p.h);
+  if(p.s==='pg'){x.fillStyle=p.top||shade(p.col,-.15);x.beginPath();x.moveTo(p.cs[0][0],p.cs[0][1]);for(const q of p.cs)x.lineTo(q[0],q[1]);x.closePath();x.fill();x.strokeStyle=shade(p.top||p.col,.3);x.lineWidth=1;x.stroke();return}
   if(p.s==='col'){x.fillStyle=shade(p.col,.2);x.fillRect(X,Y,2,2);x.fillStyle=shade(p.col,-.35);x.fillRect(X+1,Y+1,1,1);return}
   if(p.s==='oct'){fillCirc(x,p.cx,p.cy,p.r,shade(top,-.15));fillCirc(x,p.cx,p.cy,p.r-1,top);return}
   if(p.s==='dome'){fillCirc(x,p.cx,p.cy,p.r,shade(p.col,-.3));fillCirc(x,p.cx-.5,p.cy-.5,p.r*.8,p.col);fillCirc(x,p.cx-p.r*.3,p.cy-p.r*.3,Math.max(1,p.r*.35),shade(p.col,.35));return}
@@ -2111,7 +2118,7 @@ function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];con
   for(const b of W.blds)add(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<120+Math.max(b.w,b.h)/2;
     if(b.parts){parts3D(ctx,C,V,b,near);if(!b.tower)return}
     else box(ctx,C,V,[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]],0,b.ht,b.tower?'#1f4f8a':b.col,{win:b.win||true,top:b.roof,near:b.H?near:false,shop:b.shop});
-    if(b.tower){const cx=b.x+b.w/2,cy=b.y+b.h/2,on=Math.sin(t*3)>0;if(b.parts){const X0=cx-30.2,X1=cx+30.2,Y0=cy-26.2,Y1=cy+26.2;for(const[a,c]of[[[X1,Y0],[X0,Y0]],[[X0,Y0],[X0,Y1]],[[X0,Y1],[X1,Y1]],[[X1,Y1],[X1,Y0]]]){const L=Math.hypot(c[0]-a[0],c[1]-a[1]),k=(L-40)/2/L;logoFace(ctx,C,V,[a[0]+(c[0]-a[0])*k,a[1]+(c[1]-a[1])*k],[c[0]-(c[0]-a[0])*k,c[1]-(c[1]-a[1])*k],58,84,on)}}
+    if(b.tower){const cx=b.x+b.w/2,cy=b.y+b.h/2,on=Math.sin(t*3)>0;if(b.parts){for(const[a,c]of[[[cx+15.5,cy-26.1],[cx-15.5,cy-26.1]],[[cx-15.5,cy+26.1],[cx+15.5,cy+26.1]],[[cx-26.1,cy-13.5],[cx-26.1,cy+13.5]],[[cx+26.1,cy+13.5],[cx+26.1,cy-13.5]]])logoFace(ctx,C,V,a,c,151,171,on)}
       const T=bill(C,V,cx,cy,b.parts?b.ht:b.ht+16);if(T&&Math.floor(t*2)%2){ctx.fillStyle='#ff2a2a';ctx.beginPath();ctx.arc(T.x,T.y,Math.max(1.5,.8*T.k),0,7);ctx.fill()}}});
   {const ph=(Math.sin(t*3)+1)/2,col=ph>.5?'#ff3df2':'#3df2ff';
     const neon=(x,y,z,wl)=>{const B=bill(C,V,x,y,z);if(!B)return;const w=Math.min(380,Math.max(10,wl*B.k)),h=w*34/52;ctx.imageSmoothingEnabled=false;ctx.drawImage(PZLOGO,Math.round(B.x-w/2),Math.round(B.y-h/2),Math.round(w),Math.round(h))};
