@@ -686,6 +686,105 @@ function buildCity(){
   W.dests=[{n:'LA ESCUELA',x:200,y:287},{n:'EL PARQUEO PÚBLICO',x:880,y:545},{n:'EL MERCADO',x:640,y:507},{n:'LA ESTACIÓN DEL TREN',x:293,y:590},{n:'EL HOSPITAL',x:973,y:390},{n:'LA ROTONDA (SALIDA SUR)',x:533,y:345},{n:'EL BANCO',x:420,y:273},{n:'LA TORRE PULZAR',x:660,y:287},{n:'LA IGLESIA DEL PUEBLO',x:1360,y:1007},{n:'LA TIENDA PULZAR',x:1600,y:1007},{n:'LA PULPERÍA',x:1830,y:1007},{n:'LA ESCUELA DEL PUEBLO',x:1330,y:1267},{n:'LA PLAZA DE FÚTBOL',x:1630,y:1513},{n:'LA GASOLINERA',x:1875,y:110}];
   return W}
 
+// ===================== PLANTEL DE SAN JOSÉ (Ciudad Vial, COSEVI) =====================
+// Calles del plantel y alrededores tomadas de OpenStreetMap y ubicadas sobre la foto aérea (girada 147°).
+// Coordenadas en píxeles de esa foto; K las pasa a unidades del juego (1 m ≈ 3,1 unidades).
+const CVK=.58;
+function buildCiudadVial(){HW=9;const K=CVK,T=a=>a.map(([x,y])=>[x*K,y*K]),G=(x,y)=>({x:x*K,y:y*K});
+  const W=newWorld('cvial',Math.round(1245*K),Math.round(1005*K));W.limit=25;
+  const path=(pts,hw,o={})=>{const q=addPath(W,T(pts));q.hw=hw;Object.assign(q,o);return q};
+  // alrededores: Avenida 50 (doble vía) y Paseo de la Segunda República (Circunvalación)
+  const AV50=[[-20,393],[16,273],[73,210],[190,132],[314,58],[387,15],[466,-32],[717,-157]];
+  const HWW=[[1062,1103],[272,760],[178,720],[131,693],[89,656],[14,574],[-60,500]],HWE=[[-75,639],[-40,655],[0,679],[45,707],[156,767],[278,827],[1026,1154]];
+  path(AV50,10);path(HWW,14,{oneway:true,noCenter:true});path(HWE,14,{oneway:true,noCenter:true});
+  // plantel: calle de acceso (dos carriles), conexión, ingreso a la fila, fila bajo el toldo y fila de afuera
+  const WEST=[[314,58],[230,128],[150,205],[100,275],[88,345],[98,400],[105,440],[135,545],[170,610],[239,662]];
+  path(WEST,12);path([[239,662],[300,682],[414,690],[452,693]],12);
+  path([[446,700],[515,723],[550,733],[560,700],[568,676],[582,658],[629,634],[886,518]],8,{oneway:true,noCenter:true});
+  path([[568,676],[578,650],[605,628],[891,487]],7,{oneway:true,noCenter:true});
+  path([[550,733],[582,749],[791,849],[1029,985],[1072,999],[1122,1008],[1144,1030]],9,{noCenter:true});
+  // salida por el lado norte del toldo hacia el parqueo
+  path([[949,474],[933,457],[917,450],[895,449],[446,668],[418,680]],9,{oneway:true,noCenter:true});path([[446,668],[439,714]],7,{noCenter:true});
+  // zigzag, curva a la izquierda y entrada a la rotonda
+  const ZZ=[[886,518],[895,534],[900,549],[895,569],[887,582],[875,589],[740,657],[732,672],[732,689],[739,708],[754,722],[764,726],[800,745],[855,770]];
+  path(ZZ,10,{oneway:true,noCenter:true});
+  // rotonda (sentido antihorario visto desde arriba)
+  const rc=[915,766],rr=59,ring=[];for(let i=0;i<=40;i++){const a=-i/40*Math.PI*2;ring.push([rc[0]+Math.cos(a)*rr,rc[1]+Math.sin(a)*rr])}
+  path(ring,8,{oneway:true,noCenter:true});W.rb={x:rc[0]*K,y:rc[1]*K,r:rr*K};W.circObs.push({x:rc[0]*K,y:rc[1]*K,r:(rr*K)-9,type:'isla'});
+  // curva larga y los dos carriles de subida
+  path([[932,823],[963,895],[976,912],[994,923],[1016,925],[1036,919],[1051,908],[1062,891],[1063,867]],9,{oneway:true,noCenter:true});
+  const EAST=[[1063,867],[1055,837],[962,501],[949,474]];path(EAST,14,{oneway:true,noCenter:true});
+  // calles internas de motos y conexión
+  path([[918,496],[934,515],[940,525],[968,626],[968,646],[958,657],[948,664],[935,666],[921,659],[902,643],[888,636],[876,635],[863,640],[847,654],[837,663],[828,665],[811,665],[799,668],[788,678],[778,693],[764,726]],6,{noCenter:true});
+  path([[1055,837],[970,788]],6,{noCenter:true});
+  // conos del zigzag sobre la recta diagonal
+  for(let i=0;i<5;i++){const f=.12+i*.19;W.cones.push({x:(875+(740-875)*f)*K,y:(589+(657-589)*f)*K,vx:0,vy:0,hit:false})}
+  // parqueo en batería al norte de la calle de salida
+  const u=[.898,-.438],n=[-.438,-.898];W.pslots=[];
+  for(let i=0;i<3;i++){const t=12+i*19,bx=446+u[0]*t,by=668+u[1]*t,cx=(bx+n[0]*33)*K,cy=(by+n[1]*33)*K,o={cx,cy,ang:Math.atan2(n[1],n[0]),hl:9,hw:5.5,target:i===1};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);
+    if(i!==1)addParked(W,cx,cy,o.ang,CARCOLS[(i*3+2)%CARCOLS.length],'sedan')}
+  W.pslot=W.pslots[1];{const o=W.pslot,ca=Math.cos(o.ang),sa=Math.sin(o.ang);for(const sd of[-1,1])W.cones.push({x:o.cx+ca*(o.hl+1.5)-sa*sd*(o.hw+1.5),y:o.cy+sa*(o.hl+1.5)+ca*sd*(o.hw+1.5),vx:0,vy:0,hit:false,fatal:true})}
+  // ALTO: antes del cruce de la entrada, en el cruce del tren (dos sentidos) y antes de salir del parqueo
+  const stop=(x,y,ux,uy,code,txt)=>({x:x*K,y:y*K,ux,uy,w:14,code,txt,minV:99});
+  W.pstops=[stop(156,584,.474,.88,'altoA','No hizo ALTO total antes del cruce de la entrada'),stop(95.5,386,.176,.984,'altoT1','No hizo ALTO total antes del cruce del tren'),
+    stop(100.5,414,-.176,-.984,'altoT2','No hizo ALTO total antes del cruce del tren'),stop(458,662,-.898,.438,'altoP','No hizo ALTO total antes de salir a la calle de acceso')];
+  W.rail={x:98*K,y:400*K};
+  // toldo con paneles solares (pasa el carril de adentro bajo techo) y sus columnas
+  {const cl=[[575,643],[891,487]],A=offLine(cl,-13),B=offLine(cl,13);W.roof=T([A[0],A[1],B[1],B[0]])}
+  for(let k=0;k<=8;k++){const pl=offLine([[575,643],[891,487]],-17),x=(pl[0][0]+(pl[1][0]-pl[0][0])*k/8)*K,y=(pl[0][1]+(pl[1][1]-pl[0][1])*k/8)*K;const b={x:x-1.5,y:y-1.5,w:3,h:3,type:'bld',col:'#9aa5b1',roof:'#6c757d',pillar:true};W.obst.push(b);W.blds.push(b)}
+  // edificios y zonas vecinas (aproximados de la foto)
+  const polys=[{p:[[195,470],[320,335],[410,305],[500,470],[400,590],[300,585]],c:'#5b8fb9'},{p:[[310,350],[420,300],[470,420],[360,470]],c:'#a0522d'},{p:[[245,180],[310,140],[410,190],[380,255],[280,270]],c:'#8c3b3b'},
+    {p:[[480,270],[740,230],[830,170],[950,300],[1000,390],[840,450],[560,520],[520,420]],c:'#9b6b5b'},{p:[[730,230],[930,150],[990,300],[850,330]],c:'#7fa7c9'},{p:[[500,40],[840,20],[870,140],[560,170]],c:'#6f9f8f'},
+    {p:[[610,90],[690,90],[700,190],[620,200]],c:'#8c3b3b'},{p:[[910,60],[1000,50],[1010,130],[930,140]],c:'#b5533c'},{p:[[990,30],[1245,0],[1245,340],[1050,330]],c:'#5c5f66',lot:true},
+    {p:[[1040,430],[1245,410],[1245,1005],[1120,1005],[1070,800]],c:'#6b6e75',lot:true},{p:[[150,205],[250,140],[300,170],[270,330],[220,550],[165,540],[140,420],[140,300]],c:'#5c5f66',lot:true},
+    {p:[[908,870],[935,882],[925,904],[897,890],[899,885],[777,823],[782,815],[743,821],[597,748],[648,647],[691,635],[705,675],[680,721],[770,767],[786,809],[792,798],[912,861]],c:'#e7e3d6',label:'COSEVI'},
+    {p:[[872,544],[883,568],[776,618],[765,595]],c:'#ecebe4'},{p:[[765,606],[776,628],[712,658],[702,636]],c:'#ecebe4'},{p:[[552,645],[528,641],[516,702],[540,706]],c:'#d9d4c5'},{p:[[1114,937],[1121,967],[1074,978],[1067,948]],c:'#ecebe4'}];
+  W.drawUnder=x=>{for(const q of polys){const pp=T(q.p);x.fillStyle='rgba(0,0,0,.3)';x.beginPath();x.moveTo(pp[0][0]+2,pp[0][1]+2);for(const r of pp)x.lineTo(r[0]+2,r[1]+2);x.fill();
+      x.fillStyle=q.c;x.beginPath();x.moveTo(pp[0][0],pp[0][1]);for(const r of pp)x.lineTo(r[0],r[1]);x.fill();
+      if(!q.lot){x.strokeStyle=shade(q.c,-.3);x.lineWidth=1;x.stroke();x.save();x.clip();x.strokeStyle=shade(q.c,.12);const xs=pp.map(r=>r[0]),ys=pp.map(r=>r[1]),x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+        for(let k=x0-(y1-y0);k<x1;k+=4){x.beginPath();x.moveTo(k,y1);x.lineTo(k+(y1-y0)*.5,y0);x.stroke()}x.restore()}
+      if(q.label){const cx=pp.reduce((s,r)=>s+r[0],0)/pp.length,cy=pp.reduce((s,r)=>s+r[1],0)/pp.length;ptext(x,q.label,cx-12,cy-2,'#3d405b')}}
+    // velódromo / pista de motos vecina
+    {const[cx,cy]=[1205*K,575*K];ringPx(x,cx,cy,20,'#d8d8d8');ringPx(x,cx,cy,12,'#d8d8d8',3);x.strokeStyle='#d8d8d8';x.lineWidth=1;x.strokeRect(1085*K,450*K,150*K,520*K)}};
+  W.drawExtra=x=>{const line=(pts,d,col,dash,w=1)=>{const q=offLine(T(pts),d);x.strokeStyle=col;x.lineWidth=w;x.setLineDash(dash||[]);x.beginPath();x.moveTo(q[0][0],q[0][1]);for(const r of q)x.lineTo(r[0],r[1]);x.stroke();x.setLineDash([])};
+    line(EAST,0,'#ecece4',[4,4]);line([[582,658],[629,634],[886,518]],-7.2,'#ecece4',[4,4]);line(HWW,0,'#ecece4',[6,6]);line(HWE,0,'#ecece4',[6,6]);
+    // isla de la rotonda
+    const R=W.rb;fillCirc(x,R.x,R.y,R.r-9,'#4c9a45');ringPx(x,R.x,R.y,R.r-9,'#d62828',3,'#f4f4f4');fillCirc(x,R.x,R.y,5,'#2e6b2c');
+    // líneas de ALTO
+    for(const s of W.pstops){const nx=-s.uy,ny=s.ux;x.fillStyle='#ecece4';for(let k=-12;k<=12;k+=.5)x.fillRect(Math.round(s.x+nx*k),Math.round(s.y+ny*k),2,2);}
+    // cruce del tren
+    {const r=W.rail,ux=.176,uy=.984,nx=-uy,ny=ux;for(const off of[-2.5,2.5]){x.fillStyle='#c9c9d4';for(let k=-22;k<=22;k+=.5)x.fillRect(Math.round(r.x+ux*off+nx*k),Math.round(r.y+uy*off+ny*k),1,1)}
+      x.fillStyle='#4a3626';for(let k=-22;k<=22;k+=3)for(let j=-4;j<=4;j++)x.fillRect(Math.round(r.x+ux*j+nx*k),Math.round(r.y+uy*j+ny*k),1,1);
+      const sx=r.x+nx*-17,sy=r.y+ny*-17;x.fillStyle='#fff';for(let k=-3;k<=3;k++){x.fillRect(Math.round(sx+k),Math.round(sy+k),1,1);x.fillRect(Math.round(sx+k),Math.round(sy-k),1,1)}}
+    const lab=(t,px,py,col='#ffffff')=>ptext(x,t,Math.round(px*K),Math.round(py*K),col);
+    lab('ALTO',170,560);lab('ALTO',60,370);lab('ALTO',468,640);lab('CEDA',300,92);lab('CEDA',820,740);lab('FILA',700,610,'#ffd23f');lab('ZIGZAG',800,600,'#ffd23f');lab('ROTONDA',880,690,'#ffd23f');
+    lab('PARQUEO',400,600,'#ffd23f');lab('MOTOS',870,610);lab('DOS CARRILES',1000,700,'#ffd23f');lab('ENTRADA',225,100);lab('AVENIDA 50',380,0);lab('CIRCUNVALACION',300,860,'#dddddd');lab('PLANTEL CIUDAD VIAL',640,440,'#ffffff');};
+  // árboles en las zonas verdes
+  for(const[tx,ty]of[[1000,860],[1015,890],[985,760],[1010,620],[900,700],[830,700],[700,690],[660,700],[60,450],[40,520],[30,300],[1120,880],[180,40],[120,120],[620,560],[700,540],[580,580],[350,630],[420,620]]){const t={x:tx*K,y:ty*K,r:4};if(pavedW(W,t.x,t.y))continue;W.trees.push(t);W.obst.push({x:t.x-2,y:t.y-2,w:4,h:4,type:'tree'})}
+  for(const[px,py,h]of[[200,250,1.2],[230,300,1.3],[210,420,1.4],[245,200,.5],[1100,120,1.6],[1150,160,1.6],[1200,200,1.6],[1130,260,1.6]])addParked(W,px*K,py*K,h,pick(CARCOLS),pick(['sedan','hatch','suv']));
+  // tráfico afuera: Circunvalación y Avenida 50
+  const hw=T(HWW).concat(T(HWE));const n0=W.ai.length;spawnOnLoop(W,makePathLoop(hw,6.5),8,62,['bus']);spawnOnLoop(W,makePathLoop(hw,-6.5),6,70);
+  const av=T(AV50);spawnOnLoop(W,makePathLoop(av.concat(av.slice().reverse()),5.5),6,40);for(let i=n0;i<W.ai.length;i++)W.ai[i].zl=60;
+  W.spawn={x:290*K,y:78*K,h:Math.atan2(50,-60)};W.jay=null;W.dests=[{n:'LA SALIDA',x:305*K,y:66*K}];
+  return W}
+function pstopRules(W,P,dt){for(const s of W.pstops){const dx=P.x-s.x,dy=P.y-s.y,al=dx*s.ux+dy*s.uy,lat=Math.abs(dy*s.ux-dx*s.uy),hd=Math.cos(P.h)*s.ux+Math.sin(P.h)*s.uy;
+  if(lat<s.w&&hd>.3&&al>-34&&al<=0&&P.gear===1){s.on=true;s.minV=Math.min(s.minV,Math.abs(P.v))}
+  else if(s.on&&al>0){s.on=false;if(s.minV>1.2)fault(s.code,s.txt,'I',4);s.minV=99}
+  else if(al<-40||lat>s.w+10){s.on=false;s.minV=99}}}
+function cvTasks(){const K=CVK,G=(x,y)=>({x:x*K,y:y*K}),near=(x,y,r)=>Math.hypot(S.P.x-x*K,S.P.y-y*K)<r;return[
+  {txt:'PLANTEL DE SAN JOSÉ (Ciudad Vial): póngase el cinturón [C] y baje por la calle de acceso. ALTO en el cruce del tren y en la línea antes del cruce.',tgt:G(300,684),check(){return near(300,684,18)}},
+  {txt:'Doble a la IZQUIERDA hacia la FILA y avance por uno de los dos carriles (bajo el toldo o afuera) hasta el final.',tgt:G(888,503),check(){return near(888,503,20)}},
+  {txt:'ZIGZAG: doble a la DERECHA y pase entre los conos sin tocarlos (−12 por cono).',tgt:G(736,690),check(){return near(736,690,16)}},
+  {txt:'Curva a la IZQUIERDA y entre a la ROTONDA: ceda el paso, dé la VUELTA COMPLETA y salga a la curva larga con direccional DERECHA.',tgt:G(855,770),start(){S.lap=0;S.la=null;S.inR=false},
+   check(){const P=S.P,R=S.W.rb,d=Math.hypot(P.x-R.x,P.y-R.y);if(d<R.r+12){const a=Math.atan2(P.y-R.y,P.x-R.x);if(S.la!=null)S.lap+=nA(a-S.la);S.la=a;S.inR=true;return false}
+    if(S.inR&&d>R.r+20){S.inR=false;S.la=null;if(S.lap>1)fault('rwrong','Circuló la rotonda en sentido contrario','I',5);else if(S.lap>-5)fault('lap','No dio la vuelta completa a la rotonda','II',5);
+      if(!(P.blinkR||S.t-(P.lastR||-9)<2.5))fault('rsigR','No puso direccional DERECHA al salir de la rotonda','III',5);return true}return false}},
+  {txt:'Siga la CURVA LARGA y suba por los DOS CARRILES. Manténgase en su carril.',tgt:G(940,465),check(){return near(940,465,20)}},
+  {txt:'PARQUEO: siga junto al toldo y estaciónese en el espacio AMARILLO. ¡Si toca un cono del parqueo pierde la prueba!',tgt:{x:CVK*0,y:0},start(){this.tgt={x:S.W.pslot.cx,y:S.W.pslot.cy}},
+   check(){const P=S.P,o=S.W.pslot,dx=P.x-o.cx,dy=P.y-o.cy,c=Math.cos(o.ang),s=Math.sin(o.ang),al=dx*c+dy*s,lt=-dx*s+dy*c;return still('cp',Math.abs(al)<3.5&&Math.abs(lt)<2&&Math.abs(Math.cos(P.h-o.ang))>.92,1.2)},ok:'¡Parqueo correcto!'},
+  {txt:'Salga del parqueo (ALTO antes de la calle), doble a la DERECHA en la calle de acceso y haga ALTO total en el CRUCE DEL TREN.',tgt:G(98,380),check(){const P=S.P,r=S.W.rail;return(P.x-r.x)*-.176+(P.y-r.y)*-.984>12}},
+  {txt:'SALIDA: ceda el paso a los carros de la Avenida 50 y salga del plantel.',tgt:G(305,66),check(){return near(305,66,16)}}]}
+
 // ===================== RUTAS EMBLEMÁTICAS =====================
 function arrowPx(x,cx,cy,dx,dy,col){x.fillStyle=col;for(let k=-5;k<=3;k++)x.fillRect(Math.round(cx+dx*k),Math.round(cy+dy*k),1,1);
   for(let k=1;k<=3;k++){const bx=cx+dx*(3-k),by=cy+dy*(3-k);x.fillRect(Math.round(bx-dy*k),Math.round(by+dx*k),1,1);x.fillRect(Math.round(bx+dy*k),Math.round(by-dx*k),1,1)}}
@@ -812,6 +911,7 @@ function renderBG(W){
   const R=rng(W.kind==='city'?7:3);const px=(X,Y,col)=>{x.fillStyle=col;x.fillRect(X,Y,1,1)};
   x.fillStyle='#3f8f3f';x.fillRect(0,0,W.w,W.h);
   for(let i=0;i<W.w*W.h/30;i++){x.fillStyle=R()<.5?'#357d35':'#4ea24a';x.fillRect(R()*W.w|0,R()*W.h|0,1+(R()*2|0),1)}
+  if(W.drawUnder)W.drawUnder(x);
   for(const rl of W.rails){x.fillStyle='#7d6b58';if(rl.o==='v')x.fillRect(rl.pos-7,0,14,W.h);else x.fillRect(0,rl.pos-7,W.w,14)}
   for(const s of W.sidewalks){x.fillStyle='#a3a39b';x.fillRect(s.x,s.y,s.w,s.h);x.fillStyle='#c9c9bf';x.fillRect(s.x,s.y,s.w,1);x.fillRect(s.x,s.y,1,s.h);x.fillStyle='#7c7c74';x.fillRect(s.x,s.y+s.h-1,s.w,1);x.fillRect(s.x+s.w-1,s.y,1,s.h)}
   if(W.parks)for(const p of W.parks){x.fillStyle='#4a9b48';x.fillRect(p.x,p.y,p.w,p.h)}
@@ -892,7 +992,7 @@ function renderBG(W){
     for(const off of[-7,7]){const[ax,ay]=r.o==='h'?[t,r.c+off]:[r.c+off,t];arrowPx(x,ax,ay,r.o==='h'?r.ow:0,r.o==='v'?r.ow:0,WH)}}
   if(W.drawExtra)W.drawExtra(x);
   if(W.labels)for(const l of W.labels)ptext(x,l.t,Math.round(l.x),Math.round(l.y),l.col||'#f2f2f2',l.rot||0);
-  for(const b of W.blds){b.ht=b.tower?96:b.booth?7:b.house?9:b.pulzar?16:b.label==='GRADERIAS'?6:12+((b.x*7+b.y*13)%22);
+  for(const b of W.blds){b.ht=b.tower?96:b.booth?7:b.pillar?8:b.house?9:b.pulzar?16:b.label==='GRADERIAS'?6:12+((b.x*7+b.y*13)%22);
     if(b.tower){x.fillStyle='rgba(0,0,0,.4)';for(let k=1;k<=12;k++)x.fillRect(b.x+k,b.y+k,b.w,b.h);x.fillStyle=b.col;x.fillRect(b.x,b.y,b.w,b.h);
       for(let k=0;k<b.h-4;k+=4){x.fillStyle=k%8?'#1f4f8a':'#2a6bb5';x.fillRect(b.x+2,b.y+2+k,b.w-4,3)}x.fillStyle='#7fd3ff';x.fillRect(b.x+2,b.y+2,b.w-4,1);x.fillRect(b.x+2,b.y+2,1,b.h-4);
       x.fillStyle='#0b1022';x.fillRect(b.x+8,b.y+20,b.w-16,24);fillCirc(x,b.x+b.w-11,b.y+11,6,'#2b2b38');ptext(x,'H',b.x+b.w-12,b.y+9,'#ffd23f');continue}x.fillStyle='rgba(0,0,0,.35)';x.fillRect(b.x+3,b.y+3,b.w,b.h);x.fillStyle=b.col;x.fillRect(b.x,b.y,b.w,b.h);x.fillStyle=b.roof||shade(b.col,-.2);x.fillRect(b.x+2,b.y+2,b.w-4,b.h-4);
@@ -957,10 +1057,10 @@ const ROUTES={centro:1,r27:1};
 const MODES={centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};
 function start(mode){
   logDrive();
-  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode==='sanjose'?buildSanJose():mode==='centro'?buildCentro():mode==='r27'?buildR27():buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
+  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode==='sanjose'?buildCiudadVial():mode==='centro'?buildCentro():mode==='r27'?buildR27():buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);S.zoom=store.get('pp_zoom',1.5);S.mapOpen=false;
-  S.tasks=mode==='tuto'?tutoTasks():mode==='plantel'?plantelTasks():mode==='sanjose'?sjTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='street'?streetTasks():[];if(mode==='city')newDest();
+  S.tasks=mode==='tuto'?tutoTasks():mode==='plantel'?plantelTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='street'?streetTasks():[];if(mode==='city')newDest();
   const mw=W.w>1200?170:130,mh=Math.round(mw*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
   show(null);$('hud').classList.remove('hidden');ui=null;
   $('banner').textContent='';$('toasts').innerHTML='';
@@ -1378,7 +1478,7 @@ function updateWorld(W,P,dt,t){
     if(c.off>.2){const ux=dx/(dist||1),uy=dy/(dist||1);dx+=uy*c.off;dy-=ux*c.off}
     const heavy=c.type==='bus'||c.type==='garbage';
     const rate=Math.max(.2,c.v*(heavy?.06:.085));c.h=nA(c.h+clamp(nA(Math.atan2(dy,dx)-c.h),-rate*dt,rate*dt));
-    let zl=W.limit;for(const z of W.zones)if(inR(c.x,c.y,z)){zl=z.limit;if(z.name==='ESCUELA')break}
+    let zl=c.zl||W.limit;for(const z of W.zones)if(inR(c.x,c.y,z)){zl=z.limit;if(z.name==='ESCUELA')break}
     let tgt=c.nav?Math.min(c.cap||99,zl/KMH*(c.drv||1)):Math.min(c.vmax,zl/KMH*1.04);if(W.slopes&&heavy)for(const q of W.slopes)if(inR(c.x,c.y,q)&&Math.cos(c.h)*q.dx+Math.sin(c.h)*q.dy<-.5)tgt*=.6;
     if(dist<34&&Math.abs(tn)>.5)tgt=Math.min(tgt,heavy?12:16);if(dist<30&&cv>.25)tgt=Math.min(tgt,15);if(wp.slow)tgt=Math.min(tgt,wp.slow);
     if(c.stun>0){c.stun-=dt;tgt=0}
@@ -1478,6 +1578,8 @@ function drawWorld(W,P,ix,iy,t){
   if(W.tower){const b=W.tower,ph=(Math.sin(t*3)+1)/2,col=ph>.5?'#ff3df2':'#3df2ff',gl=ph>.5?'#ff3df255':'#3df2ff55';const tx=X(b.x+b.w/2-23),ty=Y(b.y+27);
     if(tx>-60&&tx<VW+10&&ty>-30&&ty<VH+10){{const lx=X(b.x+b.w/2)-26,ly=Y(b.y+b.h/2)-17;g.fillStyle=ph>.5?'rgba(61,99,242,.55)':'rgba(61,99,242,.2)';g.fillRect(lx-3,ly-3,58,40);g.drawImage(PZLOGO,lx,ly)}
       if(Math.floor(t*2)%2){g.fillStyle='#ff2a2a';g.fillRect(X(b.x+3),Y(b.y+3),2,2);g.fillRect(X(b.x+b.w-5),Y(b.y+b.h-5),2,2)}}}
+  if(W.roof){const q=W.roof;g.save();g.globalAlpha=.62;g.fillStyle='#1f3f8f';g.beginPath();g.moveTo(X(q[0][0]),Y(q[0][1]));for(const r of q)g.lineTo(X(r[0]),Y(r[1]));g.fill();g.globalAlpha=.5;g.strokeStyle='#8fb4ff';g.lineWidth=1;
+    for(let k=1;k<12;k++){const a=k/12;g.beginPath();g.moveTo(X(q[0][0]+(q[3][0]-q[0][0])*a),Y(q[0][1]+(q[3][1]-q[0][1])*a));g.lineTo(X(q[1][0]+(q[2][0]-q[1][0])*a),Y(q[1][1]+(q[2][1]-q[1][1])*a));g.stroke()}g.restore()}
   if(W.tolls)for(const T of W.tolls){const bx=X(T.x+T.dir*13);if(bx<-5||bx>VW+5)continue;const near=Math.abs(P.x-T.x)<120&&Math.abs(P.y-T.y)<16;
     for(const ly of[T.y-8,T.y+8]){g.fillStyle='#2b2d42';g.fillRect(bx-1,Y(ly+(ly<T.y?-7:7))-1,3,3);if(near&&!T.paid&&Math.abs(P.y-ly)<9){for(let k=0;k<12;k++){g.fillStyle=(k>>1)%2?'#fff':'#e63946';g.fillRect(bx,Y(ly-6)+k,1,1)}}}}
   // globos de enojo
@@ -1686,7 +1788,7 @@ function step(dt){
   if(S.respawn>0){S.respawn-=dt;if(S.respawn<=0){const b=P.belt;Object.assign(P,spawnState(W));P.belt=b}updateWorld(W,P,dt,S.t);return}
   const px=P.x,py=P.y;
   updatePlayer(W,P,dt);if(S.over)return;
-  rules(W,P,px,py,dt);if(S.over)return;if(W.tolls)tollRules(W,P,dt);if(S.over)return;
+  rules(W,P,px,py,dt);if(S.over)return;if(W.tolls)tollRules(W,P,dt);if(W.pstops)pstopRules(W,P,dt);if(S.over)return;
   updateWorld(W,P,dt,S.t);if(S.over)return;
   if(S.exam){const tk=S.tasks[S.task];if(tk){if(!tk.started){tk.started=true;tk.start&&tk.start()}
       if(tk.check()){toast('✔ '+(tk.ok||'¡LISTO!'),'','good');sfx.good();S.task++;if(S.task>=S.tasks.length)endExam('done')}}}
