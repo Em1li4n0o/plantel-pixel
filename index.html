@@ -199,13 +199,16 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <div class="sub">Practique la prueba tal como se hace en cada plantel</div>
     <div class="grid pl">
       <button id="plSJ">1 · SAN JOSÉ<small>DISPONIBLE</small></button>
-      <button disabled>HEREDIA<small>PRÓXIMAMENTE</small></button>
-      <button disabled>ALAJUELA<small>PRÓXIMAMENTE</small></button>
-      <button disabled>CARTAGO<small>PRÓXIMAMENTE</small></button>
-      <button disabled>LIMÓN<small>PRÓXIMAMENTE</small></button>
-      <button disabled>LIBERIA<small>PRÓXIMAMENTE</small></button>
-      <button disabled>PUNTARENAS<small>PRÓXIMAMENTE</small></button>
-      <button disabled>PÉREZ ZELEDÓN<small>PRÓXIMAMENTE</small></button>
+      <button data-sede="heredia">2 · HEREDIA<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="alajuela">3 · ALAJUELA<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="perez">4 · PÉREZ ZELEDÓN<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="rioclaro">5 · RÍO CLARO<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="limon">6 · LIMÓN<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="guapiles">7 · GUÁPILES<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="sancarlos">8 · SAN CARLOS<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="nicoya">9 · NICOYA<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="puntarenas">PUNTARENAS<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="liberia">LIBERIA<small>VERSIÓN PRELIMINAR</small></button>
     </div>
     <button id="plBack" style="min-width:0">ESC · VOLVER</button>
   </div>
@@ -1145,6 +1148,19 @@ function r32Tasks(){const W=S.W;return[
   {txt:'NEBLINA Y BAJADA DEL 10%: baje despacio, con luces y MARCHA BAJA [G] (compresionar).',tgt:{x:W.CL[W.iBr-6][0],y:W.CL[W.iBr-6][1]},start(){S.lowT=0;S.dnT=0},
    check(){const P=S.P;if(P.slope&&P.slAl>.5&&P.v>3){S.dnT+=S.dt;if(P.low)S.lowT+=S.dt}if(S.ci>W.iBr-6){if(S.dnT>4&&S.lowT<S.dnT*.5)fault('baja','No usó marcha baja en la bajada fuerte','III',99);return true}return false}},
   {txt:'Cruce el puente del RÍO SUCIO (mire: agua amarilla y oscura juntas) y llegue a GUÁPILES.',tgt:{x:W.CL[W.iEnd][0],y:W.CL[W.iEnd][1]},check(){return S.ci>=W.iEnd}}]}
+// ===================== PLANTELES DE LAS SEDES (VERSIÓN PRELIMINAR) =====================
+// Sedes donde se aplica la prueba práctica según la Dirección General de Educación Vial. La prueba es la misma en todo el país;
+// mientras se consiguen medidas y fotos de cada sede, se usa un plantel estándar con el entorno de cada región.
+const SEDES={heredia:{n:'HEREDIA',r:'valle'},alajuela:{n:'ALAJUELA',r:'valle'},perez:{n:'PÉREZ ZELEDÓN',r:'montana'},rioclaro:{n:'RÍO CLARO',r:'sur'},limon:{n:'LIMÓN',r:'caribe'},
+  guapiles:{n:'GUÁPILES',r:'caribe'},sancarlos:{n:'SAN CARLOS',r:'norte'},nicoya:{n:'NICOYA',r:'seco'},puntarenas:{n:'PUNTARENAS',r:'costa'},liberia:{n:'LIBERIA',r:'seco'}};
+const REGION={valle:{g:['#3f8f3f','#357d35','#4ea24a'],palms:0,trees:70},montana:{g:['#2f7a36','#276b2d','#3d8f42'],palms:0,trees:110},sur:{g:['#3a8a3a','#2f7a31','#4b9c45'],palms:14,trees:90},
+  caribe:{g:['#2f8a3a','#287a31','#3fa04a'],palms:26,trees:90},norte:{g:['#3b8f38','#317e31','#4da746'],palms:6,trees:90},seco:{g:['#a3a34f','#8f9043','#b7b45f'],palms:4,trees:40},costa:{g:['#8fa35a','#7f9450','#a7b56a'],palms:22,trees:30}};
+function buildSede(k){const D=SEDES[k],Rg=REGION[D.r];const W=buildPlantel();W.grass=Rg.g;W.sede=D.n;
+  const R=rng(k.length*31+7);W.trees=W.trees.slice(0,Rg.trees);W.palms=[];for(let i=0,t=0;i<Rg.palms&&t<400;t++){const x=R()*640,y=R()*480;if(pavedW(W,x,y)||pavedW(W,x+8,y)||pavedW(W,x-8,y)||W.obst.some(o=>x>o.x-6&&x<o.x+o.w+6&&y>o.y-6&&y<o.y+o.h+6))continue;W.palms.push({x,y,r:R()*6});i++}
+  if(D.r==='costa'||D.r==='caribe'){W.drawUnder=x=>{x.fillStyle=D.r==='costa'?'#e6d7a3':'#d8c991';x.fillRect(0,462,640,18);x.fillStyle='#3a86b8';x.fillRect(0,470,640,10)}}
+  W.labels=(W.labels||[]).concat([{x:150,y:108,t:'PLANTEL DE '+D.n.normalize('NFD').replace(/[̀-ͯ]/g,''),col:'#fff'}]);
+  if(D.r==='seco'){W.cows=[];for(let i=0;i<5;i++){const x=520+R()*100,y=360+R()*90;if(!pavedW(W,x,y))W.cows.push({x,y,ox:x,oy:y,h:R()*6,t:R()*5})}}
+  return W}
 // ===================== ALAJUELA: AEROPUERTO, MODO TAXI Y LA GUÁCIMA =====================
 let MODE_NOW=null;
 function buildAlajuela(){HW=14;const W=newWorld('alajuela',3000,2000);W.limit=40;W.taxi=true;
@@ -1358,8 +1374,8 @@ function bld2D(x,b){const s=Math.min(18,2+b.ht/7);x.fillStyle='rgba(0,0,0,.34)';
 function renderBG(W){
   const c=document.createElement('canvas');c.width=W.w;c.height=W.h;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
   const R=rng(W.kind==='city'?7:3);const px=(X,Y,col)=>{x.fillStyle=col;x.fillRect(X,Y,1,1)};
-  x.fillStyle='#3f8f3f';x.fillRect(0,0,W.w,W.h);
-  for(let i=0;i<W.w*W.h/30;i++){x.fillStyle=R()<.5?'#357d35':'#4ea24a';x.fillRect(R()*W.w|0,R()*W.h|0,1+(R()*2|0),1)}
+  const GR=W.grass||['#3f8f3f','#357d35','#4ea24a'];x.fillStyle=GR[0];x.fillRect(0,0,W.w,W.h);
+  for(let i=0;i<W.w*W.h/30;i++){x.fillStyle=R()<.5?GR[1]:GR[2];x.fillRect(R()*W.w|0,R()*W.h|0,1+(R()*2|0),1)}
   if(W.drawUnder)W.drawUnder(x);
   for(const rl of W.rails){x.fillStyle='#7d6b58';if(rl.o==='v')x.fillRect(rl.pos-7,0,14,W.h);else x.fillRect(0,rl.pos-7,W.w,14)}
   for(const s of W.sidewalks){x.fillStyle='#a3a39b';x.fillRect(s.x,s.y,s.w,s.h);x.fillStyle='#c9c9bf';x.fillRect(s.x,s.y,s.w,1);x.fillRect(s.x,s.y,1,s.h);x.fillStyle='#7c7c74';x.fillRect(s.x,s.y+s.h-1,s.w,1);x.fillRect(s.x+s.w-1,s.y,1,s.h)}
@@ -1510,13 +1526,13 @@ $('prgBack').onclick=()=>back();
 let S=null,A=null,ui='menu';
 function spawnState(W){const ty=isArc(CAR.type)&&!ARCOK?'sedan':(MODE_NOW==='alajuela'&&!isArc(CAR.type)?'taxi':CAR.type),v=VEH[ty];return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,thr:0,bp:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:carCol(),type:ty,sp:v,nitro:1,L:v.L,Wd:v.Wd,player:true}}
 const ROUTES={centro:1,r27:1,r32:1,tilaran:1,sjlibre:1,alajuela:1};
-const MODES={alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};
+const MODES={alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};for(const k in SEDES)MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';
 function start(mode){
   logDrive();ARCOK=mode==='city'||mode==='sjlibre'||mode==='alajuela';MODE_NOW=mode;
-  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
+  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city'&&mode!=='sjlibre'&&mode!=='alajuela',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);S.chase=S.fp&&store.get('pp_chase',false);S.camH=S.P.h;S.zoom=store.get('pp_zoom',1.5);S.mapOpen=false;
-  S.tasks=mode==='tuto'?tutoTasks():mode==='plantel'?plantelTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
+  S.tasks=mode==='tuto'?tutoTasks():(mode==='plantel'||mode.startsWith('pl_'))?plantelTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
   const mw=W.w>1200?170:130,mh=Math.round(mw*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
   show(null);$('hud').classList.remove('hidden');ui=null;
   $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio',false);shush();
@@ -1545,7 +1561,7 @@ function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
   if(S.mode==='tuto'){$('endTitle').textContent='¡TUTORIAL COMPLETADO!';$('endTitle').style.color='var(--good)';$('endLic').classList.add('hidden');$('endSub').textContent='Ya sabe manejar el simulador. Siga con el EXAMEN TEÓRICO (1) o practique en MANEJO LIBRE (5). Las reglas completas están en REGLAS (9).';$('endList').innerHTML='';show('end');ui='end';sfx.fanfare();return}
   const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();checkDaily();$('bReplay').classList.toggle('hidden',!S.faults.length);say(reason==='crash'?'Accidente. Prueba terminada.':ok?'¡Felicidades, aprobó!':'Reprobado. Siga practicando.',true);$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   let extra='';const prog=store.get('pp_prog',{});
-  const pk=S.mode==='sanjose'?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
+  const pk=(S.mode==='sanjose'||S.mode.startsWith('pl_'))?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
   const lic=prog.plantel&&prog.street&&prog.teorico;
   if(ok&&lic&&!ROUTES[S.mode]){extra=' · ¡GANÓ SU LICENCIA!';$('endLic').classList.remove('hidden');$('licName').value=store.get('pp_name','');drawLicense($('licEnd'));setTimeout(sfx.fanfare,500)}
   else{$('endLic').classList.add('hidden');if(ok&&!ROUTES[S.mode])extra=' · Para la licencia le falta: '+[['teorico','TEÓRICO'],['plantel','PLANTEL'],['street','CALLE']].filter(([k])=>!prog[k]).map(a=>a[1]).join(', ')}
@@ -2478,7 +2494,7 @@ function onKey(k){
     if(ui==='rules'){if(k==='escape'||k==='enter')back();return}
     if(ui==='lic'){if(k==='escape'||k==='enter')back();return}
     if(ui==='prg'){if(k==='escape')back();return}
-    if(ui==='pl'){if(k==='1')start('sanjose');if(k==='escape')back();return}
+    if(ui==='pl'){if(k==='1')start('sanjose');{const b=[...document.querySelectorAll('#plScr [data-sede]')].find(b=>b.textContent.trim().startsWith(k+' ·'));if(b)start('pl_'+b.dataset.sede)}if(k==='escape')back();return}
     if(ui==='rt'){if(k==='1')start('centro');if(k==='2')start('r27');if(k==='3')start('sjlibre');if(k==='4')start('r32');if(k==='5')start('tilaran');if(k==='6')start('alajuela');if(k==='escape')back();return}
     if(ui==='garage'){if(k==='a'||k==='arrowleft')garage(-1,0);if(k==='d'||k==='arrowright')garage(1,0);if(k==='w'||k==='arrowup')garage(0,-1);if(k==='s'||k==='arrowdown')garage(0,1);if(k==='enter'||k==='escape')back();return}
     if(ui==='theory'){theoryKey(k);return}
@@ -2513,7 +2529,7 @@ function back(){show('menu');ui='menu';refreshMenu()}
 function openPlanteles(){show('plScr');ui='pl'}
 function openRutas(){show('rtScr');ui='rt'}
 function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);if(engG&&S.paused)engG.gain.value=0}
-$('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
+$('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};for(const b of document.querySelectorAll('#plScr [data-sede]'))b.onclick=()=>{audioInit();start('pl_'+b.dataset.sede)};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
 $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
 $('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
