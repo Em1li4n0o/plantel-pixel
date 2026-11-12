@@ -21,7 +21,8 @@ y entre a http://localhost:8080
 | A / D | Girar |
 | Q / E | Direccional izquierda / derecha (se apagan solas al enderezar) |
 | H | Intermitentes |
-| C | Cinturón (con el carro detenido) |
+| C | Cinturón (en moto o bici: casco), con el vehículo detenido |
+| T | Bajarse del vehículo / subirse (manejo libre y rutas). A pie: WASD caminar, Espacio o Shift correr |
 | Espacio | Freno de mano |
 | V | Vista de piloto |
 | Z / X | (Piloto) mirar a la izquierda / derecha: espejos laterales |
@@ -29,12 +30,17 @@ y entre a http://localhost:8080
 | B | Pitar (solo para evitar accidentes; nunca en zona escolar) |
 | G | Marcha baja: compresionar al bajar cuestas |
 | P / Esc | Pausa |
-| M | Mapa completo (también tocando el minimapa); el juego se pausa |
+| M | Mapa completo (también tocando el minimapa); el juego se pausa. En manejo libre, clic o toque en un lugar del mapa para ir ahí |
 | + / - | Zoom de la cámara (en el mapa: acercar) |
 | N | Sonido |
 | R | Reiniciar |
 
 ## Modos
+
+- **Al abrir por primera vez**: se pregunta dónde se juega (computadora o teléfono) y qué licencia se está sacando (Bici, A1, A2, A3, B1, C1, C2). Los controles se adaptan y el perfil se guarda con cada intento para el panel del instructor. Se cambia desde el menú (PERFIL).
+- **Pantalla completa**: botón arriba a la derecha; mientras está activa, el botón rojo SALIR queda siempre visible.
+- **Garaje por licencia**: bicicleta, scooter 50 cc (A1), moto 150 cc y trail 250 cc (A2), moto deportiva 600 cc (A3), carros (B1), taxi (C1) y autobús (C2). En moto la vista de piloto muestra el manubrio y los espejos.
+- **Policía de tránsito** (manejo libre): con 4 infracciones en 90 segundos llega una patrulla con sirena que lo alcanza y lo detiene, con diálogo del oficial y −300 puntos.
 
 - **Tutorial (0)**: enseña los controles paso a paso (cinturón, pedales, volante, direccionales, reversa, freno de mano, marcha baja, bocina, vistas y espejos).
 - **Celular / tablet**: botones en pantalla (volante, pedales, direccionales, pito, vista, freno de mano). Se juega en horizontal.
@@ -43,6 +49,8 @@ y entre a http://localhost:8080
 - **Menú**: 1 examen teórico · 2 planteles oficiales · 3 rutas emblemáticas · 4 prueba en calle · 5 manejo libre; abajo: 0 tutorial · 6 progreso · 7 licencia · 8 garaje · 9 reglas.
 - **Rutas emblemáticas**:
   - **Centro de San José**: cuadrícula real de avenidas y calles (Av. 7 a Av. 10, Calle 12 a Calle 15) con sus sentidos de UNA VÍA tomados de OpenStreetMap, bulevares peatonales de Avenida Central y Avenida 4, Paseo de los Estudiantes, Teatro Nacional, Plaza de la Cultura, Catedral, Parque Central, Mercado Central, Correos, Banco Central, Parque Morazán, Plaza de la Democracia y Museo Nacional. Recorrido guiado de 10 tareas; circular en contravía es falta grave.
+  - El centro tiene edificios emblemáticos en 3D en su cuadra real: Teatro Nacional (columnas, estatuas y bandera), Gran Hotel, Teatro Melico Salazar, Catedral con cúpula, kiosco del Parque Central, Templo de la Música, Mercado Central y Mercado Borbón con puestos, Correos, torres del Banco Nacional y del Banco Central, La Caja (CCSS), INS, Edificio Metálico, Parque España, Casa Amarilla, Asamblea Legislativa con el Castillo Azul, Museo Nacional con sus almenas e Iglesia de La Merced. Además: torre Pulzar Solutions, vallas Pulzar, palomas que vuelan al acercarse, motos y bicicletas en el tráfico.
+  - **San José libre**: el mismo centro sin examen; destinos emblemáticos, se puede caminar y viajar por el mapa.
   - **Ruta 27** (resumida): rampa de Escazú, autopista de dos carriles por sentido con curvas, peajes de Escazú, San Rafael y Atenas (hay que detenerse a pagar) y salida a Atenas.
   - Mapa del centro: © colaboradores de OpenStreetMap, licencia ODbL.
 - **Planteles oficiales**: solo se incluyen planteles reales. Hoy está San José; Heredia, Alajuela, Cartago, Limón, Liberia, Puntarenas y Pérez Zeledón aparecen como “próximamente”. El plantel inventado ya no está en el menú (su mapa solo se usa para el tutorial).
@@ -52,7 +60,7 @@ y entre a http://localhost:8080
 - **Licencia pixel**: se gana al aprobar teórico, plantel y prueba en calle.
 - **Vista de piloto** (tecla V) en primera persona.
 - **Mapa del tutorial**: 9 tareas con nota (empieza en 100, mínimo 80): incorporarse con direccional, parqueo en batería, ALTO en el cruce del tren, rotonda (3ª salida con direccionales), ALTO en intersección, retroceso entre conos, parqueo en paralelo y regreso al cuadro de inicio.
-- **Modo calle**: ciudad grande con centro, **pista** a 80 km/h, dos **cuestas** (bajar compresionando con marcha baja, arrancar en subida con freno de mano) y un **pueblo** con iglesia, pulpería, plaza de fútbol, escuela, cafetales y su propia rotonda. La marca PULZAR aparece en la torre, vallas y una tienda. El tráfico solo se simula cerca del jugador. Hay tráfico que circula por todas las calles y la rotonda (cediendo el paso), camiones de basura que se detienen a recoger, obras con conos, carros varados con intermitentes, huecos, peatones en las aceras y algunos que cruzan sin paso peatonal. Los carros adelantan a los vehículos detenidos: unos bien (con direccionales) y otros mal. Usted también puede adelantar: direccional izquierda al salir, derecha al volver, nunca en intersecciones ni cerca de pasos peatonales. Además tiene semáforos altos, rotonda, línea del tren con agujas, pasos peatonales, zona escolar y parqueo público. Lleva la cuenta de infracciones y de destinos alcanzados.
+- **Modo calle**: ciudad grande con centro, **pista** a 80 km/h, dos **cuestas** (bajar compresionando con marcha baja, arrancar en subida con freno de mano) y un **pueblo** con iglesia, pulpería, plaza de fútbol, escuela, cafetales y su propia rotonda. Estilo Miami: palmeras, edificios de colores y torres de vidrio. La marca PULZAR aparece en un rascacielos moderno, vallas, letreros en azoteas y una tienda. El tráfico solo se simula cerca del jugador. Hay tráfico que circula por todas las calles y la rotonda (cediendo el paso), camiones de basura que se detienen a recoger, obras con conos, carros varados con intermitentes, huecos, peatones en las aceras y algunos que cruzan sin paso peatonal. Los carros adelantan a los vehículos detenidos: unos bien (con direccionales) y otros mal. Usted también puede adelantar: direccional izquierda al salir, derecha al volver, nunca en intersecciones ni cerca de pasos peatonales. Además tiene semáforos altos, rotonda, línea del tren con agujas, pasos peatonales, zona escolar y parqueo público. Lleva la cuenta de infracciones y de destinos alcanzados.
 
 ## Faltas (según reportes sobre la prueba de Educación Vial)
 
