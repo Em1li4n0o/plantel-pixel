@@ -2,7 +2,11 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plantel Pixel">
 <title>Plantel Pixel</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
@@ -10,7 +14,7 @@
 :root{--u:2px;--bg:#0d0d16;--fg:#f4f4e8;--acc:#ffd23f;--bad:#ff4d4d;--good:#3ddc84;--info:#4dc3ff}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:'Press Start 2P',monospace;overflow:hidden}
-#wrap{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);aspect-ratio:16/9;width:min(100vw,177.78vh)}
+#wrap{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);aspect-ratio:16/9;width:min(100vw,177.78vh);width:min(100vw,177.78dvh)}
 #game{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block;background:#000}
 .hidden{display:none!important}
 #hud{position:absolute;inset:0;pointer-events:none;font-size:calc(var(--u)*5);line-height:1.4}
@@ -2684,7 +2688,8 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     A.t+=dt;updateWorld(A.W,null,dt,A.t);A.cx=330+Math.sin(A.t*.05)*300;A.cy=380+Math.cos(A.t*.07)*230;
     drawWorld(A.W,null,Math.round(clamp(A.cx,0,A.W.w-VW)),Math.round(clamp(A.cy,0,A.W.h-VH)),A.t);
   }}
-function fit(){const w=$('wrap').getBoundingClientRect().width;$('wrap').style.setProperty('--u',(w/VW)+'px');const u=w/VW;
+function fit(){{const vv=window.visualViewport,iw=vv?vv.width:innerWidth,ih=vv?vv.height:innerHeight,wr=$('wrap'),ww=Math.min(iw,ih*VW/VH);wr.style.width=ww+'px';wr.style.height=(ww*VH/VW)+'px';wr.style.left=((vv?vv.offsetLeft:0)+iw/2)+'px';wr.style.top=((vv?vv.offsetTop:0)+ih/2)+'px'}
+  const w=$('wrap').getBoundingClientRect().width;$('wrap').style.setProperty('--u',(w/VW)+'px');const u=w/VW;
   for(const b of document.querySelectorAll('#touch .tb')){if(!b.dataset.l){b.dataset.l=parseFloat(b.style.left);b.dataset.t=parseFloat(b.style.top)}b.style.left=(b.dataset.l*u)+'px';b.style.top=(b.dataset.t*u)+'px'}}
 let TOUCH=matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches;
 // Perfil inicial: dispositivo y licencia que está sacando (adapta los controles y se guarda con cada intento para el instructor)
@@ -2700,14 +2705,14 @@ $('profL').onclick=openWelcome;
 function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement}
 function fsToggle(){const d=document.documentElement;try{if(fsEl()){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{const r=d.requestFullscreen||d.webkitRequestFullscreen;if(r){const p=r.call(d,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>toast('PANTALLA COMPLETA','Su navegador no lo permite aquí. En iPhone: Compartir › Agregar a inicio','info'));try{screen.orientation.lock('landscape').catch(()=>{})}catch(_){}}else toast('PANTALLA COMPLETA','En iPhone: Compartir › Agregar a pantalla de inicio','info')}}catch(e){}}
 function fsPaint(){const on=!!fsEl();$('fsBtn').classList.toggle('on',on);const sm=S||innerHeight<520;$('fsBtn').textContent=sm?(on?'✕ SALIR':'⛶'):(on?'✕ SALIR DE PANTALLA COMPLETA':'⛶ PANTALLA COMPLETA');setTimeout(fit,120)}
-$('fsBtn').onclick=fsToggle;document.addEventListener('fullscreenchange',fsPaint);document.addEventListener('webkitfullscreenchange',fsPaint);
+$('fsBtn').onclick=fsToggle;if(navigator.standalone||matchMedia('(display-mode: standalone)').matches)$('fsBtn').style.display='none';document.addEventListener('fullscreenchange',fsPaint);document.addEventListener('webkitfullscreenchange',fsPaint);
 $('mini').style.pointerEvents='auto';$('mini').style.cursor='pointer';$('mini').title='Ver mapa [M]';$('mini').addEventListener('click',()=>{if(S&&!S.over)onKey('m')});
 $('game').addEventListener('click',e=>{if(S&&S.mapOpen&&!mapClick(e))S.mapOpen=false});if(TOUCH)document.body.classList.add('touch');
 for(const b of document.querySelectorAll('#touch [data-k]')){const k=b.dataset.k;
   const down=e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}audioInit();if(!keys[k])pressed[k]=true;keys[k]=true;b.classList.add('on');onKey(k)};
   const up=e=>{keys[k]=false;b.classList.remove('on')};
   b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault())}
-addEventListener('resize',()=>{fit();fsPaint()});applyProf();fit();fsPaint();refreshMenu();if(!PROF)openWelcome();
+addEventListener('resize',()=>{fit();fsPaint()});if(window.visualViewport){visualViewport.addEventListener('resize',fit);visualViewport.addEventListener('scroll',fit)}addEventListener('orientationchange',()=>setTimeout(fit,300));applyProf();fit();fsPaint();refreshMenu();if(!PROF)openWelcome();
 requestAnimationFrame(frame);
 </script>
 </body>
