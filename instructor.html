@@ -105,6 +105,7 @@ const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){msg('N
 let DB=load(),SEL=null;
 const MN={teorico:'Teórico',sanjose:'Plantel San José',plantel:'Plantel (tutorial)',street:'Prueba en calle',city:'Manejo libre',sjlibre:'San José libre',alajuela:'Alajuela · taxi',centro:'Ruta: Centro de San José',r27:'Ruta 27',r32:'Ruta 32',tilaran:'Ruta Tilarán',manuel:'Ruta Manuel Antonio',cerro:'Ruta Cerro de la Muerte'};
 for(const[k,n]of[['heredia','Heredia'],['alajuela','Alajuela'],['perez','Pérez Zeledón'],['rioclaro','Río Claro'],['limon','Limón'],['guapiles','Guápiles'],['sancarlos','San Carlos'],['nicoya','Nicoya'],['puntarenas','Puntarenas'],['liberia','Liberia']])MN['pl_'+k]='Plantel '+n+' (prelim.)';
+for(const[k,n]of[['heredia','Heredia'],['alajuela','Alajuela'],['sanramon','San Ramón'],['cartago','Cartago'],['perez','Pérez Zeledón'],['rioclaro','Río Claro'],['sancarlos','San Carlos'],['guapiles','Guápiles'],['nicoya','Nicoya'],['liberia','Liberia']])MN['of_'+k]='Recorrido oficial '+n;
 const fmtD=t=>new Date(t).toLocaleDateString('es-CR',{day:'2-digit',month:'short',year:'numeric'});
 const fmtT=s=>`${String(s/60|0).padStart(2,'0')}:${String(s%60|0).padStart(2,'0')}`;
 function msg(t,err){$('msg').textContent=t;$('msg').className=err?'err':''}
@@ -126,7 +127,7 @@ $('wipe').onclick=()=>{if(!confirm('¿Borrar todos los alumnos de este navegador
 
 // ---------- cálculo ----------
 const FREE=new Set(['city','sjlibre','alajuela']);const exams=a=>a.filter(x=>!x.prac&&!FREE.has(x.m));
-function best(s,ms){const v=s.h.filter(x=>(ms.includes(x.m)||(ms.includes('sanjose')&&String(x.m).startsWith('pl_')))&&!x.prac).map(x=>x.s);return v.length?Math.max(...v):null}
+function best(s,ms){const v=s.h.filter(x=>(ms.includes(x.m)||(ms.includes('sanjose')&&/^(pl|of)_/.test(String(x.m))))&&!x.prac).map(x=>x.s);return v.length?Math.max(...v):null}
 function topFault(h){const fc={};for(const a of h)for(const f of a.f||[])fc[f[0]]=(fc[f[0]]||0)+1;return Object.entries(fc).sort((a,b)=>b[1]-a[1])}
 function status(s){const t=best(s,['teorico']),p=best(s,['plantel','sanjose']),c=best(s,['street']);const drv=exams(s.h).filter(x=>x.m!=='teorico').slice(-3);
   const avg=drv.length?drv.reduce((a,x)=>a+x.s,0)/drv.length:null;
