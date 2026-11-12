@@ -1664,7 +1664,7 @@ const MODES={manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERT
 for(const k in SEDES){MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';MNAME['pl_'+k]='PLANTEL '+SEDES[k].n}
 function start(mode){
   logDrive();ARCOK=mode==='city'||mode==='sjlibre'||mode==='alajuela';MODE_NOW=mode;
-  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();if(mode==='city')addEvents(W,['llanta','derrape','hidro','varado','nino']);if(mode==='sjlibre')addEvents(W,['llanta','varado','nino','hidro']);if(mode==='alajuela')addEvents(W,['llanta','varado','hidro','nino']);W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
+  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();if(mode==='city')addEvents(W,SCENALL);if(mode==='sjlibre')addEvents(W,['llanta','varado','nino','hidro','ambulancia','bus','moto','accidente','frenos','encandilado','neblina']);if(mode==='alajuela')addEvents(W,['llanta','varado','hidro','nino','animal','motor','acelerador','bus','encandilado','derrape']);W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city'&&mode!=='sjlibre'&&mode!=='alajuela',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);S.chase=S.fp&&store.get('pp_chase',false);S.camH=S.P.h;S.zoom=store.get('pp_zoom',1.5);S.mapOpen=false;
   S.tasks=mode==='tuto'?tutoTasks():(mode==='plantel'||mode.startsWith('pl_'))?plantelTasks():mode.startsWith('of_')?oficialTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
@@ -2213,6 +2213,7 @@ function drawWorld(W,P,ix,iy,t){
   if(P&&P.hornT>0){P.hornT-=1/60;const sx=X(P.x),sy=Y(P.y)-16;g.fillStyle='#000';g.fillRect(sx-12,sy-1,25,9);g.fillStyle='#fff';g.fillRect(sx-11,sy,23,7);ptext(g,'PIII!',sx-9,sy+1,'#1b4965')}
   if(P&&!(S&&S.respawn>0&&blinkOn))drawCar(g,P.x,P.y,P.h,P.col,{boost:P.boost&&Math.floor(t*20)%2,brake:P.brake,rev:P.gear===-1,bl:P.blinkL||P.haz,br:P.blinkR||P.haz,on:blinkOn},ix,iy,P.type);
   if(S&&S.W===W&&S.gravel&&Math.abs(S.P.v)>12){const P=S.P;for(let k=0;k<6;k++){const d=P.L/2+3+k*3,j=Math.sin(t*37+k*7)*3;g.fillStyle=`rgba(194,164,119,${.5-k*.07})`;g.fillRect(X(P.x-Math.cos(P.h)*d-Math.sin(P.h)*j)-2,Y(P.y-Math.sin(P.h)*d+Math.cos(P.h)*j)-2,4+k,4+k)}}
+  if(S&&S.W===W)evLive2D(g,X,Y,ix,iy,t,blinkOn,ped,W);
   if(S&&S.W===W&&S.ev&&S.ev.ty==='nino'){const e=S.ev.e,k2=Math.min(1,S.ev.t/1.2),bx=e.x+e.ux*34-e.uy*(26-22*k2),by=e.y+e.uy*34+e.ux*(26-22*k2);fillCirc(g,X(bx),Y(by),2,'#ff7b00');g.fillStyle='#fff';g.fillRect(X(bx),Y(by)-1,1,1);if(S.ev.t>.5)ped({x:bx-e.uy*(-9),y:by+e.ux*(-9),an:S.t,col:'#e63946'})}
   if(S&&S.W===W&&S.tire){const T=S.tire;if(T.tri){const tx=X(T.tri.x),ty=Y(T.tri.y);if(T.placed){g.fillStyle='#e63946';g.beginPath();g.moveTo(tx,ty-4);g.lineTo(tx+4,ty+3);g.lineTo(tx-4,ty+3);g.fill();g.fillStyle='#fff';g.fillRect(tx-1,ty,2,1)}else if(T.st===2&&Math.floor(t*4)%2){g.strokeStyle='#ffd23f';g.strokeRect(tx-5,ty-5,10,10)}}
     if(T.st===3&&T.wh){const wx=X(T.wh.x),wy=Y(T.wh.y);g.strokeStyle='#ffd23f';g.strokeRect(wx-4,wy-4,8,8);if(T.t>0){g.fillStyle='#000';g.fillRect(wx-8,wy-9,16,3);g.fillStyle='#3ddc84';g.fillRect(wx-8,wy-9,16*Math.min(1,T.t/3),3)}}}
@@ -2265,7 +2266,7 @@ function drawFullMap(W,P,t,tg){g.fillStyle='#0d0d16';g.fillRect(0,0,VW,VH);
   S.mapT={ox,oy,k};g.imageSmoothingEnabled=k<1;g.drawImage(W.bg,ox,oy,mw,mh);if(S.foot){g.fillStyle='#ffd23f';g.fillRect(Math.round(ox+S.foot.x*k)-2,Math.round(oy+S.foot.y*k)-2,4,4)}g.imageSmoothingEnabled=false;g.strokeStyle='#6a6a9a';g.lineWidth=1;g.strokeRect(Math.round(ox)-.5,Math.round(oy)-.5,Math.round(mw)+1,Math.round(mh)+1);
   for(const c of W.ai){g.fillStyle=c.angryT>0?'#ff4d4d':'#e8e8e8';g.fillRect(Math.round(ox+c.x*k)-1,Math.round(oy+c.y*k)-1,2,2)}
   if(W.events){for(const e of W.events){const X=Math.round(ox+e.x*k),Y=Math.round(oy+e.y*k);g.fillStyle='#000';g.fillRect(X-4,Y-4,9,9);g.fillStyle=e.done?'#3ddc84':SCEN[e.ty].col;g.fillRect(X-3,Y-3,7,7)}
-    let lx=6;for(const ty of[...new Set(W.events.map(e=>e.ty))]){g.fillStyle=SCEN[ty].col;g.fillRect(lx,20,5,5);const t=SCEN[ty].n.split(' ')[0].normalize('NFD').replace(/[̀-ͯ]/g,'');ptext(g,t,lx+7,20,'#fff');lx+=t.length*4+16}}
+    let lx=6,ly=20;for(const ty of[...new Set(W.events.map(e=>e.ty))]){const t=(SCEN[ty].l||SCEN[ty].n.split(' ')[0]).normalize('NFD').replace(/[̀-ͯ]/g,''),wd=t.length*4+14;if(lx+wd>VW-4){lx=6;ly+=8}g.fillStyle='rgba(0,0,0,.6)';g.fillRect(lx-1,ly-1,wd,7);g.fillStyle=SCEN[ty].col;g.fillRect(lx,ly,5,5);ptext(g,t,lx+7,ly,'#fff');lx+=wd+2}}
   if(tg){const X=ox+tg.x*k,Y=oy+tg.y*k,r=3+(Math.sin(t*6)+1)*1.5;g.strokeStyle='#ffd23f';g.beginPath();g.arc(X,Y,r+3,0,7);g.stroke();g.fillStyle='#000';g.fillRect(X-3,Y-3,7,7);g.fillStyle='#ffd23f';g.fillRect(X-2,Y-2,5,5)}
   g.save();g.translate(ox+P.x*k,oy+P.y*k);g.rotate(P.h);g.fillStyle='#000';g.beginPath();g.moveTo(8,0);g.lineTo(-5,-6);g.lineTo(-2,0);g.lineTo(-5,6);g.fill();g.fillStyle='#ff3b30';g.beginPath();g.moveTo(6,0);g.lineTo(-4,-4);g.lineTo(-1,0);g.lineTo(-4,4);g.fill();g.restore();
   g.fillStyle='rgba(10,10,20,.9)';g.fillRect(0,0,VW,16);g.fillRect(0,VH-14,VW,14);
@@ -2435,6 +2436,7 @@ function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];con
   if(W.walkers)for(const p of W.walkers)ped3(p);if(S&&S.foot&&S.chase&&S.W===W&&!mirror)ped3(S.foot);if(W.jay)for(const p of W.jay)ped3(p);
   if(W.works)for(const r of W.works)add(r.x+r.w/2,r.y+r.h/2,12,()=>box(ctx,C,V,[[r.x,r.y],[r.x+r.w,r.y],[r.x+r.w,r.y+r.h],[r.x,r.y+r.h]],0,3.2,'#ff6a00',{top:'#fff'}));
   if(W.broken)for(const b of W.broken)add(b.x,b.y,10,()=>car3D(ctx,C,V,{x:b.x,y:b.y,h:b.h,type:b.type,col:b.col,L:b.L,Wd:b.Wd,bl:true,br:true},blinkOn));
+  if(S&&S.W===W&&!mirror)evLive3D(add,ctx,C,V,blinkOn,ped3,W);
   for(const k of W.cones)add(k.x,k.y,1,()=>{const B=bill(C,V,k.x,k.y,0),T=bill(C,V,k.x,k.y,2.4);if(!B)return;const w=Math.max(1,.9*B.k);ctx.fillStyle=k.hit?'#b34700':'#ff7b00';ctx.beginPath();ctx.moveTo(B.x-w,B.y);ctx.lineTo(B.x+w,B.y);ctx.lineTo(T.x,T.y);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(B.x-w*.45,B.y-(B.y-T.y)*.55,w*.9,Math.max(1,(B.y-T.y)*.15))});
   for(const s of W.stops.concat(W.yields)){const p=polePos(s);const facing=(dirVec[s.dir][0]*C.c+dirVec[s.dir][1]*C.s)>.2;
     if(s.kind==='stop'||s.kind==='yield')add(p[0],p[1],1,()=>{const B=bill(C,V,p[0],p[1],0),T=bill(C,V,p[0],p[1],6.5);if(!B)return;ctx.fillStyle='#888';ctx.fillRect(B.x-Math.max(.5,.15*B.k),T.y,Math.max(1,.3*B.k),B.y-T.y);const r=Math.max(1.5,1.4*B.k);
@@ -2562,29 +2564,112 @@ const SCEN={
   nino:{n:'NIÑO EN LA VÍA',col:'#c77dff',intro:'Una bola sale rodando a la calle... y detrás viene un niño corriendo.',
     opts:[['Frenar fuerte en línea recta hasta detenerse',1,'Correcto: frenar en línea recta es lo más seguro. Cuando vea una bola en la calle, espere que detrás venga un niño.'],
       ['Esquivarlo con un volantazo a toda velocidad',0,'El volantazo lo sacó de la vía y chocó contra un poste. Con un obstáculo repentino, primero se frena en línea recta.'],
-      ['Pitar y seguir',0,'El niño no reacciona a tiempo al pito: no logró detenerse. Cerca de escuelas, parques y zonas residenciales hay que ir despacio.']]}};
+      ['Pitar y seguir',0,'El niño no reacciona a tiempo al pito: no logró detenerse. Cerca de escuelas, parques y zonas residenciales hay que ir despacio.']]},
+  frenos:{n:'SIN FRENOS',l:'FRENOS',col:'#ff006e',intro:'Pisa el freno y el pedal se va hasta el fondo: los frenos no responden.',
+    opts:[['Bombear el pedal varias veces, bajar a una marcha más baja y usar el freno de mano poco a poco mientras se orilla',1,'Correcto: bombear puede recuperar presión, la marcha baja hace que el motor frene el carro y el freno de mano, usado de a poco, termina de detenerlo. Después: intermitentes y llamar a la grúa.'],
+      ['Apagar el motor con la llave',0,'Con el motor apagado se pierde la dirección asistida y el volante puede trabarse: no pudo girar y chocó. Nunca apague el carro en movimiento.'],
+      ['Jalar el freno de mano de un solo golpe',0,'El freno de mano de golpe bloquea las ruedas traseras y el carro dio un trompo. Se usa poco a poco, con el botón apretado.']]},
+  acelerador:{n:'ACELERADOR TRABADO',l:'ACELERADOR',col:'#00f5d4',intro:'Soltó el pedal, pero el carro sigue acelerando solo: el acelerador se trabó.',
+    opts:[['Poner el carro en neutro, frenar firme y orillarse; ya detenido, apagar el motor',1,'Correcto: en neutro el motor ya no empuja las ruedas aunque siga acelerado, y los frenos detienen el carro. El motor se apaga solo cuando ya está detenido.'],
+      ['Agacharse a destrabar el pedal con la mano',0,'Al quitar la vista del camino no vio lo que venía adelante y chocó. Nunca deje de mirar al frente: use el neutro y el freno.'],
+      ['Apagar el motor con la llave en plena marcha',0,'Con el motor apagado se pierde la ayuda del volante y del freno, y la llave puede trabar el volante: perdió el control. Primero neutro y freno.']]},
+  animal:{n:'ANIMAL EN LA VÍA',l:'ANIMAL',col:'#c0703a',intro:'Una vaca se salió de una finca y está cruzando la calle frente a usted.',
+    opts:[['Soltar el acelerador, frenar en línea recta sin volantazos y esperar a que el animal termine de pasar',1,'Correcto: frenar en línea recta mantiene el control. Los animales se mueven de forma impredecible: espere a que se alejen y pase despacio.'],
+      ['Pitar y pasar rápido por un lado',0,'La vaca se asustó con el pito y se movió justo hacia el carro: la golpeó. Nunca pase rápido junto a un animal.'],
+      ['Dar un volantazo para esquivarla',0,'El volantazo a esa velocidad lo sacó de la vía. Primero se frena en línea recta.']]},
+  ambulancia:{n:'AMBULANCIA DETRÁS',l:'AMBULANCIA',col:'#ffffff',intro:'Se oye una sirena: una ambulancia con las luces encendidas viene detrás de usted.',
+    opts:[['Poner la direccional derecha, orillarse a la derecha con suavidad y detenerse hasta que pase',1,'Correcto: los vehículos de emergencia en servicio tienen prioridad. Orillarse con calma y señalizando le abre el paso sin causar otro accidente. Después no la siga de cerca.'],
+      ['Frenar en seco en medio del carril',0,'Al frenar de golpe, la ambulancia no tuvo espacio y lo chocó por detrás. Hay que orillarse de forma suave y predecible.'],
+      ['Acelerar para que no lo alcance',0,'Por acelerar perdió el control en la siguiente esquina. Con una emergencia no se compite: se le cede el paso.']]},
+  encandilado:{n:'LUCES ALTAS DE FRENTE',l:'LUCES ALTAS',night:1,col:'#e9ff70',intro:'Es de noche y un carro viene de frente con las luces altas: el brillo lo encandila.',
+    opts:[['Bajar la velocidad y mirar hacia la orilla derecha de la calle, sin responder con las altas, hasta que pase',1,'Correcto: mirar la orilla derecha le permite seguir en su carril sin ver directo a las luces. Use las altas solo cuando no viene nadie de frente.'],
+      ['Ponerle también las luces altas para que las baje',0,'Ahora los dos iban encandilados: ninguno vio al otro y chocaron de frente. Nunca responda con las altas.'],
+      ['Seguir igual, mirando directo a las luces',0,'Encandilado no vio el borde de la calle y se salió de la vía. Baje la velocidad y mire hacia la orilla derecha.']]},
+  neblina:{n:'NEBLINA DENSA',l:'NEBLINA',col:'#90a4ae',intro:'De pronto entra una neblina muy densa y casi no se ve lo que hay adelante.',
+    opts:[['Bajar la velocidad, encender las luces bajas (y las antiniebla), dejar más distancia y no detenerse en medio de la vía',1,'Correcto: con neblina las luces bajas sirven para que lo vean, y la distancia extra le da tiempo para frenar. Si necesita detenerse, que sea fuera de la vía.'],
+      ['Encender las luces altas para ver mejor',0,'Las altas rebotan en la neblina y lo dejan más ciego: no vio el carro de adelante y lo chocó por detrás.'],
+      ['Detenerse en medio del carril hasta que se vaya',0,'Detenido en el carril y sin que nadie lo viera, el carro de atrás lo chocó. Si se detiene, salga de la vía y ponga intermitentes.']]},
+  motor:{n:'MOTOR RECALENTADO',l:'MOTOR',col:'#9d4edd',intro:'Sale humo blanco del capó y la aguja de la temperatura está en rojo.',
+    opts:[['Poner intermitentes, orillarse, apagar el motor y esperar a que se enfríe antes de revisar el agua',1,'Correcto: seguir manejando con el motor recalentado lo puede fundir. Espere al menos 30 minutos: el radiador caliente está a presión. Después revise el agua y lleve el carro al taller.'],
+      ['Abrir de inmediato la tapa del radiador para echarle agua',0,'El agua hirviendo salió a presión y le quemó la cara y las manos. Nunca abra el radiador caliente.','s'],
+      ['Seguir manejando hasta llegar a la casa',0,'El motor se fundió y el carro se apagó en plena vía: ahora la reparación es carísima. Con la temperatura en rojo se orilla y se apaga el motor.','s']]},
+  accidente:{n:'CHOQUE ADELANTE',l:'CHOQUE',col:'#ff70a6',intro:'Adelante acaba de ocurrir un choque: dos carros atravesados y una persona herida en la orilla.',
+    opts:[['Bajar la velocidad, poner intermitentes, detenerse en un lugar seguro, llamar al 911 y no mover a la persona herida',1,'Correcto: avisar rápido al 911 salva vidas. Mover a un herido puede empeorar una lesión de columna; solo se mueve si hay peligro de fuego o de otro choque.'],
+      ['Detenerse en medio de la calle para ver y tomar fotos',0,'Detenido en el carril, otro conductor distraído lo chocó por detrás. Si se detiene, que sea fuera de la vía y para ayudar.'],
+      ['Levantar a la persona herida y llevarla en su carro al hospital',0,'Al moverla le empeoró una lesión de la columna. Llame al 911 y espere a los paramédicos: no mueva a los heridos.','s']]},
+  bus:{n:'BUS EN LA PARADA',l:'BUS',col:'#4361ee',intro:'Un autobús está detenido en la parada y la gente se está bajando. Usted viene detrás.',
+    opts:[['Bajar la velocidad y esperar detrás, o pasarlo muy despacio atento a quien cruce por delante del bus',1,'Correcto: quien se baja suele cruzar por delante del bus, justo donde usted no lo ve. Paciencia: el bus arranca en segundos.'],
+      ['Adelantarlo rápido antes de que arranque',0,'Una persona cruzó por delante del bus justo cuando usted pasaba y no logró frenar.'],
+      ['Pitar para que el bus se apure',0,'El pito no mueve al bus y lo distrajo a usted: no vio a la persona que salía por delante del bus.']]},
+  moto:{n:'MOTO EN EL PUNTO CIEGO',l:'MOTO',col:'#b5838d',intro:'Va a adelantar a un carro lento. En el espejo no se ve nada... pero una moto ya lo está adelantando a usted por la izquierda.',
+    opts:[['Poner la direccional, revisar los espejos y girar la cabeza para ver el punto ciego antes de moverse; esperar a que pase la moto',1,'Correcto: los espejos no muestran todo. Una mirada rápida por encima del hombro le muestra las motos y bicis que el espejo esconde.'],
+      ['Salirse a adelantar confiando solo en el espejo',0,'La moto venía en el punto ciego: la golpeó al salirse del carril.'],
+      ['Salirse rápido sin direccional para aprovechar el espacio',0,'Sin direccional nadie sabía que iba a moverse: la moto no pudo frenar y chocaron.']]}};
+const SCENALL=Object.keys(SCEN);
+// objetos de la situación en curso (vaca, ambulancia, carro de frente, moto), relativos al carro del jugador
+function evRel(P,d,lat){const c=Math.cos(P.h),s=Math.sin(P.h);return{x:P.x+c*d-s*lat,y:P.y+s*d+c*lat,h:P.h}}
+function evFx(W,P,dt){const E=S.ev;
+  if(E&&E.ty==='neblina')S.evFog=Math.min(.85,(S.evFog||0)+dt*1.2);else if(S.evFog>0)S.evFog=Math.max(0,S.evFog-dt*.05);if(!W.r32)S.fogK=S.evFog||0;
+  if(!E)return;const t=E.t,ph=E.ph;
+  if(E.ty==='animal'){const c=E.cow;if(!c.st)c.st=1;const sp=ph==='crash'?0:5;c.x+=Math.cos(c.h)*sp*dt;c.y+=Math.sin(c.h)*sp*dt}
+  if(E.ty==='ambulancia'){const A=E.amb;if(ph==='safe'){A.lat=Math.max(-12,A.lat-dt*20);A.d+=dt*40}else if(ph==='crash')A.d=Math.min(-P.L+1,A.d+dt*30);else{A.d=Math.min(-18,A.d+dt*24);A.lat=Math.max(-5,A.lat-dt*4)}}
+  if(E.ty==='encandilado'){const O=E.onc;O.d-=dt*(ph==='crash'?25:45);if(ph==='crash')O.lat=Math.min(0,O.lat+dt*12)}
+  if(E.ty==='moto'){const M=E.moto;M.d+=dt*(ph==='crash'?6:ph==='safe'?30:12);if(ph==='crash')M.lat=Math.min(-6,M.lat+dt*6)}
+  if(E.ty==='acelerador'&&ph==='slow')P.v=Math.min(P.v+dt*25,P.vmax||90)}
+function evStart(E,P){const ty=E.ty,e=E.e;
+  if(ty==='animal'){const rx=-e.uy,ry=e.ux;E.cow={x:e.x+e.ux*34+rx*16,y:e.y+e.uy*34+ry*16,h:Math.atan2(-ry,-rx),t:0};sfx.bad()}
+  if(ty==='ambulancia'){E.amb={d:-40,lat:0};for(let i=0;i<4;i++)beep(i%2?740:960,.28,'triangle',.12,0,i*.3)}
+  if(ty==='encandilado')E.onc={d:110,lat:-14};
+  if(ty==='moto')E.moto={d:-26,lat:-13};
+  if(ty==='motor')S.shake=.25}
+// dibujo 2D (vista de arriba) de lo que pasa en la situación
+function evLive2D(g,X,Y,ix,iy,t,blinkOn,ped,W){if(W.events)for(const e of W.events)if(e.props)for(const q of e.props)ped(q);
+  const E=S.ev;if(!E)return;const P=S.P;
+  if(E.cow)cow2D(g,X(E.cow.x),Y(E.cow.y),E.cow.h);
+  if(E.amb){const A=evRel(P,E.amb.d,E.amb.lat),fl=Math.floor(t*8)%2;g.fillStyle=fl?'rgba(47,107,255,.3)':'rgba(255,42,74,.3)';g.fillRect(X(A.x)-12,Y(A.y)-12,24,24);drawCar(g,A.x,A.y,A.h,'#f4f4f4',{on:fl},ix,iy,'ambulance')}
+  if(E.onc){const O=evRel(P,E.onc.d,E.onc.lat);drawCar(g,O.x,O.y,O.h+Math.PI,'#6c757d',{},ix,iy,'sedan');g.save();g.globalCompositeOperation='lighter';glow(g,X(O.x-Math.cos(P.h)*14),Y(O.y-Math.sin(P.h)*14),26,'rgba(255,255,230,.7)');g.restore()}
+  if(E.moto){const M=evRel(P,E.moto.d,E.moto.lat);drawCar(g,M.x,M.y,M.h,'#222',{},ix,iy,'moto')}
+  if(E.ty==='motor'){for(let k=0;k<7;k++){const a=(t*1.3+k*.37)%1,c=Math.cos(P.h),s=Math.sin(P.h),d=P.L/2-1+a*6,j=Math.sin(k*2.1+t*3)*3;g.fillStyle=`rgba(235,235,235,${.6*(1-a)})`;const r=2+a*5;g.fillRect(X(P.x+c*d-s*j)-r/2,Y(P.y+s*d+c*j)-r/2-a*8,r,r)}}}
+function evLive3D(add,ctx,C,V,blinkOn,ped3,W){if(W.events)for(const e of W.events)if(e.props)for(const q of e.props)ped3(q);
+  const E=S.ev;if(!E)return;const P=S.P;
+  if(E.cow)add(E.cow.x,E.cow.y,6,()=>cow3D(ctx,C,V,E.cow));
+  if(E.amb){const A=evRel(P,E.amb.d,E.amb.lat);add(A.x,A.y,10,()=>car3D(ctx,C,V,{...A,type:'ambulance',col:'#f4f4f4',L:16,Wd:9,siren:1,bl:blinkOn,br:!blinkOn},blinkOn))}
+  if(E.onc){const O=evRel(P,E.onc.d,E.onc.lat);add(O.x,O.y,10,()=>{car3D(ctx,C,V,{...O,h:O.h+Math.PI,type:'sedan',col:'#6c757d',L:14,Wd:8},blinkOn);const B=bill(C,V,O.x-Math.cos(P.h)*7,O.y-Math.sin(P.h)*7,1.6);if(B){ctx.save();ctx.globalCompositeOperation='lighter';glow(ctx,B.x,B.y,Math.max(10,40*B.k),'rgba(255,255,235,.9)');ctx.restore()}})}
+  if(E.moto){const M=evRel(P,E.moto.d,E.moto.lat);add(M.x,M.y,5,()=>car3D(ctx,C,V,{...M,type:'moto',col:'#222',L:8,Wd:4},blinkOn))}
+  if(E.ty==='nino'){const e=E.e,k2=Math.min(1,E.t/1.2),bx=e.x+e.ux*34-e.uy*(26-22*k2),by=e.y+e.uy*34+e.ux*(26-22*k2);add(bx,by,1,()=>{const B=bill(C,V,bx,by,.7);if(B){ctx.fillStyle='#ff7b00';ctx.beginPath();ctx.arc(B.x,B.y,Math.max(1,.7*B.k),0,7);ctx.fill()}});if(E.t>.5){E.kid3=E.kid3||{col:'#e63946',ht:3.4};Object.assign(E.kid3,{x:bx+e.uy*9,y:by-e.ux*9,an:S.t});ped3(E.kid3)}}}
+// efectos de pantalla: encandilamiento, sirena, humo del capó, neblina en la vista de arriba
+function evOver(is3D){const E=S.ev;
+  if(!is3D&&S.evFog>.02){g.fillStyle=`rgba(220,226,232,${.6*S.evFog})`;g.fillRect(0,0,VW,VH);for(let i=0;i<10;i++){const fx=((i*157+S.t*8)%(VW+120))-60,fy=(i*53)%VH;g.fillStyle=`rgba(240,244,248,${.25*S.evFog})`;g.fillRect(fx,fy,70,14)}}
+  if(!E)return;
+  if(E.ty==='encandilado'&&E.onc&&E.onc.d>-10){const k=clamp(1-Math.abs(E.onc.d-25)/80,0,1)*(E.ok?.5:1);g.fillStyle=`rgba(255,255,235,${.75*k})`;g.fillRect(0,0,VW,VH)}
+  if(E.ty==='ambulancia'&&E.amb&&E.amb.d<40){const fl=Math.floor(S.t*8)%2;g.fillStyle=fl?'rgba(47,107,255,.3)':'rgba(255,42,74,.3)';g.fillRect(0,0,VW,8);g.fillRect(0,VH-8,VW,8);g.fillRect(0,0,6,VH);g.fillRect(VW-6,0,6,VH);if(Math.floor(S.t*3.3)!==E.sn){E.sn=Math.floor(S.t*3.3);beep(E.sn%2?740:960,.28,'triangle',.06)}}
+  if(E.ty==='motor'&&is3D){for(let k=0;k<9;k++){const a=(S.t*.9+k*.29)%1;g.fillStyle=`rgba(235,235,235,${.55*(1-a)})`;const r=6+a*26;g.beginPath();g.arc(VW/2+Math.sin(k*2.3+S.t)*40,VH*.62-a*70,r,0,7);g.fill()}}}
 function addEvents(W,types){if(!W.roads||!W.roads.length)return;W.events=[];W.broken=W.broken||[];W.roadObs=W.roadObs||[];const R=rng(77);
   for(const ty of types){for(let tr=0;tr<200;tr++){const r=W.roads[R()*W.roads.length|0];if(r.b-r.a<220)continue;const dir=r.ow?r.ow:(R()<.5?1:-1);const along=r.a+80+R()*(r.b-r.a-160);
-      const x=r.o==='h'?along:r.c,y=r.o==='h'?r.c:along;if(W.nodes.some(n=>Math.hypot(n.x-x,n.y-y)<70))continue;if(W.events.some(e=>Math.hypot(e.x-x,e.y-y)<300))continue;if(W.spawn&&Math.hypot(W.spawn.x-x,W.spawn.y-y)<250)continue;if(W.zebras.some(z=>Math.hypot(z.x-x,z.y-y)<60))continue;
+      const x=r.o==='h'?along:r.c,y=r.o==='h'?r.c:along;if(W.nodes.some(n=>Math.hypot(n.x-x,n.y-y)<70))continue;if(W.events.some(e=>Math.hypot(e.x-x,e.y-y)<230))continue;if(W.spawn&&Math.hypot(W.spawn.x-x,W.spawn.y-y)<250)continue;if(W.zebras.some(z=>Math.hypot(z.x-x,z.y-y)<60))continue;
       const ux=r.o==='h'?dir:0,uy=r.o==='h'?0:dir,lx=-uy*7,ly=ux*7;const e={ty,x:x+lx,y:y+ly,ux,uy,done:false};
       if(ty==='varado'){const b={x:e.x+ux*40,y:e.y+uy*40,h:Math.atan2(uy,ux),col:'#8d99ae',type:'sedan',L:14,Wd:8,v:0,static:true,haz:true};W.broken.push(b);W.roadObs.push(b);for(const q of circles(b))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'});e.car=b}
+      const rx=-uy,ry=ux,park=(dx,lat,dh,type,col)=>{const b={x:e.x+ux*dx+rx*lat,y:e.y+uy*dx+ry*lat,h:Math.atan2(uy,ux)+dh,col,type,L:VEH[type].L,Wd:VEH[type].Wd,v:0,static:true,haz:true};W.broken.push(b);W.roadObs.push(b);for(const q of circles(b))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'});return b};
+      if(ty==='accidente'){park(52,-2,.7,'sedan','#c1121f');park(64,-9,-.5,'pickup','#577590');e.props=[{x:e.x+ux*58+rx*17,y:e.y+uy*58+ry*17,col:'#ffd166',an:0,ht:3},{x:e.x+ux*62+rx*19,y:e.y+uy*62+ry*19,col:'#3a86ff',an:0}]}
+      if(ty==='bus'){park(42,0,0,'bus','#2a9d8f');e.props=[{x:e.x+ux*48+rx*13,y:e.y+uy*48+ry*13,col:'#e76f51',an:0},{x:e.x+ux*40+rx*14,y:e.y+uy*40+ry*14,col:'#8338ec',an:0}]}
       W.events.push(e);break}}}
 function evDraw2D(x,W){if(!W.events)return;for(const e of W.events){if(e.ty==='hidro'){x.fillStyle='rgba(60,120,190,.55)';x.beginPath();x.ellipse(e.x+e.ux*10,e.y+e.uy*10,e.ux?16:7,e.ux?7:16,0,0,7);x.fill();x.fillStyle='rgba(180,220,255,.5)';x.fillRect(e.x+e.ux*10-3,e.y+e.uy*10-1,5,1)}
   if(e.ty==='derrape'){x.fillStyle='rgba(40,60,90,.25)';x.fillRect(e.x-20,e.y-20,40,40)}}}
-function evStep(W,P,dt){const E=S.ev;
+function evStep(W,P,dt){const E=S.ev;evFx(W,P,dt);
   if(S.tire)return tireStep(W,P,dt);
   if(E){E.t+=dt;if(E.ph==='slow'){if(E.ty==='llanta')P.h=nA(P.h+.12*dt);if(E.ty==='derrape')P.h=nA(P.h+.35*dt);if(E.t>.9){E.ph='ask';evAsk(E)}}return}
-  if(S.foot||Math.abs(P.v)<12)return;for(const e of W.events||[]){if(e.done||(e.cool&&S.t<e.cool))continue;const rx=P.x-e.x,ry=P.y-e.y;if(Math.hypot(rx,ry)>22)continue;if(Math.cos(P.h)*e.ux+Math.sin(P.h)*e.uy<.7)continue;
-    S.ev={e,ty:e.ty,ph:'slow',t:0};sfx.bad();if(e.ty==='llanta'){beep(90,.3,'sawtooth',.2,-40);S.shake=.5}if(e.ty==='nino')e.kid={t:0};return}}
+  if(S.foot||Math.abs(P.v)<12)return;for(const e of W.events||[]){if(e.done||(e.cool&&S.t<e.cool))continue;const rx=P.x-e.x,ry=P.y-e.y;if(Math.hypot(rx,ry)>22)continue;if(Math.cos(P.h)*e.ux+Math.sin(P.h)*e.uy<.7)continue;if(SCEN[e.ty].night&&!(S.wx&&S.wx.n>.45)){if(!e.warned){e.warned=1;toast(SCEN[e.ty].n,'Esta situación ocurre de noche: vuelva cuando oscurezca','info')}continue}
+    S.ev={e,ty:e.ty,ph:'slow',t:0};evStart(S.ev,P);sfx.bad();if(e.ty==='llanta'){beep(90,.3,'sawtooth',.2,-40);S.shake=.5}if(e.ty==='nino')e.kid={t:0};return}}
 function evAsk(E){const D=SCEN[E.ty],box=$('evBox');const ord=shuffle([0,1,2]);E.ord=ord;
   box.innerHTML=`<b style="color:${D.col}">⚠ ${D.n}</b><p>${D.intro}</p><p style="color:#ffd23f">¿Qué hace?</p>`+ord.map((k,i)=>`<button data-k="${i}">${i+1} · ${D.opts[k][0]}</button>`).join('');
   box.classList.remove('hidden');for(const b of box.querySelectorAll('button'))b.onclick=()=>evAnswer(+b.dataset.k);say(D.intro+' ¿Qué hace?',true)}
-function evAnswer(i){const E=S.ev;if(!E||E.ph!=='ask')return;const D=SCEN[E.ty],o=D.opts[E.ord[i]];$('evBox').classList.add('hidden');E.ok=!!o[1];E.msg=o[2];E.t=0;
+function evAnswer(i){const E=S.ev;if(!E||E.ph!=='ask')return;const D=SCEN[E.ty],o=D.opts[E.ord[i]];$('evBox').classList.add('hidden');E.ok=!!o[1];E.msg=o[2];E.still=o[3]==='s';E.t=0;
   if(E.ok){E.ph='safe';toast('¡BIEN HECHO!',o[2],'good');say(o[2],true);sfx.good()}else{E.ph='crash';say('¡Cuidado!',true)}}
-function evAnim(W,P,dt){const E=S.ev;E.t+=dt;
-  if(E.ph==='safe'){P.v=Math.max(0,P.v-(E.ty==='nino'?40:18)*dt);P.steer*=.9;P.brake=true;P.x+=Math.cos(P.h)*P.v*dt;P.y+=Math.sin(P.h)*P.v*dt;
-    if(P.v<=.2&&E.t>1){P.v=0;E.e.done=true;S.pts+=150;S.ev=null;if(E.ty==='llanta'){S.tire={st:0,t:0};toast('LLANTA REVENTADA','Ahora: intermitentes [H], bájese [T], coloque el triángulo y cambie la llanta','info')}else toast('SITUACIÓN SUPERADA','+150 pts','good')}return}
-  if(E.ph==='crash'){P.spin=E.t<1.2?4.5:0;P.h=nA(P.h+P.spin*dt);P.v=Math.max(0,P.v-10*dt);P.x+=Math.cos(P.h)*P.v*dt+(E.ty==='derrape'||E.ty==='hidro'?Math.cos(P.h+1.5)*12*dt:0);P.y+=Math.sin(P.h)*P.v*dt;
+function evAnim(W,P,dt){const E=S.ev;E.t+=dt;evFx(W,P,dt);
+  if(E.ph==='safe'){P.v=Math.max(0,P.v-(E.ty==='nino'||E.ty==='animal'?40:18)*dt);if(E.ty==='ambulancia'&&E.t<1.5){P.x-=Math.sin(P.h)*5*dt;P.y+=Math.cos(P.h)*5*dt}P.steer*=.9;P.brake=true;P.x+=Math.cos(P.h)*P.v*dt;P.y+=Math.sin(P.h)*P.v*dt;
+    if(P.v<=.2&&E.t>1){P.v=0;E.e.done=true;S.pts+=150;S.ev=null;if(E.ty==='llanta'){S.tire={st:0,t:0};toast('LLANTA REVENTADA','Ahora: intermitentes [H], bájese [T], coloque el triángulo y cambie la llanta','info')}else{const n=W.events.filter(q=>q.done).length;toast('SITUACIÓN SUPERADA','+150 pts · '+n+' de '+W.events.length+' situaciones del mapa','good')}}return}
+  if(E.ph==='crash'){if(E.still){P.v=Math.max(0,P.v-30*dt);P.steer*=.9;P.x+=Math.cos(P.h)*P.v*dt;P.y+=Math.sin(P.h)*P.v*dt;if(E.ty==='motor'&&E.t>.6)S.shake=Math.max(S.shake||0,.15)}
+    else{P.spin=E.t<1.2?4.5:0;P.h=nA(P.h+P.spin*dt);P.v=Math.max(0,P.v-10*dt);P.x+=Math.cos(P.h)*P.v*dt+(E.ty==='derrape'||E.ty==='hidro'?Math.cos(P.h+1.5)*12*dt:0);P.y+=Math.sin(P.h)*P.v*dt}
     if(E.t>1.3&&!E.over){E.over=true;sfx.crash();S.shake=.8;const D=SCEN[E.ty],box=$('evBox');S.pts=Math.max(0,S.pts-150);
       box.innerHTML=`<b style="color:#ff4d4d;font-size:150%">GAME OVER</b><p style="color:${D.col}">${D.n}</p><p>${E.msg}</p><p style="color:#9cf">Lo correcto: ${D.opts.find(o=>o[1])[0]}.</p><button id="evRetry">1 · INTENTAR DE NUEVO</button><button id="evGo">2 · SEGUIR MANEJANDO</button>`;
       box.classList.remove('hidden');$('evRetry').onclick=()=>evRetry(true);$('evGo').onclick=()=>evRetry(false)}}}
@@ -2841,11 +2926,11 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     const ix=Math.round(S.cx*zm)/zm,iy=Math.round(S.cy*zm)/zm;$('hud').classList.toggle('fp',!!S.fp&&!S.chase);$('hud').classList.toggle('map',!!S.mapOpen);
     if(S.mapOpen){const tg=updateHUD();drawFullMap(W,P,S.t,tg)}
     else if(S.fp&&S.foot&&S.chase){const F=S.foot;S.camH=nA((S.camH||F.h)+nA(F.h-(S.camH||F.h))*Math.min(1,dt*4));const ch0=S.camH+(S.yaw||0),cx=F.x-Math.cos(ch0)*9,cy=F.y-Math.sin(ch0)*9,ch=Math.atan2(F.y-cy,F.x-cx),c=Math.cos(ch),s=Math.sin(ch);VMAIN.hz=Math.round(70+(S.lp||0)*80);
-      render3D(VMAIN,{x:cx,y:cy,z:5.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
+      render3D(VMAIN,{x:cx,y:cy,z:5.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);evOver(true);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
     else if(S.fp&&S.foot){const F=S.foot,lt=keys.z?-1.05:keys.x?1.05:0;S.look=(S.look||0)+(lt-(S.look||0))*Math.min(1,dt*7);const hh=F.h+S.look+(S.yaw||0);VMAIN.hz=Math.round((S.lp||0)*90)+84+Math.round(Math.sin(F.an*9)*(F.v>1?1:0));
-      render3D(VMAIN,{x:F.x,y:F.y,z:3,h:hh,c:Math.cos(hh),s:Math.sin(hh)},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
+      render3D(VMAIN,{x:F.x,y:F.y,z:3,h:hh,c:Math.cos(hh),s:Math.sin(hh)},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);evOver(true);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
     else if(S.fp&&S.chase&&!S.foot){S.camH=nA(S.camH+nA(P.h-S.camH)*Math.min(1,dt*6));const ch0=S.camH+(S.yaw||0),back=24+Math.abs(P.v)*.06,cx=P.x-Math.cos(ch0)*back,cy=P.y-Math.sin(ch0)*back,ch=Math.atan2(P.y-cy,P.x-cx),c=Math.cos(ch),s=Math.sin(ch);VMAIN.hz=Math.round(66+(S.lp||0)*80);
-      render3D(VMAIN,{x:cx,y:cy,z:10.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
+      render3D(VMAIN,{x:cx,y:cy,z:10.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);evOver(true);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
     else if(S.fp){const c=Math.cos(P.h),s=Math.sin(P.h);
       // cabeza: Z/X mirar a los lados (espejos laterales), F mirar hacia arriba; se inclina sola al detenerse junto a un semáforo
       const lt=keys.z?-1.05:keys.x?1.05:0;S.look=(S.look||0)+(lt-(S.look||0))*Math.min(1,dt*7);
@@ -2855,8 +2940,8 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
       S.mirF=((S.mirF||0)+1)%3;if(S.mirF===0)render3D(VMIR,{x:P.x-c*2+s*1.5,y:P.y-s*2-c*1.5,z:4.3,h:P.h+Math.PI,c:-c,s:-s},W,P,S.t,true);
       if(S.look<-.25){const a=P.h+Math.PI+.22;render3D(VSL,{x:P.x+c*1.5+s*5,y:P.y+s*1.5-c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
       if(S.look>.25){const a=P.h+Math.PI-.22;render3D(VSR,{x:P.x+c*1.5-s*5,y:P.y+s*1.5+c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
-      g.drawImage(VMAIN.c,0,0);wipers(S.t);cockpit(P,S.t);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
-    else{g.fillStyle='#2f6b2a';g.fillRect(0,0,VW,VH);g.save();g.setTransform(zm,0,0,zm,0,0);drawWorld(W,P,ix,iy,S.t);g.restore();atmo2D(W,P,ix,iy,zm,S.t);const tg=updateHUD();if(tg&&!S.over)drawTarget(tg,ix,iy,S.t,zm);drawMini(W,P,tg)}
+      g.drawImage(VMAIN.c,0,0);evOver(true);wipers(S.t);cockpit(P,S.t);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
+    else{g.fillStyle='#2f6b2a';g.fillRect(0,0,VW,VH);g.save();g.setTransform(zm,0,0,zm,0,0);drawWorld(W,P,ix,iy,S.t);g.restore();atmo2D(W,P,ix,iy,zm,S.t);evOver(false);const tg=updateHUD();if(tg&&!S.over)drawTarget(tg,ix,iy,S.t,zm);drawMini(W,P,tg)}
     if(engG&&AC){engG.gain.value=(muted||S.paused||S.over)?0:.035;eng.frequency.value=38+Math.abs(P.v)*1.7+(keys.w||keys.s?8:0)}
   }else{
     for(const k in pressed)delete pressed[k];
