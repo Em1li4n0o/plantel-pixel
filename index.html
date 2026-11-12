@@ -734,6 +734,11 @@ function buildCity(){
     for(let x=x1;x<x2-14;x+=16+RT()*14|0){const w=14+RT()*8|0;put(x,y1,w,14);put(x,y2-14,w,14)}
     for(let y=y1+24;y<y2-34;y+=18+RT()*12|0){const h=14+RT()*6|0;put(x1,y,14,h);put(x2-14,y,14,h)}}
   // fincas, cafetales y ladera entre las cuestas
+  {const G1=smoothLine([[300,754],[300,860],[245,985],[300,1110],[330,1250],[430,1395],[640,1468],[900,1482],[1226,1520]],10),G2=smoothLine([[330,1250],[520,1200],[690,1185]],10);
+    W.gravelP=[];for(const g of[G1,G2]){const pa=addPath(W,g);pa.hw=11;pa.hidden=true;pa.noCenter=true;pa.gravel=true;W.gravelP.push(pa);for(let i=0;i<g.length-1;i+=3){const a=g[i],b=g[Math.min(g.length-1,i+3)];W.zones.push({x:Math.min(a[0],b[0])-14,y:Math.min(a[1],b[1])-14,w:Math.abs(b[0]-a[0])+28,h:Math.abs(b[1]-a[1])+28,limit:40,name:'LASTRE',noText:true})}}
+    W.gHoles=[[300,900],[300,1180],[520,1440],[800,1480],[600,1192]].map(([x,y])=>({x,y,r:3}));
+    W.cows=[];for(let i=0;i<7;i++){const x=640+Math.random()*120,y=1210+Math.random()*60;W.cows.push({x,y,ox:x,oy:y,h:Math.random()*6.28,t:Math.random()*5})}
+    W.labels=(W.labels||[]).concat([{x:700,y:1140,t:'FINCA',col:'#fff'},{x:250,y:1000,t:'CALLE DE LASTRE',col:'#ffd23f',rot:1}])}
   W.cafe.push({x:90,y:790,w:380,h:300},{x:520,y:800,w:400,h:240},{x:110,y:1140,w:520,h:360},{x:1060,y:1060,w:150,h:420},{x:1060,y:120,w:300,h:200},{x:1500,y:150,w:300,h:240});
   for(const f of[{x:700,y:1150,w:24,h:18},{x:860,y:1300,w:26,h:18},{x:1420,y:420,w:24,h:18}])B2(Object.assign(f,{type:'bld',col:'#ffd6a5',roof:'#7f5539',house:true}));
   B2({x:1852,y:84,w:46,h:18,type:'bld',col:'#e63946',roof:'#f1f1f1',label:'GAS'});
@@ -759,7 +764,7 @@ function buildCity(){
   const varado=(x,y,h,col,type)=>{const b={x,y,h,col,type,L:VEH[type].L,Wd:VEH[type].Wd,v:0,static:true,haz:true};W.broken.push(b);W.roadObs.push(b);for(const q of circles(b))W.circObs.push({x:q.x,y:q.y,r:q.r,type:'car'})};
   varado(773,170,Math.PI/2,'#8d99ae','sedan');varado(420,733,Math.PI,'#d4a373','pickup');varado(1953,880,Math.PI/2,'#5c677d','suv');varado(1420,1527,0,'#e9c46a','hatch');
   // huecos
-  W.holes=[[180,67],[420,273],[293,400],[987,600],[660,747],[67,380],[787,450],[880,287],[547,170],[1373,993],[1953,1100],[1627,1267],[1507,1400],[1700,53]].map(([x,y])=>({x,y,r:3.5}));
+  W.holes=[[180,67],[420,273],[293,400],[987,600],[660,747],[67,380],[787,450],[880,287],[547,170],[1373,993],[1953,1100],[1627,1267],[1507,1400],[1700,53]].map(([x,y])=>({x,y,r:3.5})).concat(W.gHoles||[]);
   // tráfico que circula libremente (también por la rotonda) y camiones de basura
   spawnNav(W,60,['garbage',null,null,null,null,null,null,null,null,null,null,null,'garbage',null,null,null,null,null,null,null,null,null,null,null,'bus',null,null,null,null,null,null,null,null,null,null,'garbage']);
   // peatones en las aceras
@@ -1583,6 +1588,9 @@ function renderBG(W){
   for(const r of W.roads)if(r.ow)for(let t=r.a+70;t<r.b-40;t+=150){if(W.nodes.some(n=>Math.abs((r.o==='h'?n.x:n.y)-t)<40&&(r.o==='h'?n.y:n.x)===r.c))continue;
     for(const off of[-7,7]){const[ax,ay]=r.o==='h'?[t,r.c+off]:[r.c+off,t];arrowPx(x,ax,ay,r.o==='h'?r.ow:0,r.o==='v'?r.ow:0,WH)}}
   if(W.drawExtra)W.drawExtra(x);evDraw2D(x,W);
+  if(W.gravelP){x.lineJoin='round';x.lineCap='round';for(const[w,col]of[[25,'#7a5c3a'],[21,'#a8875a']]){x.strokeStyle=col;x.lineWidth=w;for(const pa of W.gravelP){x.beginPath();x.moveTo(pa.pts[0][0],pa.pts[0][1]);for(const q of pa.pts)x.lineTo(q[0],q[1]);x.stroke()}}
+    const RG=rng(9);for(const pa of W.gravelP)for(const q of pa.pts)for(let k=0;k<6;k++){x.fillStyle=RG()<.5?'#8d6e45':'#c2a477';x.fillRect(q[0]+(RG()-.5)*18|0,q[1]+(RG()-.5)*18|0,1,1)}
+    x.strokeStyle='rgba(90,70,45,.5)';x.lineWidth=2;for(const d of[-5,5])for(const pa of W.gravelP){const o=offLine(pa.pts,d);x.beginPath();x.moveTo(o[0][0],o[0][1]);for(const q of o)x.lineTo(q[0],q[1]);x.stroke()}x.lineCap='butt'}
   if(W.labels)for(const l of W.labels)ptext(x,l.t,Math.round(l.x),Math.round(l.y),l.col||'#f2f2f2',l.rot||0);
   for(const b of W.blds){if(b.parts){b.ht=b.H;parts2D(x,b);continue}if(b.H){b.ht=b.H;bld2D(x,b);continue}
     b.ht=b.tower?96:b.booth?7:b.pillar?8:b.house?9:b.pulzar?16:b.label==='GRADERIAS'?6:12+((b.x*7+b.y*13)%22);
@@ -2204,6 +2212,7 @@ function drawWorld(W,P,ix,iy,t){
   if(S&&S.cop&&S.W===W){const C=S.cop,fl=Math.floor(t*8)%2===0;g.fillStyle=fl?'rgba(47,107,255,.28)':'rgba(255,42,74,.28)';g.fillRect(X(C.x)-12,Y(C.y)-12,24,24);drawCar(g,C.x,C.y,C.h,C.col,{on:fl,brake:C.arrest},ix,iy,'police')}
   if(P&&P.hornT>0){P.hornT-=1/60;const sx=X(P.x),sy=Y(P.y)-16;g.fillStyle='#000';g.fillRect(sx-12,sy-1,25,9);g.fillStyle='#fff';g.fillRect(sx-11,sy,23,7);ptext(g,'PIII!',sx-9,sy+1,'#1b4965')}
   if(P&&!(S&&S.respawn>0&&blinkOn))drawCar(g,P.x,P.y,P.h,P.col,{boost:P.boost&&Math.floor(t*20)%2,brake:P.brake,rev:P.gear===-1,bl:P.blinkL||P.haz,br:P.blinkR||P.haz,on:blinkOn},ix,iy,P.type);
+  if(S&&S.W===W&&S.gravel&&Math.abs(S.P.v)>12){const P=S.P;for(let k=0;k<6;k++){const d=P.L/2+3+k*3,j=Math.sin(t*37+k*7)*3;g.fillStyle=`rgba(194,164,119,${.5-k*.07})`;g.fillRect(X(P.x-Math.cos(P.h)*d-Math.sin(P.h)*j)-2,Y(P.y-Math.sin(P.h)*d+Math.cos(P.h)*j)-2,4+k,4+k)}}
   if(S&&S.W===W&&S.ev&&S.ev.ty==='nino'){const e=S.ev.e,k2=Math.min(1,S.ev.t/1.2),bx=e.x+e.ux*34-e.uy*(26-22*k2),by=e.y+e.uy*34+e.ux*(26-22*k2);fillCirc(g,X(bx),Y(by),2,'#ff7b00');g.fillStyle='#fff';g.fillRect(X(bx),Y(by)-1,1,1);if(S.ev.t>.5)ped({x:bx-e.uy*(-9),y:by+e.ux*(-9),an:S.t,col:'#e63946'})}
   if(S&&S.W===W&&S.tire){const T=S.tire;if(T.tri){const tx=X(T.tri.x),ty=Y(T.tri.y);if(T.placed){g.fillStyle='#e63946';g.beginPath();g.moveTo(tx,ty-4);g.lineTo(tx+4,ty+3);g.lineTo(tx-4,ty+3);g.fill();g.fillStyle='#fff';g.fillRect(tx-1,ty,2,1)}else if(T.st===2&&Math.floor(t*4)%2){g.strokeStyle='#ffd23f';g.strokeRect(tx-5,ty-5,10,10)}}
     if(T.st===3&&T.wh){const wx=X(T.wh.x),wy=Y(T.wh.y);g.strokeStyle='#ffd23f';g.strokeRect(wx-4,wy-4,8,8);if(T.t>0){g.fillStyle='#000';g.fillRect(wx-8,wy-9,16,3);g.fillStyle='#3ddc84';g.fillRect(wx-8,wy-9,16*Math.min(1,T.t/3),3)}}}
@@ -2781,7 +2790,7 @@ $('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMen
 function step(dt){
   S.t+=dt;S.dt=dt;const W=S.W,P=S.P;
   if(S.dlg&&S.dlg.auto){S.dlg.t+=dt;if(S.dlg.t>3.6){S.dlg.i++;S.dlg.t=0}if(S.dlg.i>=S.dlg.lines.length)S.dlg=null}
-  updateWx(dt);recTrace(W,P);updateRadio(dt);if(!S.exam&&(S.t%1)<dt)checkDaily();
+  updateWx(dt);if(W.gravelP&&!S.foot){const F=W.gravelP.some(pa=>pa.segs.some(q=>{const t=clamp(((P.x-q.ax)*q.dx+(P.y-q.ay)*q.dy)/q.len2,0,1),ex=q.ax+q.dx*t-P.x,ey=q.ay+q.dy*t-P.y;return ex*ex+ey*ey<121}));if(F&&!S.gravel&&!S.gWarnL){S.gWarnL=1;toast('CALLE DE LASTRE','Máximo 40 km/h: el carro resbala más y necesita más distancia para frenar','info')}S.gravel=F;if(F){S.grip=(S.grip||1)*.72;if(Math.abs(P.v)>25)S.shake=Math.max(S.shake||0,.06)}}else S.gravel=false;recTrace(W,P);updateRadio(dt);if(!S.exam&&(S.t%1)<dt)checkDaily();
   if(S.respawn>0){S.respawn-=dt;if(S.respawn<=0){const b=P.belt;Object.assign(P,spawnState(W));P.belt=b}updateWorld(W,P,dt,S.t);return}
   if(S.cop&&S.cop.arrest){updateCop(dt);updateWorld(W,P,dt,S.t);return}
   if(!S.exam){copWanted();updateCop(dt)}if(!S.exam||S.mode==='street')emergStep(W,P,dt);
