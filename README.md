@@ -32,6 +32,9 @@ y entre a http://localhost:8080
 | P / Esc | Pausa |
 | M | Mapa completo (también tocando el minimapa); el juego se pausa. En manejo libre, clic o toque en un lugar del mapa para ir ahí |
 | + / - | Zoom de la cámara (en el mapa: acercar) |
+| L | Luces (obligatorias de noche y con lluvia en manejo libre) |
+| O | Radio Pixel 101.5 (solo fuera del examen) |
+| I | Voz del instructor (lee cada tarea y las faltas) |
 | N | Sonido |
 | R | Reiniciar |
 
@@ -40,6 +43,10 @@ y entre a http://localhost:8080
 - **Al abrir por primera vez**: se pregunta dónde se juega (computadora o teléfono) y qué licencia se está sacando (Bici, A1, A2, A3, B1, C1, C2). Los controles se adaptan y el perfil se guarda con cada intento para el panel del instructor. Se cambia desde el menú (PERFIL).
 - **Pantalla completa**: botón arriba a la derecha; mientras está activa, el botón rojo SALIR queda siempre visible.
 - **Garaje por licencia**: bicicleta, scooter 50 cc (A1), moto 150 cc y trail 250 cc (A2), moto deportiva 600 cc (A3), carros (B1), taxi (C1) y autobús (C2). En moto la vista de piloto muestra el manubrio y los espejos.
+- **Clima y hora** (manejo libre): el día avanza (1 hora ≈ 40 s), anochece con luces de calle, faros y estrellas, y a veces llueve: la calle resbala (se frena peor), hay limpiaparabrisas y manejar sin luces es falta.
+- **Voz**: el instructor lee cada tarea y anuncia las faltas (voz del navegador en español). Radio con locutor, música, consejos viales, reportes de tránsito y anuncios de Pulzar.
+- **Repetición de faltas**: al terminar una prueba, VER REPETICIÓN muestra los segundos antes de cada falta desde arriba, con los carros alrededor.
+- **Reto del día**: un reto distinto cada día con racha de días seguidos (se ve en el menú).
 - **Policía de tránsito** (manejo libre): con 4 infracciones en 90 segundos llega una patrulla con sirena que lo alcanza y lo detiene, con diálogo del oficial y −300 puntos.
 
 - **Tutorial (0)**: enseña los controles paso a paso (cinturón, pedales, volante, direccionales, reversa, freno de mano, marcha baja, bocina, vistas y espejos).

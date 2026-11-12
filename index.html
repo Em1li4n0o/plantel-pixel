@@ -134,7 +134,9 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <button data-k="p" class="tb sm" style="left:282px;top:4px">II</button>
       <button data-k="m" class="tb sm" style="left:256px;top:4px">MAPA</button>
       <button data-k="+" class="tb sm zoomb" style="left:230px;top:4px">ZOOM</button>
-      <button data-k="t" class="tb sm" style="left:204px;top:4px">A PIE</button>
+      <button data-k="t" class="tb sm" style="left:256px;top:20px">A PIE</button>
+      <button data-k="l" class="tb sm" style="left:230px;top:20px">LUCES</button>
+      <button data-k="o" class="tb sm" style="left:282px;top:20px">RADIO</button>
       <button data-k="z" class="tb sm look" style="left:236px;top:190px">◀ESP</button>
       <button data-k="f" class="tb sm look" style="left:256px;top:174px">ARRIBA</button>
       <button data-k="x" class="tb sm look" style="left:268px;top:190px">ESP▶</button>
@@ -154,12 +156,13 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <div id="toasts"></div>
     <div id="banner"></div>
     <div id="dlg" class="hidden"></div>
-    <div id="keys">WASD manejar · S freno (otro toque = reversa) · Q/E direccionales · H intermitentes · C cinturón · B pitar · G marcha baja · V vista piloto (Z/X lados · F arriba) · T bajarse/subirse · ESPACIO freno de mano · P pausa · M mapa · +/- zoom · N sonido · R reiniciar</div>
+    <div id="keys">WASD manejar · S freno (otro toque = reversa) · Q/E direccionales · H intermitentes · C cinturón · B pitar · G marcha baja · V vista piloto (Z/X lados · F arriba) · T bajarse/subirse · L luces · O radio · I voz del instructor · ESPACIO freno de mano · P pausa · M mapa · +/- zoom · N sonido · R reiniciar</div>
   </div>
 
   <div id="menu" class="screen">
     <h1>PLANTEL PIXEL</h1>
     <div class="sub">Simulador de manejo · Costa Rica</div>
+    <div id="daily" class="sub" style="color:#9cf"></div>
     <div id="prog" class="sub"></div>
     <div class="grid main">
       <button id="b0">1 · EXAMEN TEÓRICO</button>
@@ -346,7 +349,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <input id="licName" maxlength="16" placeholder="ESCRIBA SU NOMBRE">
     </div>
     <div id="endList" class="res box"></div>
-    <div class="row"><button id="bAgain">REINTENTAR [ENTER]</button><button id="bMenu2">MENÚ [ESC]</button></div>
+    <div class="row"><button id="bReplay">VER REPETICIÓN DE FALTAS</button><button id="bAgain">REINTENTAR [ENTER]</button><button id="bMenu2">MENÚ [ESC]</button></div>
   </div>
 </div>
 
@@ -1285,11 +1288,11 @@ function start(mode){
   S.tasks=mode==='tuto'?tutoTasks():mode==='plantel'?plantelTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
   const mw=W.w>1200?170:130,mh=Math.round(mw*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
   show(null);$('hud').classList.remove('hidden');ui=null;
-  $('banner').textContent='';$('toasts').innerHTML='';fsPaint();
+  $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio',false);shush();
   toast(MODES[mode],mode==='tuto'?'Siga las instrucciones de arriba, paso a paso.':S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
 }
 function show(id){for(const s of['welScr','rtScr','plScr','menu','rules','end','pause','garage','licScr','theory','prgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
-function toMenu(){logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0;fsPaint()}
+function toMenu(){shush();logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0;fsPaint()}
 function newDest(){const W=S.W,P=S.P;let i;do{i=Math.random()*W.dests.length|0}while(S.dest&&W.dests[i]===S.dest&&W.dests.length>1);S.dest=W.dests[i];
   S.destT=S.t;S.destPar=Math.round(12+(Math.abs(S.dest.x-P.x)+Math.abs(S.dest.y-P.y))/30)}
 
@@ -1297,7 +1300,7 @@ function toast(title,txt,kind='info'){const d=document.createElement('div');d.cl
 const QUIET=new Set(['belt','off','speed','inc','exit','rnoret','cut']);
 function fault(code,text,cat,cdSec=5){if(!S||S.over)return;if(S.mode==='tuto'){if(!S.cd[code]||S.t>S.cd[code]){S.cd[code]=S.t+4;toast('OJO',text,'info')}return}if(S.cd[code]&&S.t<S.cd[code])return;S.cd[code]=S.t+cdSec;const pts=CAT[cat];
   S.faults.push({t:S.t,text,cat,pts,x:Math.round(S.P.x),y:Math.round(S.P.y)});
-  if(S.exam){S.score-=pts;if(S.score<80&&!S.failed){S.failed=true;$('banner').textContent='REPROBADO · siga practicando o pulse R'}toast(`FALTA CAT. ${cat} · −${pts}`,text,'bad')}
+  if(S.exam){S.score-=pts;say('Falta. '+text);if(S.score<80&&!S.failed){S.failed=true;$('banner').textContent='REPROBADO · siga practicando o pulse R'}toast(`FALTA CAT. ${cat} · −${pts}`,text,'bad')}
   else{S.infr++;(S.wl=S.wl||[]).push(S.t);const lost=S.streak>0;S.streak=0;S.pts=Math.max(0,S.pts-50);toast(`INFRACCIÓN · CAT. ${cat}`,text+` · −50 pts${lost?' · ¡RACHA PERDIDA!':''}`,'bad')}
   if(!QUIET.has(code.replace(/\d+$/,'')))angerNear(S.W,S.P.x,S.P.y,95);
   sfx.bad()}
@@ -1306,7 +1309,7 @@ function fatal(text){if(S.over)return;if(S.mode==='tuto'){toast('¡CUIDADO!',tex
   else{S.infr++;(S.wl=S.wl||[]).push(S.t);S.streak=0;S.pts=Math.max(0,S.pts-100);S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});toast('¡ACCIDENTE!',text+' · −100 pts','bad');S.respawn=1.6;S.P.v=0}}
 function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
   if(S.mode==='tuto'){$('endTitle').textContent='¡TUTORIAL COMPLETADO!';$('endTitle').style.color='var(--good)';$('endLic').classList.add('hidden');$('endSub').textContent='Ya sabe manejar el simulador. Siga con el EXAMEN TEÓRICO (1) o practique en MANEJO LIBRE (5). Las reglas completas están en REGLAS (9).';$('endList').innerHTML='';show('end');ui='end';sfx.fanfare();return}
-  const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
+  const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();checkDaily();$('bReplay').classList.toggle('hidden',!S.faults.length);say(reason==='crash'?'Accidente. Prueba terminada.':ok?'¡Felicidades, aprobó!':'Reprobado. Siga practicando.',true);$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   let extra='';const prog=store.get('pp_prog',{});
   const pk=S.mode==='sanjose'?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
   const lic=prog.plantel&&prog.street&&prog.teorico;
@@ -1338,7 +1341,7 @@ function drawLicense(cv){const c=cv.getContext('2d');c.imageSmoothingEnabled=fal
 function showLicense(){const prog=store.get('pp_prog',{});show('licScr');ui='lic';$('licName2').value=store.get('pp_name','');
   const has=prog.plantel&&prog.street&&prog.teorico;$('licMenu').classList.toggle('hidden',!has);$('licName2').classList.toggle('hidden',!has);
   $('licMsg').textContent=has?'¡Felicidades! Escriba su nombre para su licencia.':`Para ganarla apruebe: TEÓRICO ${prog.teorico?'✔':'✘'} · PLANTEL ${prog.plantel?'✔':'✘'} · CALLE ${prog.street?'✔':'✘'}`;if(has)drawLicense($('licMenu'))}
-function refreshMenu(){const p=store.get('pp_prog',{});$('prog').textContent=`LICENCIA: TEÓRICO ${p.teorico?'✔':'✘'} · PLANTEL ${p.plantel?'✔':'✘'} · CALLE ${p.street?'✔':'✘'} · CARRO: ${VEH[CAR.type].n}`}
+function refreshMenu(){try{$('daily').textContent=dailyTxt()}catch(e){}const p=store.get('pp_prog',{});$('prog').textContent=`LICENCIA: TEÓRICO ${p.teorico?'✔':'✘'} · PLANTEL ${p.plantel?'✔':'✘'} · CALLE ${p.street?'✔':'✘'} · CARRO: ${VEH[CAR.type].n}`}
 
 // ===================== EXAMEN TEÓRICO =====================
 // Banco propio de práctica (no es el banco oficial). La respuesta correcta siempre va primero y se baraja al mostrar.
@@ -1543,11 +1546,11 @@ function updatePlayer(W,P,dt){
   if(P.gear===1){
     if(pD&&stopped){P.gear=-1;P.v=0;P.thr=0;sfx.gear()}
     else{if(up){P.v+=sp.acc*thr*dt*(1-Math.max(0,P.v)/sp.vmax);gas=true}
-      if(dn){P.brake=true;if(P.v>0)P.v=Math.max(0,P.v-sp.brk*bp*dt);else P.v=0}}
+      if(dn){P.brake=true;if(P.v>0)P.v=Math.max(0,P.v-sp.brk*bp*dt*(S.grip||1));else P.v=0}}
   }else{
     if(pU&&stopped){P.gear=1;P.v=0;P.thr=0;sfx.gear()}
     else{if(dn){P.v-=4*thr*dt*(1-Math.max(0,-P.v)/12);gas=true}
-      if(up){P.brake=true;if(P.v<0)P.v=Math.min(0,P.v+sp.brk*bp*dt);else P.v=0}}
+      if(up){P.brake=true;if(P.v<0)P.v=Math.min(0,P.v+sp.brk*bp*dt*(S.grip||1));else P.v=0}}
   }
   if(hb){P.brake=true;const d=48*dt;P.v=Math.abs(P.v)<d?0:P.v-Math.sign(P.v)*d}
   if(!gas){const d=(1.4+.0012*P.v*P.v)*dt;P.v=Math.abs(P.v)<d?0:P.v-Math.sign(P.v)*d}
@@ -1972,7 +1975,7 @@ function render3D(V,C,W,P,t,mirror){
     const fog=f>V.fog?Math.min(1,(f-V.fog)/160):0;const row=y*w;
     for(let x=0;x<w;x++){let c=(wx>=0&&wy>=0&&wx<bw&&wy<bh)?bg[(wy|0)*bw+(wx|0)]:GRASS32;if(fog)c=mix32(c,HAZE32,fog);buf[row+x]=c;wx+=rx;wy+=ry}}
   V.ctx.putImageData(V.img,0,0);
-  drawObjects3D(V,C,W,P,t,mirror?220:340,mirror)}
+  drawObjects3D(V,C,W,P,t,mirror?220:340,mirror);atmo3D(V,C,W,P,t,mirror)}
 function cockpit(P,t){const col=P.col;const ox=Math.round(-(S.look||0)*215),oy=Math.round((S.pitch||0)*70);
   if(isMoto(P.type)){// vista desde la moto o la bici: tanque, manubrio con espejos y tablero pequeño
     const bk=VEH[P.type].bike,kmh=Math.round(Math.abs(P.v)*KMH),lim=S.lim||S.W.limit,on=Math.floor(t*2.6)%2===0;g.save();g.translate(ox,oy);
@@ -2027,6 +2030,94 @@ function updateCop(dt){const C=S.cop;if(!C)return;const T=S.foot||S.P;
   if(d<17){C.arrest=true;C.v=0;S.P.v=0;S.P.thr=0;sfx.bad();const n=S.infr;
     S.dlg={lines:[[OFI,'¡Alto! Detenga el vehículo y no se mueva, por favor.'],[OFI,'Me permite su licencia y el derecho de circulación.'],[OFI,'Tiene '+n+' infracciones registradas. Le confeccionamos la boleta y el vehículo queda detenido.'],[OFI,'Recuerde: respetar las leyes de tránsito salva vidas.']],i:0,t:0}}}
 
+// ===================== CLIMA Y HORA DEL DÍA =====================
+// En manejo libre el día avanza (1 hora de juego ≈ 40 s) y a veces llueve: de noche o con lluvia hay que encender las luces [L]; con lluvia se frena peor.
+function wxInit(){S.wx={on:!S.exam,clock:S.exam?10:16.6,rain:0,rt:0,next:50+Math.random()*60,n:0,drops:[]};S.grip=1;S.P.lights=false}
+const smooth=(a,b,x)=>{const t=clamp((x-a)/(b-a),0,1);return t*t*(3-2*t)};
+function nightOf(h){return h<12?1-smooth(5,6.6,h):smooth(17.4,19,h)}
+function updateWx(dt){const X=S.wx;if(!X||!X.on){S.grip=1;return}const P=S.P;const prevH=X.clock|0;X.clock=(X.clock+dt/40)%24;X.n=nightOf(X.clock);
+  if((X.clock|0)!==prevH){const h=X.clock|0;if(h===18)toast('ATARDECER','Encienda las luces con '+(TOUCH?'LUCES':'[L]'),'info');if(h===6)toast('AMANECE','Ya puede apagar las luces','info')}
+  X.next-=dt;if(X.next<=0){X.next=60+Math.random()*90;const was=X.rt>0;X.rt=Math.random()<.4?.5+Math.random()*.5:0;if(X.rt>0&&!was)toast('EMPIEZA A LLOVER','Luces encendidas, más distancia y frene antes: la calle resbala','info');if(!X.rt&&was)toast('ESCAMPÓ','La calle sigue mojada un rato','info')}
+  X.rain+=clamp(X.rt-X.rain,-dt*.08,dt*.08);S.grip=1-.4*X.rain;
+  if((X.n>.5||X.rain>.35)&&!P.lights&&Math.abs(P.v)>3&&!S.foot){S.noLT=(S.noLT||0)+dt;if(S.noLT>5){S.noLT=-20;fault('luces',X.n>.5?'Manejar de noche sin las luces encendidas':'Manejar con lluvia sin las luces encendidas','IV',30)}}else if(S.noLT>0)S.noLT=0}
+function clockTxt(){const X=S.wx;if(!X||!X.on)return'';const h=X.clock|0,m=(X.clock%1)*60|0;return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+(X.rain>.15?' LLUVIA':'')}
+function glow(ctx,x,y,r,col){const gr=ctx.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,col);gr.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gr;ctx.fillRect(x-r,y-r,2*r,2*r)}
+function rainFx(ctx,w,h,k,t,slant){const n=Math.round(140*k);ctx.strokeStyle='rgba(190,215,255,.45)';ctx.lineWidth=1;ctx.beginPath();for(let i=0;i<n;i++){const x=((i*97+t*30*(i%3+1))%(w+40))-20,y=((i*61+t*(260+i%5*40))%(h+30))-15;ctx.moveTo(x,y);ctx.lineTo(x+slant,y+7)}ctx.stroke()}
+function atmo2D(W,P,ix,iy,zm,t){const X=S.wx;if(!X||!X.on||(X.n<.02&&X.rain<.02))return;const sx=x=>(x-ix)*zm,sy=y=>(y-iy)*zm;
+  if(X.rain>.02){g.fillStyle=`rgba(40,60,90,${.18*X.rain})`;g.fillRect(0,0,VW,VH)}
+  if(X.n>.02){g.fillStyle=`rgba(8,12,38,${.62*X.n})`;g.fillRect(0,0,VW,VH);g.save();g.globalCompositeOperation='lighter';const a=X.n;
+    for(const nd of W.nodes){const x=sx(nd.x),y=sy(nd.y);if(x<-40||x>VW+40||y<-40||y>VH+40)continue;glow(g,x,y,30*zm,`rgba(255,200,120,${.22*a})`)}
+    const cars=W.ai.concat(W.ringCars);if(P&&(P.lights||S.foot))cars.push(P);if(S.cop)cars.push(S.cop);
+    for(const c of cars){const x=sx(c.x),y=sy(c.y);if(x<-60||x>VW+60||y<-60||y>VH+60)continue;const cc=Math.cos(c.h),ss=Math.sin(c.h),L=(c.L||14)/2;
+      if(c!==P||P.lights)glow(g,sx(c.x+cc*(L+12)),sy(c.y+ss*(L+12)),15*zm,`rgba(255,245,200,${.32*a})`);glow(g,sx(c.x-cc*L),sy(c.y-ss*L),5*zm,`rgba(255,40,40,${.45*a})`)}
+    if(S.foot)glow(g,sx(S.foot.x),sy(S.foot.y),10*zm,`rgba(255,230,160,${.2*a})`);g.restore()}
+  if(X.rain>.02)rainFx(g,VW,VH,X.rain,t,-3)}
+function atmo3D(V,C,W,P,t,mirror){const X=S&&S.wx;if(!X||!X.on||(X.n<.02&&X.rain<.02))return;const ctx=V.ctx,a=X.n;
+  if(X.rain>.02){ctx.fillStyle=`rgba(70,85,110,${.25*X.rain})`;ctx.fillRect(0,0,V.w,V.h)}
+  if(a>.02){ctx.fillStyle=`rgba(6,10,32,${.66*a})`;ctx.fillRect(0,0,V.w,V.h);ctx.save();ctx.globalCompositeOperation='lighter';
+    if(a>.6&&X.rain<.3){ctx.fillStyle=`rgba(255,255,255,${(a-.6)*1.6})`;for(let i=0;i<60;i++){const ang=i*2.399,sx=((ang-C.h)%6.283+6.283)%6.283;const x=(sx/1.4)*V.w-V.w*.5,y=(i*37%(V.hz-10));if(x>=0&&x<V.w)ctx.fillRect(x|0,y|0,1,1)}}
+    for(const nd of W.nodes){const B=bill(C,V,nd.x,nd.y,9);if(B&&B.f<260)glow(ctx,B.x,B.y,Math.max(3,5*B.k),`rgba(255,200,120,${.6*a})`)}
+    for(const c of W.ai.concat(W.ringCars,S.cop?[S.cop]:[])){const q=camXform(C,c.x,c.y);if(q.f<1||q.f>240)continue;const cc=Math.cos(c.h),ss=Math.sin(c.h),L=(c.L||14)/2;
+      const fr=bill(C,V,c.x+cc*L,c.y+ss*L,1.6),bk=bill(C,V,c.x-cc*L,c.y-ss*L,1.6);const facing=(C.x-c.x)*cc+(C.y-c.y)*ss>0;
+      if(facing&&fr)glow(ctx,fr.x,fr.y,Math.max(3,3.4*fr.k),`rgba(255,245,200,${.8*a})`);if(!facing&&bk)glow(ctx,bk.x,bk.y,Math.max(2,1.8*bk.k),`rgba(255,40,40,${.8*a})`)}
+    if(!mirror&&!S.foot&&P.lights){ctx.fillStyle=`rgba(255,240,190,${.16*a})`;ctx.beginPath();ctx.moveTo(V.w*.3,V.h);ctx.lineTo(V.w*.44,V.hz+6);ctx.lineTo(V.w*.56,V.hz+6);ctx.lineTo(V.w*.7,V.h);ctx.fill()}
+    ctx.restore()}
+  if(X.rain>.02&&!mirror)rainFx(ctx,V.w,V.h,X.rain,t,-1)}
+function wipers(t){const X=S.wx;if(!X||X.rain<.25||isMoto(S.P.type))return;const a=-Math.PI/2+Math.sin(t*3.2)*1.15;g.strokeStyle='#111';g.lineWidth=3;
+  for(const bx of[110,250]){g.beginPath();g.moveTo(bx,184);g.lineTo(bx+Math.cos(a)*120,184+Math.sin(a)*120);g.stroke()}
+  g.fillStyle='rgba(200,225,255,.35)';for(let i=0;i<40;i++){const x=(i*73+((t*7|0)*31))%360+12,y=(i*41+((t*5|0)*17))%170+6;g.fillRect(x,y,2,2)}}
+
+// ===================== VOZ: INSTRUCTOR Y RADIO =====================
+let VOZ=store.get('pp_voz',true),VOICE=null;
+function pickVoice(){try{const vs=speechSynthesis.getVoices();VOICE=vs.find(v=>/es[-_]CR/i.test(v.lang))||vs.find(v=>/es[-_](MX|US|419)/i.test(v.lang))||vs.find(v=>/^es/i.test(v.lang))||null}catch(e){}}
+try{speechSynthesis.onvoiceschanged=pickVoice;pickVoice()}catch(e){}
+function say(txt,cut){if(!VOZ||muted||!window.speechSynthesis)return;try{const t=txt.replace(/\[[^\]]*\]/g,'').replace(/km\/h/gi,'kilómetros por hora').replace(/·/g,',').replace(/\s+/g,' ').trim().toLowerCase();if(!t)return;if(cut)speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);u.lang=VOICE?VOICE.lang:'es-CR';if(VOICE)u.voice=VOICE;u.rate=1.05;u.pitch=1;speechSynthesis.speak(u)}catch(e){}}
+function shush(){try{speechSynthesis.cancel()}catch(e){}}
+const RADIO_SONG=[[392,523,659,523],[440,523,698,523],[349,440,587,440],[392,494,587,494]];
+function radioLine(){const X=S.wx,d=S.W.dests||[],dn=d.length?pick(d).n.toLowerCase():'el centro';const hr=X&&X.on?clockTxt().slice(0,5):'';
+  return pick([`Radio Pixel, ciento uno punto cinco. ${hr?'Son las '+hr+'.':''} Tránsito pesado cerca de ${dn}; tome previsiones.`,
+    `Este espacio es presentado por Pulzar Solutions. Pulzar Solutions: tecnología que impulsa su negocio.`,
+    X&&X.rain>.2?'Reportan lluvia en la capital. Encienda las luces y aumente la distancia con el carro de adelante.':'Cielo despejado en el Valle Central. Recuerde: el cinturón salva vidas.',
+    'Consejo vial: en las rotondas cede el paso a quien ya va circulando, y usa la direccional derecha antes de salir.',
+    'Recuerde que adelantar a un ciclista exige dejar un metro y medio de distancia.',
+    `Llamada de un oyente: pura vida a todos los que van rumbo a ${dn}.`,
+    'Si toma, no maneje. Radio Pixel le acompaña.'])}
+function updateRadio(dt){if(!S.radio||S.exam)return;S.radioT=(S.radioT||0)-dt;S.beatT=(S.beatT||0)-dt;
+  if(S.beatT<=0){S.beatT=.5;S.beat=((S.beat||0)+1)%16;const bar=RADIO_SONG[(S.beat>>2)%4],n=bar[S.beat%4];beep(n,.22,'triangle',.025);if(S.beat%2===0)beep(n/2,.18,'square',.012)}
+  if(S.radioT<=0){S.radioT=28+Math.random()*14;const l=radioLine();toast('RADIO PIXEL 101.5',l,'info');say(l)}}
+
+// ===================== REPETICIÓN DE FALTAS =====================
+function recTrace(W,P){if(!S.trace)S.trace=[];if(S.t-(S.lastRec||-1)<.1)return;S.lastRec=S.t;const F=S.foot||P;
+  const cars=[];for(const c of W.ai)if(Math.abs(c.x-F.x)<180&&Math.abs(c.y-F.y)<120)cars.push([c.x|0,c.y|0,+c.h.toFixed(2),c.type,c.col]);
+  S.trace.push([S.t,P.x,P.y,P.h,cars]);if(S.trace.length>9000)S.trace.shift()}
+function startReplay(){if(!S||!S.faults.length||!S.trace||!S.trace.length)return;S.replay={k:0,t:0};show(null);$('hud').classList.add('hidden');ui='replay'}
+function endReplay(){S.replay=null;show('end');ui='end'}
+function nextReplay(){const R=S.replay;R.k++;R.t=0;if(R.k>=S.faults.length)endReplay()}
+function drawReplay(dt){const R=S.replay,W=S.W,f=S.faults[R.k],tr=S.trace;R.t+=dt;const cur=f.t-4+R.t;if(cur>f.t+1.6){nextReplay();if(!S.replay)return;return}
+  let i=0,lo=0,hi=tr.length-1;while(lo<hi){const m=(lo+hi)>>1;if(tr[m][0]<cur)lo=m+1;else hi=m}i=lo;const fr=tr[i];
+  const zm=2,vw=VW/zm,vh=VH/zm,ix=Math.round(clamp(f.x-vw/2,0,W.w-vw)),iy=Math.round(clamp(f.y-vh/2,0,W.h-vh));
+  g.fillStyle='#000';g.fillRect(0,0,VW,VH);g.save();g.setTransform(zm,0,0,zm,0,0);g.drawImage(W.bg,ix,iy,vw,vh,0,0,vw,vh);
+  for(const c of fr[4])drawCar(g,c[0],c[1],c[2],c[4],{},ix,iy,c[3]);drawCar(g,fr[1],fr[2],fr[3],S.P.col,{},ix,iy,S.P.type);
+  if(cur>=f.t){g.strokeStyle='#ff3030';g.lineWidth=1;g.beginPath();g.arc(f.x-ix,f.y-iy,12+Math.sin(cur*10)*2,0,7);g.stroke()}g.restore();
+  g.fillStyle='rgba(10,10,20,.88)';g.fillRect(0,0,VW,28);g.fillRect(0,VH-12,VW,12);ptext(g,`REPETICION - FALTA ${R.k+1}/${S.faults.length} - CAT ${f.cat}`,6,4,'#ffd23f');
+  const t=clean(f.text).toUpperCase();ptext(g,t.slice(0,92),6,13,'#fff');if(t.length>92)ptext(g,t.slice(92,184),6,20,'#fff');
+  ptext(g,cur<f.t?'MIRE LO QUE PASA...':'AQUI COMETIO LA FALTA',VW-100,VH-9,cur<f.t?'#cfd6dd':'#ff6b6b');ptext(g,TOUCH?'TOQUE: SIGUIENTE':'ENTER: SIGUIENTE - ESC: VOLVER',6,VH-9,'#cfd6dd')}
+
+// ===================== RETO DEL DÍA =====================
+const DAILY=[{t:'Apruebe el CENTRO DE SAN JOSÉ con 90 o más',ok:S=>S.mode==='centro'&&S.okRes&&S.score>=90},
+  {t:'Apruebe la PRUEBA EN CALLE sin faltas de categoría I ni II',ok:S=>S.mode==='street'&&S.okRes&&!S.faults.some(f=>f.cat==='I'||f.cat==='II')},
+  {t:'En MANEJO LIBRE llegue a 3 destinos sin ninguna infracción',ok:S=>S.mode==='city'&&S.deliv>=3&&S.infr===0},
+  {t:'Apruebe el PLANTEL DE SAN JOSÉ',ok:S=>S.mode==='sanjose'&&S.okRes},
+  {t:'Apruebe la RUTA 27 pagando los 3 peajes',ok:S=>S.mode==='r27'&&S.okRes},
+  {t:'En SAN JOSÉ LIBRE visite 2 lugares emblemáticos sin infracciones',ok:S=>S.mode==='sjlibre'&&S.deliv>=2&&S.infr===0},
+  {t:'Llegue a 2 destinos en MANEJO LIBRE de noche o con lluvia, sin infracciones',ok:S=>S.mode==='city'&&S.deliv>=2&&S.infr===0&&S.wx&&(S.wx.n>.5||S.wx.rain>.3)}];
+const today=()=>new Date().toLocaleDateString('en-CA');
+function dailyCh(){const d=today();let h=0;for(const c of d)h=(h*31+c.charCodeAt(0))>>>0;return DAILY[h%DAILY.length]}
+function dailyTxt(){const st=store.get('pp_daily',{}),done=st.date===today(),n=done||st.date===new Date(Date.now()-864e5).toLocaleDateString('en-CA')?st.n||0:0;return`RETO DEL DÍA: ${dailyCh().t} ${done?'✔':''} · RACHA ${n} DÍA${n===1?'':'S'}`}
+function checkDaily(){if(!S)return;const st=store.get('pp_daily',{});if(st.date===today())return;if(!dailyCh().ok(S))return;
+  const y=new Date(Date.now()-864e5).toLocaleDateString('en-CA'),n=st.date===y?(st.n||0)+1:1;store.set('pp_daily',{date:today(),n});toast('¡RETO DEL DÍA CUMPLIDO!','Racha: '+n+' día'+(n>1?'s':'')+' seguidos','good');sfx.fanfare();say('¡Reto del día cumplido!')}
+
 // ===================== A PIE Y TELETRANSPORTE =====================
 const FOOTOK=m=>m==='city'||!!ROUTES[m];
 function toggleFoot(){const P=S.P;
@@ -2072,6 +2163,7 @@ function onKey(k){
     if(ui==='garage'){if(k==='a'||k==='arrowleft')garage(-1,0);if(k==='d'||k==='arrowright')garage(1,0);if(k==='w'||k==='arrowup')garage(0,-1);if(k==='s'||k==='arrowdown')garage(0,1);if(k==='enter'||k==='escape')back();return}
     if(ui==='theory'){theoryKey(k);return}
     if(k==='1')openTheory();if(k==='2')openPlanteles();if(k==='3')openRutas();if(k==='4')start('street');if(k==='5')start('city');if(k==='6')openProgress();if(k==='7')showLicense();if(k==='8')openGarage();if(k==='9'){show('rules');ui='rules'}if(k==='0')start('tuto');return}
+  if(S.replay){if(k==='escape')endReplay();else if(k==='enter'||k===' ')nextReplay();return}
   if(S.over){if(k==='enter')start(S.mode);if(k==='escape')toMenu();return}
   if(S.mapOpen&&(k==='escape'||k==='m')){S.mapOpen=false;return}
   if(k==='m'&&!S.paused){S.mapOpen=true;S.mapZ=0;return}
@@ -2083,6 +2175,9 @@ function onKey(k){
   if(S.paused)return;
   const P=S.P;
   if(k==='t'){toggleFoot();return}
+  if(k==='l'&&!S.foot){P.lights=!P.lights;sfx.gear();toast(P.lights?'LUCES ENCENDIDAS':'LUCES APAGADAS','',P.lights?'good':'info');return}
+  if(k==='i'){VOZ=!VOZ;store.set('pp_voz',VOZ);if(!VOZ)shush();toast(VOZ?'VOZ DEL INSTRUCTOR ACTIVADA':'VOZ DEL INSTRUCTOR APAGADA','','info');return}
+  if(k==='o'){if(S.exam){toast('RADIO','En el examen no hay radio: concéntrese','info');return}S.radio=!S.radio;store.set('pp_radio',S.radio);S.radioT=1.5;if(!S.radio)shush();toast(S.radio?'RADIO PIXEL 101.5':'RADIO APAGADA',S.radio?'Música, tránsito y consejos':'','info');return}
   if(S.foot&&'qehgcb'.includes(k))return;
   if(k==='q'){P.blinkL=!P.blinkL;P.blinkR=false;P.haz=false;P.bh0=P.h;P.armed=false}
   if(k==='e'){P.blinkR=!P.blinkR;P.blinkL=false;P.haz=false;P.bh0=P.h;P.armed=false}
@@ -2091,7 +2186,7 @@ function onKey(k){
   if(k==='g'){if(P.gear===1){P.low=!P.low;sfx.gear();toast(P.low?'MARCHA BAJA (L)':'MARCHA NORMAL (D)',P.low?'Freno de motor: ideal para bajar pendientes':'',P.low?'good':'info')}}
   if(k==='c'){const bw=isMoto(P.type)?'CASCO':'CINTURÓN';if(Math.abs(P.v)<1){P.belt=!P.belt;sfx.gear();toast(P.belt?bw+' PUESTO':bw+' QUITADO','',P.belt?'good':'info')}else toast('DETÉNGASE','para ponerse el '+bw.toLowerCase(),'info')}
   if(k==='v'){S.fp=!S.fp;store.set('pp_fp',S.fp);toast(S.fp?'VISTA DE PILOTO':'VISTA DESDE ARRIBA',S.fp?'Z/X: mirar espejos laterales · F: mirar arriba (semáforo)':'Cambie con [V]','info')}
-  if(k==='n'){muted=!muted;toast(muted?'SONIDO APAGADO':'SONIDO ENCENDIDO','','info')}
+  if(k==='n'){muted=!muted;if(muted)shush();toast(muted?'SONIDO APAGADO':'SONIDO ENCENDIDO','','info')}
   if(k==='r')start(S.mode)}
 function back(){show('menu');ui='menu';refreshMenu()}
 function openPlanteles(){show('plScr');ui='pl'}
@@ -2100,11 +2195,12 @@ function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!
 $('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
 $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
-$('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bMenu2').onclick=toMenu;
+$('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
 
 // ===================== BUCLE =====================
 function step(dt){
   S.t+=dt;S.dt=dt;const W=S.W,P=S.P;
+  updateWx(dt);recTrace(W,P);updateRadio(dt);if(!S.exam&&(S.t%1)<dt)checkDaily();
   if(S.respawn>0){S.respawn-=dt;if(S.respawn<=0){const b=P.belt;Object.assign(P,spawnState(W));P.belt=b}updateWorld(W,P,dt,S.t);return}
   if(S.cop&&S.cop.arrest){updateCop(dt);updateWorld(W,P,dt,S.t);return}
   if(!S.exam){copWanted();updateCop(dt)}
@@ -2113,7 +2209,7 @@ function step(dt){
   updatePlayer(W,P,dt);if(S.over)return;
   rules(W,P,px,py,dt);if(S.over)return;if(W.tolls)tollRules(W,P,dt);if(W.pstops)pstopRules(W,P,dt);if(S.over)return;
   updateWorld(W,P,dt,S.t);if(S.over)return;
-  if(S.exam){const tk=S.tasks[S.task];if(tk){if(!tk.started){tk.started=true;tk.start&&tk.start()}
+  if(S.exam){const tk=S.tasks[S.task];if(tk){if(!tk.started){tk.started=true;tk.start&&tk.start();say(tk.txt,true)}
       if(tk.check()){toast('✔ '+(tk.ok||'¡LISTO!'),'','good');sfx.good();S.task++;if(S.task>=S.tasks.length)endExam('done')}}}
   else{const d=S.dest;if(Math.hypot(P.x-d.x,P.y-d.y)<16){S.deliv++;const el=S.t-S.destT,bonus=Math.max(0,Math.round((S.destPar-el)*5)),mult=1+Math.min(S.streak,6)*.5;
       const gain=Math.round((100+bonus)*mult);S.pts+=gain;S.streak++;S.best=Math.max(S.best,S.pts);
@@ -2122,7 +2218,7 @@ function step(dt){
   for(const R of W.rails){const tr=trainRect(W,R,S.t);if(tr){const d=Math.hypot(tr.x+tr.w/2-P.x,tr.y+tr.h/2-P.y);if(d<320&&S.horned!==Math.floor((S.t+R.off)/R.period)){S.horned=Math.floor((S.t+R.off)/R.period);sfx.horn()}}
     for(const cr of R.cross)if(railWarn(W,R,cr.ca,S.t)&&Math.hypot(cr.x-P.x,cr.y-P.y)<150){S.bellT-=dt;if(S.bellT<=0){S.bellT=.45;sfx.bell()}}}
 }
-function updateHUD(){const P=S.P;let tg=null;$('dlg').classList.toggle('hidden',!S.dlg);if(S.dlg){const d=S.dlg,l=d.lines[Math.min(d.i,d.lines.length-1)];const h='<b>'+l[0]+':</b> '+l[1]+'<small>'+(TOUCH?'Toque para seguir':'ENTER para seguir')+'</small>';if($('dlg').innerHTML!==h)$('dlg').innerHTML=h}$('touch').classList.toggle('hidden',!TOUCH||S.over);
+function updateHUD(){const P=S.P;let tg=null;{const ct=clockTxt();if(ct&&!S.mapOpen){const w=ct.length*4+5;g.fillStyle='rgba(10,10,20,.75)';g.fillRect(292,128,w,9);ptext(g,ct,295,130,S.wx.n>.5?'#9cf':'#ffd23f')}}$('dlg').classList.toggle('hidden',!S.dlg);if(S.dlg){const d=S.dlg,l=d.lines[Math.min(d.i,d.lines.length-1)];const h='<b>'+l[0]+':</b> '+l[1]+'<small>'+(TOUCH?'Toque para seguir':'ENTER para seguir')+'</small>';if($('dlg').innerHTML!==h)$('dlg').innerHTML=h}$('touch').classList.toggle('hidden',!TOUCH||S.over);
   if(S.exam){const tk=S.tasks[S.task];$('tasknum').textContent=tk?`${S.mode==='street'?'CALLE':'TAREA'} ${S.task+1}/${S.tasks.length}`:'FIN';$('tasktxt').textContent=tk?tk.txt:'';tg=tk?tk.tgt:null;
     $('scoreLbl').textContent='PUNTOS';$('score').textContent=Math.max(0,S.score);$('score').classList.toggle('low',S.score<80);$('time').textContent=fmtT(S.t)}
   else{const left=Math.max(0,Math.ceil(S.destPar-(S.t-S.destT)));$('tasknum').textContent=`DESTINO ${S.deliv+1} · BONO: ${left}s`;$('tasktxt').textContent='Maneje hasta '+S.dest.n+' sin infracciones. ¡Rápido pero legal!';tg=S.dest;
@@ -2139,6 +2235,7 @@ let last=performance.now(),acc=0;
 function frame(now){requestAnimationFrame(frame);try{tick(now)}catch(e){console.error(e)}}
 function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   if(ui==='theory'){if(TH.mode)thHead();const q=TH.mode&&TH.list[TH.i];if(q&&q.s&&q.s.endsWith('f'))drawSign(q.s,performance.now()/1000)}
+  if(S&&S.replay){drawReplay(dt);return}
   if(S){
     if(!S.paused&&!S.over&&!S.mapOpen){acc+=dt;while(acc>=1/60){step(1/60);acc-=1/60;for(const k in pressed)delete pressed[k];if(S.over)break}}else{acc=0;for(const k in pressed)delete pressed[k]}
     const W=S.W,P=S.P;const sh=S.shake>0?(S.shake-=dt,S.shake*6):0;// cámara: el carro siempre al centro de la pantalla; zoom con + / -
@@ -2156,8 +2253,8 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
       render3D(VMIR,{x:P.x-c*2+s*1.5,y:P.y-s*2-c*1.5,z:4.3,h:P.h+Math.PI,c:-c,s:-s},W,P,S.t,true);
       if(S.look<-.25){const a=P.h+Math.PI+.22;render3D(VSL,{x:P.x+c*1.5+s*5,y:P.y+s*1.5-c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
       if(S.look>.25){const a=P.h+Math.PI-.22;render3D(VSR,{x:P.x+c*1.5-s*5,y:P.y+s*1.5+c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
-      g.drawImage(VMAIN.c,0,0);cockpit(P,S.t);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
-    else{g.fillStyle='#2f6b2a';g.fillRect(0,0,VW,VH);g.save();g.setTransform(zm,0,0,zm,0,0);drawWorld(W,P,ix,iy,S.t);g.restore();const tg=updateHUD();if(tg&&!S.over)drawTarget(tg,ix,iy,S.t,zm);drawMini(W,P,tg)}
+      g.drawImage(VMAIN.c,0,0);wipers(S.t);cockpit(P,S.t);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
+    else{g.fillStyle='#2f6b2a';g.fillRect(0,0,VW,VH);g.save();g.setTransform(zm,0,0,zm,0,0);drawWorld(W,P,ix,iy,S.t);g.restore();atmo2D(W,P,ix,iy,zm,S.t);const tg=updateHUD();if(tg&&!S.over)drawTarget(tg,ix,iy,S.t,zm);drawMini(W,P,tg)}
     if(engG&&AC){engG.gain.value=(muted||S.paused||S.over)?0:.035;eng.frequency.value=38+Math.abs(P.v)*1.7+(keys.w||keys.s?8:0)}
   }else{
     for(const k in pressed)delete pressed[k];
