@@ -62,7 +62,7 @@ svg text{fill:var(--mut);font-size:11px}
 <header>
   <div>
     <h1>PANEL DEL INSTRUCTOR</h1>
-    <p>Pegue aquí los códigos de reporte que le envían sus alumnos desde <b>Plantel Pixel → 9 · Mi progreso</b>. Los datos se guardan solo en este navegador.</p>
+    <p>Pegue aquí los códigos de reporte que le envían sus alumnos desde <b>Plantel Pixel → 6 · Progreso</b>. Los datos se guardan solo en este navegador.</p>
   </div>
   <a href="./">← Volver al simulador</a>
 </header>
@@ -103,7 +103,8 @@ const KEY='pp_instr';
 const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||{students:{}}}catch(e){return{students:{}}}};
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(DB))}catch(e){msg('No se pudo guardar en este navegador.',true)}};
 let DB=load(),SEL=null;
-const MN={teorico:'Teórico',sanjose:'Plantel San José',plantel:'Plantel Pixel',street:'Prueba en calle',city:'Calle libre'};
+const MN={teorico:'Teórico',sanjose:'Plantel San José',plantel:'Plantel (tutorial)',street:'Prueba en calle',city:'Manejo libre',sjlibre:'San José libre',alajuela:'Alajuela · taxi',centro:'Ruta: Centro de San José',r27:'Ruta 27',r32:'Ruta 32',tilaran:'Ruta Tilarán',manuel:'Ruta Manuel Antonio',cerro:'Ruta Cerro de la Muerte'};
+for(const[k,n]of[['heredia','Heredia'],['alajuela','Alajuela'],['perez','Pérez Zeledón'],['rioclaro','Río Claro'],['limon','Limón'],['guapiles','Guápiles'],['sancarlos','San Carlos'],['nicoya','Nicoya'],['puntarenas','Puntarenas'],['liberia','Liberia']])MN['pl_'+k]='Plantel '+n+' (prelim.)';
 const fmtD=t=>new Date(t).toLocaleDateString('es-CR',{day:'2-digit',month:'short',year:'numeric'});
 const fmtT=s=>`${String(s/60|0).padStart(2,'0')}:${String(s%60|0).padStart(2,'0')}`;
 function msg(t,err){$('msg').textContent=t;$('msg').className=err?'err':''}
@@ -116,7 +117,7 @@ async function decode(code){const kind=code.slice(0,5),b=code.slice(5).replace(/
 function valid(r){return r&&typeof r==='object'&&typeof r.id==='string'&&Array.isArray(r.h)}
 function merge(r){const id=r.id.slice(0,40);const old=DB.students[id];const hist=new Map();
   for(const a of(old?old.h:[]).concat(r.h))if(a&&typeof a.d==='number')hist.set(a.d+'|'+a.m,a);
-  DB.students[id]={id,n:String(r.n||'SIN NOMBRE').slice(0,40),g:String(r.g||'').slice(0,40),at:Math.max(r.at||0,old?old.at:0),prog:r.prog||{},w:r.w||0,first:old?old.first:Date.now(),h:[...hist.values()].sort((a,b)=>a.d-b.d).slice(-400)}}
+  DB.students[id]={id,n:String(r.n||'SIN NOMBRE').slice(0,40),g:String(r.g||'').slice(0,40),at:Math.max(r.at||0,old?old.at:0),prog:r.prog||{},w:r.w||0,prof:(r.prof&&{lic:String(r.prof.lic||'').slice(0,8),dev:String(r.prof.dev||'').slice(0,8)})||(old&&old.prof)||null,first:old?old.first:Date.now(),h:[...hist.values()].sort((a,b)=>a.d-b.d).slice(-400)}}
 
 $('add').onclick=async()=>{const codes=$('codes').value.match(/PP[ZJ]1\.[A-Za-z0-9_-]+/g)||[];if(!codes.length){msg('No encontré ningún código. Deben empezar con PPZ1. o PPJ1.',true);return}
   let ok=0,bad=0;for(const c of codes){try{const r=await decode(c);if(!valid(r))throw 0;merge(r);ok++}catch(e){bad++}}
@@ -124,8 +125,8 @@ $('add').onclick=async()=>{const codes=$('codes').value.match(/PP[ZJ]1\.[A-Za-z0
 $('wipe').onclick=()=>{if(!confirm('¿Borrar todos los alumnos de este navegador? No se puede deshacer.'))return;DB={students:{}};SEL=null;save();render();msg('Datos borrados.')};
 
 // ---------- cálculo ----------
-const exams=a=>a.filter(x=>!x.prac&&x.m!=='city');
-function best(s,ms){const v=s.h.filter(x=>ms.includes(x.m)&&!x.prac).map(x=>x.s);return v.length?Math.max(...v):null}
+const FREE=new Set(['city','sjlibre','alajuela']);const exams=a=>a.filter(x=>!x.prac&&!FREE.has(x.m));
+function best(s,ms){const v=s.h.filter(x=>(ms.includes(x.m)||(ms.includes('sanjose')&&String(x.m).startsWith('pl_')))&&!x.prac).map(x=>x.s);return v.length?Math.max(...v):null}
 function topFault(h){const fc={};for(const a of h)for(const f of a.f||[])fc[f[0]]=(fc[f[0]]||0)+1;return Object.entries(fc).sort((a,b)=>b[1]-a[1])}
 function status(s){const t=best(s,['teorico']),p=best(s,['plantel','sanjose']),c=best(s,['street']);const drv=exams(s.h).filter(x=>x.m!=='teorico').slice(-3);
   const avg=drv.length?drv.reduce((a,x)=>a+x.s,0)/drv.length:null;
@@ -143,7 +144,7 @@ function render(){const all=Object.values(DB.students);const g=$('fGroup').value
   const gf=topFault(list.flatMap(s=>s.h));
   $('kpis').innerHTML=[[list.length,'alumnos'],[att,'intentos de examen'],[ready,'listos para la prueba'],[need,'necesitan práctica'],[gf[0]?gf[0][1]+'×':'—',gf[0]?'falta más común: '+esc(gf[0][0]):'falta más común del grupo']]
     .map(([v,l])=>`<div class="kpi"><b>${v}</b><span>${l}</span></div>`).join('');
-  $('rows').innerHTML=list.length?list.map(s=>{const st=status(s),tf=topFault(s.h)[0];return`<tr class="st${s.id===SEL?' sel':''}" data-id="${esc(s.id)}"><td><b>${esc(s.n)}</b></td><td>${esc(s.g)||'<span class="none">—</span>'}</td><td>${fmtD(s.at)}</td><td class="num">${exams(s.h).length}</td>
+  $('rows').innerHTML=list.length?list.map(s=>{const st=status(s),tf=topFault(s.h)[0];return`<tr class="st${s.id===SEL?' sel':''}" data-id="${esc(s.id)}"><td><b>${esc(s.n)}</b>${s.prof&&s.prof.lic&&s.prof.lic!=='-'?` <span class="chip">${esc(s.prof.lic)}</span>`:''}${s.prof&&s.prof.dev?` <span class="none">${s.prof.dev==='movil'?'teléfono':'computadora'}</span>`:''}</td><td>${esc(s.g)||'<span class="none">—</span>'}</td><td>${fmtD(s.at)}</td><td class="num">${exams(s.h).length}</td>
       <td class="num">${cell(best(s,['teorico']),70)}</td><td class="num">${cell(best(s,['plantel','sanjose']),80)}</td><td class="num">${cell(best(s,['street']),80)}</td>
       <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis">${tf?esc(tf[0])+` <span class="none">(${tf[1]}×)</span>`:'<span class="none">—</span>'}</td><td><span class="chip ${st[1]}">${st[0]}</span></td></tr>`}).join('')
     :`<tr><td colspan="9" class="empty">Aún no hay alumnos. Pegue un código arriba o pulse “Cargar alumnos de ejemplo”.</td></tr>`;
