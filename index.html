@@ -54,6 +54,11 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 .sub{color:#9cf;font-size:calc(var(--u)*4)}
 .grid{display:grid;grid-template-columns:1fr 1fr;gap:calc(var(--u)*3)}
 .row{display:flex;gap:calc(var(--u)*3);justify-content:center}
+.mini{flex-wrap:wrap;gap:calc(var(--u)*2)}.mini button{min-width:0;font-size:calc(var(--u)*3.6);padding:calc(var(--u)*2.5) calc(var(--u)*3)}
+.main button{font-size:calc(var(--u)*5);padding:calc(var(--u)*4.5) calc(var(--u)*4)}
+.pl button{min-width:calc(var(--u)*104);font-size:calc(var(--u)*3.8);padding:calc(var(--u)*2.6) calc(var(--u)*3)}
+button:disabled{opacity:.45;cursor:default}button:disabled:hover{background:#222238;color:var(--fg)}
+button small{display:block;font-size:.7em;color:#9cf;margin-top:calc(var(--u)*.8)}button:hover small,button:focus-visible small{color:#000}
 button{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*3.5) calc(var(--u)*4);background:#222238;color:var(--fg);border:calc(var(--u)*1) solid #000;box-shadow:inset 0 0 0 calc(var(--u)*1) #6a6a9a,0 calc(var(--u)*2) 0 #000;cursor:pointer;min-width:calc(var(--u)*120)}
 button:hover,button:focus-visible{background:var(--acc);color:#000;outline:none}
 .blink{animation:bl 1s steps(1) infinite}
@@ -149,20 +154,37 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <h1>PLANTEL PIXEL</h1>
     <div class="sub">Simulador de manejo · Costa Rica</div>
     <div id="prog" class="sub"></div>
-    <div class="grid">
+    <div class="grid main">
       <button id="b0">1 · EXAMEN TEÓRICO</button>
-      <button id="bSJ">2 · PLANTEL SAN JOSÉ</button>
-      <button id="b1">3 · PLANTEL PIXEL</button>
-      <button id="b2">4 · PRUEBA EN CALLE</button>
-      <button id="b3">5 · CALLE LIBRE</button>
-      <button id="b4">6 · GARAJE</button>
-      <button id="b5">7 · MI LICENCIA</button>
-      <button id="b6">8 · REGLAS</button>
-      <button id="b7">9 · MI PROGRESO</button>
-      <button id="bT" style="background:#2d4a22">0 · TUTORIAL: CÓMO JUGAR</button>
+      <button id="bSJ">2 · PLANTELES OFICIALES</button>
+      <button id="b2">3 · PRUEBA EN CALLE</button>
+      <button id="b3">4 · MANEJO LIBRE</button>
     </div>
-    <div class="blink sub">PRESIONE 0 AL 9 · ¿PRIMERA VEZ? PULSE 0</div>
+    <div class="row mini">
+      <button id="bT" style="background:#2d4a22">0 · TUTORIAL</button>
+      <button id="b7">5 · PROGRESO</button>
+      <button id="b5">6 · LICENCIA</button>
+      <button id="b4">7 · GARAJE</button>
+      <button id="b6">8 · REGLAS</button>
+    </div>
+    <div class="blink sub">PRESIONE UN NÚMERO · ¿PRIMERA VEZ? PULSE 0</div>
     <a href="instructor.html" class="sub" style="color:var(--info);pointer-events:auto">PANEL DEL INSTRUCTOR ›</a>
+  </div>
+
+  <div id="plScr" class="screen hidden">
+    <h2>PLANTELES OFICIALES</h2>
+    <div class="sub">Practique la prueba tal como se hace en cada plantel</div>
+    <div class="grid pl">
+      <button id="plSJ">1 · SAN JOSÉ<small>DISPONIBLE</small></button>
+      <button disabled>HEREDIA<small>PRÓXIMAMENTE</small></button>
+      <button disabled>ALAJUELA<small>PRÓXIMAMENTE</small></button>
+      <button disabled>CARTAGO<small>PRÓXIMAMENTE</small></button>
+      <button disabled>LIMÓN<small>PRÓXIMAMENTE</small></button>
+      <button disabled>LIBERIA<small>PRÓXIMAMENTE</small></button>
+      <button disabled>PUNTARENAS<small>PRÓXIMAMENTE</small></button>
+      <button disabled>PÉREZ ZELEDÓN<small>PRÓXIMAMENTE</small></button>
+    </div>
+    <button id="plBack" style="min-width:0">ESC · VOLVER</button>
   </div>
 
   <div id="garage" class="screen hidden">
@@ -764,7 +786,7 @@ function logDrive(){if(!S||S.logged||S.t<15||S.mode==='tuto')return;S.logged=tru
   logAttempt({m:S.mode,s:S.exam?Math.max(0,S.score):S.pts,ok:S.exam?S.okRes===true:null,fin:S.exam?S.over:true,t:Math.round(S.t),tk:S.exam?[Math.min(S.task,S.tasks.length),S.tasks.length]:[S.deliv,0],
     f:S.faults.slice(0,25).map(f=>[f.text,f.cat,Math.round(f.t),f.x,f.y]),car:CAR.type,fp:!!S.fp})}
 addEventListener('pagehide',()=>logDrive());
-const MNAME={teorico:'TEÓRICO',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'CALLE LIBRE'};
+const MNAME={teorico:'TEÓRICO',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};
 async function makeReport(){const rep={v:1,id:sid(),n:store.get('pp_name','')||'SIN NOMBRE',g:store.get('pp_school',''),at:Date.now(),prog:store.get('pp_prog',{}),h:store.get('pp_hist',[]).slice(-60),w:store.get('pp_wrong',[]).length};
   const js=JSON.stringify(rep);let out;
   try{const cs=new Blob([js]).stream().pipeThrough(new CompressionStream('deflate-raw'));const buf=new Uint8Array(await new Response(cs).arrayBuffer());let s='';for(let i=0;i<buf.length;i+=8192)s+=String.fromCharCode.apply(null,buf.subarray(i,i+8192));out='PPZ1.'+btoa(s)}
@@ -789,7 +811,7 @@ $('prgBack').onclick=()=>back();
 // ===================== ESTADO =====================
 let S=null,A=null,ui='menu';
 function spawnState(W){const v=VEH[CAR.type];return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,thr:0,bp:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:carCol(),type:CAR.type,sp:v,L:v.L,Wd:v.Wd,player:true}}
-const MODES={tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'CALLE LIBRE'};
+const MODES={tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};
 function start(mode){
   logDrive();
   const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode==='sanjose'?buildSanJose():buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
@@ -801,7 +823,7 @@ function start(mode){
   $('banner').textContent='';$('toasts').innerHTML='';
   toast(MODES[mode],mode==='tuto'?'Siga las instrucciones de arriba, paso a paso.':S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
 }
-function show(id){for(const s of['menu','rules','end','pause','garage','licScr','theory','prgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
+function show(id){for(const s of['plScr','menu','rules','end','pause','garage','licScr','theory','prgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
 function toMenu(){logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0}
 function newDest(){const W=S.W,P=S.P;let i;do{i=Math.random()*W.dests.length|0}while(S.dest&&W.dests[i]===S.dest&&W.dests.length>1);S.dest=W.dests[i];
   S.destT=S.t;S.destPar=Math.round(12+(Math.abs(S.dest.x-P.x)+Math.abs(S.dest.y-P.y))/30)}
@@ -818,7 +840,7 @@ function fatal(text){if(S.over)return;if(S.mode==='tuto'){toast('¡CUIDADO!',tex
   if(S.exam){S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});S.score-=32;endExam('crash',text)}
   else{S.infr++;S.streak=0;S.pts=Math.max(0,S.pts-100);S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});toast('¡ACCIDENTE!',text+' · −100 pts','bad');S.respawn=1.6;S.P.v=0}}
 function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
-  if(S.mode==='tuto'){$('endTitle').textContent='¡TUTORIAL COMPLETADO!';$('endTitle').style.color='var(--good)';$('endLic').classList.add('hidden');$('endSub').textContent='Ya sabe manejar el simulador. Siga con el EXAMEN TEÓRICO (1) o practique en CALLE LIBRE (5). Las reglas completas están en REGLAS (8).';$('endList').innerHTML='';show('end');ui='end';sfx.fanfare();return}
+  if(S.mode==='tuto'){$('endTitle').textContent='¡TUTORIAL COMPLETADO!';$('endTitle').style.color='var(--good)';$('endLic').classList.add('hidden');$('endSub').textContent='Ya sabe manejar el simulador. Siga con el EXAMEN TEÓRICO (1) o practique en MANEJO LIBRE (4). Las reglas completas están en REGLAS (8).';$('endList').innerHTML='';show('end');ui='end';sfx.fanfare();return}
   const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   let extra='';const prog=store.get('pp_prog',{});
   const pk=S.mode==='sanjose'?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
@@ -1480,9 +1502,10 @@ function onKey(k){
     if(ui==='rules'){if(k==='escape'||k==='enter')back();return}
     if(ui==='lic'){if(k==='escape'||k==='enter')back();return}
     if(ui==='prg'){if(k==='escape')back();return}
+    if(ui==='pl'){if(k==='1')start('sanjose');if(k==='escape')back();return}
     if(ui==='garage'){if(k==='a'||k==='arrowleft')garage(-1,0);if(k==='d'||k==='arrowright')garage(1,0);if(k==='w'||k==='arrowup')garage(0,-1);if(k==='s'||k==='arrowdown')garage(0,1);if(k==='enter'||k==='escape')back();return}
     if(ui==='theory'){theoryKey(k);return}
-    if(k==='1')openTheory();if(k==='2')start('sanjose');if(k==='3')start('plantel');if(k==='4')start('street');if(k==='5')start('city');if(k==='6')openGarage();if(k==='7')showLicense();if(k==='8'){show('rules');ui='rules'}if(k==='9')openProgress();if(k==='0')start('tuto');return}
+    if(k==='1')openTheory();if(k==='2')openPlanteles();if(k==='3')start('street');if(k==='4')start('city');if(k==='5')openProgress();if(k==='6')showLicense();if(k==='7')openGarage();if(k==='8'){show('rules');ui='rules'}if(k==='0')start('tuto');return}
   if(S.over){if(k==='enter')start(S.mode);if(k==='escape')toMenu();return}
   if(S.mapOpen&&(k==='escape'||k==='m')){S.mapOpen=false;return}
   if(k==='m'&&!S.paused){S.mapOpen=true;S.mapZ=0;return}
@@ -1502,8 +1525,9 @@ function onKey(k){
   if(k==='n'){muted=!muted;toast(muted?'SONIDO APAGADO':'SONIDO ENCENDIDO','','info')}
   if(k==='r')start(S.mode)}
 function back(){show('menu');ui='menu';refreshMenu()}
+function openPlanteles(){show('plScr');ui='pl'}
 function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);if(engG&&S.paused)engG.gain.value=0}
-$('b0').onclick=openTheory;$('bSJ').onclick=()=>{audioInit();start('sanjose')};$('b1').onclick=()=>{audioInit();start('plantel')};$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
+$('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};$('plBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
 $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
 $('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bMenu2').onclick=toMenu;
