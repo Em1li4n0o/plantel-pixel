@@ -34,6 +34,9 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 #gear{font-size:calc(var(--u)*10);color:var(--acc);width:calc(var(--u)*14);text-align:center}
 #gear.r{color:#fff;background:#b00;}
 #limit{width:calc(var(--u)*22);height:calc(var(--u)*22);border-radius:50%;background:#fff;border:calc(var(--u)*3) solid #d00;color:#000;display:flex;align-items:center;justify-content:center;font-size:calc(var(--u)*6)}
+#fsBtn{position:fixed;top:8px;right:8px;z-index:50;font:inherit;font-size:13px;padding:7px 11px;border:2px solid #fff;background:rgba(20,20,40,.85);color:#fff;cursor:pointer;border-radius:4px}
+#fsBtn.on{background:#c1121f;font-size:15px;padding:9px 14px}
+#welScr button.sel,#welScr button.sel small{background:var(--acc);color:#000}
 #belt{font-size:calc(var(--u)*4);padding:calc(var(--u)*2)}
 #belt.off{color:#fff;background:var(--bad);animation:bl .6s steps(1) infinite}
 #belt.on{color:var(--good)}
@@ -110,6 +113,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
 </style>
 </head>
 <body>
+<button id="fsBtn" title="Pantalla completa">⛶ PANTALLA COMPLETA</button>
 <div id="rotate">GIRE EL TELÉFONO<br>(modo horizontal)<br>para manejar</div>
 <div id="wrap">
   <canvas id="game" width="384" height="216"></canvas>
@@ -171,7 +175,18 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <button id="b6">9 · REGLAS</button>
     </div>
     <div class="blink sub">PRESIONE UN NÚMERO · ¿PRIMERA VEZ? PULSE 0</div>
+    <a id="profL" class="sub" style="color:var(--acc);pointer-events:auto;cursor:pointer"></a>
     <a href="instructor.html" class="sub" style="color:var(--info);pointer-events:auto">PANEL DEL INSTRUCTOR ›</a>
+  </div>
+
+  <div id="welScr" class="screen hidden">
+    <h1>PLANTEL PIXEL</h1>
+    <div class="sub">Antes de empezar, cuéntenos un poco sobre usted</div>
+    <div class="sub" style="color:var(--acc)">1 · ¿DÓNDE VA A JUGAR?</div>
+    <div class="row" id="welDev"><button data-d="pc">COMPUTADORA<small>con teclado</small></button><button data-d="movil">TELÉFONO O TABLET<small>con botones en pantalla</small></button></div>
+    <div class="sub" style="color:var(--acc)">2 · ¿QUÉ LICENCIA ESTÁ SACANDO?</div>
+    <div class="row" id="welLic" style="flex-wrap:wrap;justify-content:center;gap:calc(var(--u)*1.5)"></div>
+    <button id="welOk" disabled>EMPEZAR ▶</button>
   </div>
 
   <div id="plScr" class="screen hidden">
@@ -1211,7 +1226,7 @@ function sid(){let s=store.get('pp_sid',null);if(!s){s=Math.random().toString(36
 function logAttempt(a){const h=store.get('pp_hist',[]);h.push(Object.assign({d:Date.now()},a));while(h.length>300)h.shift();store.set('pp_hist',h)}
 function logDrive(){if(!S||S.logged||S.t<15||S.mode==='tuto')return;S.logged=true;
   logAttempt({m:S.mode,s:S.exam?Math.max(0,S.score):S.pts,ok:S.exam?S.okRes===true:null,fin:S.exam?S.over:true,t:Math.round(S.t),tk:S.exam?[Math.min(S.task,S.tasks.length),S.tasks.length]:[S.deliv,0],
-    f:S.faults.slice(0,25).map(f=>[f.text,f.cat,Math.round(f.t),f.x,f.y]),car:CAR.type,fp:!!S.fp})}
+    f:S.faults.slice(0,25).map(f=>[f.text,f.cat,Math.round(f.t),f.x,f.y]),car:CAR.type,fp:!!S.fp,lic:PROF?PROF.lic:null,dev:PROF?PROF.dev:null})}
 addEventListener('pagehide',()=>logDrive());
 const MNAME={centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',teorico:'TEÓRICO',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};
 async function makeReport(){const rep={v:1,id:sid(),n:store.get('pp_name','')||'SIN NOMBRE',g:store.get('pp_school',''),at:Date.now(),prog:store.get('pp_prog',{}),h:store.get('pp_hist',[]).slice(-60),w:store.get('pp_wrong',[]).length};
@@ -1248,11 +1263,11 @@ function start(mode){
   S.tasks=mode==='tuto'?tutoTasks():mode==='plantel'?plantelTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='street'?streetTasks():[];if(mode==='city')newDest();
   const mw=W.w>1200?170:130,mh=Math.round(mw*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
   show(null);$('hud').classList.remove('hidden');ui=null;
-  $('banner').textContent='';$('toasts').innerHTML='';
+  $('banner').textContent='';$('toasts').innerHTML='';fsPaint();
   toast(MODES[mode],mode==='tuto'?'Siga las instrucciones de arriba, paso a paso.':S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
 }
-function show(id){for(const s of['rtScr','plScr','menu','rules','end','pause','garage','licScr','theory','prgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
-function toMenu(){logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0}
+function show(id){for(const s of['welScr','rtScr','plScr','menu','rules','end','pause','garage','licScr','theory','prgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
+function toMenu(){logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0;fsPaint()}
 function newDest(){const W=S.W,P=S.P;let i;do{i=Math.random()*W.dests.length|0}while(S.dest&&W.dests[i]===S.dest&&W.dests.length>1);S.dest=W.dests[i];
   S.destT=S.t;S.destPar=Math.round(12+(Math.abs(S.dest.x-P.x)+Math.abs(S.dest.y-P.y))/30)}
 
@@ -1973,6 +1988,7 @@ addEventListener('keyup',e=>{keys[e.key.toLowerCase()]=false});
 addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 function onKey(k){
   if(!S){
+    if(ui==='wel'){if(k==='enter'&&!$('welOk').disabled)$('welOk').onclick();return}
     if(ui==='rules'){if(k==='escape'||k==='enter')back();return}
     if(ui==='lic'){if(k==='escape'||k==='enter')back();return}
     if(ui==='prg'){if(k==='escape')back();return}
@@ -2069,14 +2085,28 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   }}
 function fit(){const w=$('wrap').getBoundingClientRect().width;$('wrap').style.setProperty('--u',(w/VW)+'px');const u=w/VW;
   for(const b of document.querySelectorAll('#touch .tb')){if(!b.dataset.l){b.dataset.l=parseFloat(b.style.left);b.dataset.t=parseFloat(b.style.top)}b.style.left=(b.dataset.l*u)+'px';b.style.top=(b.dataset.t*u)+'px'}}
-const TOUCH=matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches;
+let TOUCH=matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches;
+// Perfil inicial: dispositivo y licencia que está sacando (adapta los controles y se guarda con cada intento para el instructor)
+let PROF=store.get('pp_prof',null);
+function applyProf(){if(!PROF)return;TOUCH=PROF.dev==='movil';document.body.classList.toggle('touch',TOUCH);const L=LICS.find(l=>l.id===PROF.lic);$('profL').textContent='PERFIL: '+(PROF.dev==='movil'?'TELÉFONO':'COMPUTADORA')+' · '+(L?'LICENCIA '+L.id:'PRÁCTICA LIBRE')+' (CAMBIAR)'}
+function openWelcome(){show('welScr');ui='wel';const sel={dev:PROF?PROF.dev:(TOUCH?'movil':'pc'),lic:PROF?PROF.lic:null};
+  $('welLic').innerHTML=LICS.map(l=>`<button data-l="${l.id}" style="min-width:0;padding:calc(var(--u)*1.5) calc(var(--u)*2.5)">${l.id}<small>${l.d}</small></button>`).join('')+'<button data-l="-" style="min-width:0">AÚN NO SÉ<small>solo practicar</small></button>';
+  const paint=()=>{for(const b of $('welDev').children)b.classList.toggle('sel',b.dataset.d===sel.dev);for(const b of $('welLic').children)b.classList.toggle('sel',b.dataset.l===sel.lic);$('welOk').disabled=!(sel.dev&&sel.lic)};
+  for(const b of $('welDev').children)b.onclick=()=>{sel.dev=b.dataset.d;paint()};for(const b of $('welLic').children)b.onclick=()=>{sel.lic=b.dataset.l;paint()};
+  $('welOk').onclick=()=>{PROF={dev:sel.dev,lic:sel.lic,d:Date.now()};store.set('pp_prof',PROF);const L=LICS.find(l=>l.id===sel.lic);if(L&&!L.t.includes(CAR.type)){CAR.type=L.t[0];store.set('pp_car',CAR)}applyProf();fit();back()};paint()}
+$('profL').onclick=openWelcome;
+// Pantalla completa (computadora y celular); el botón cambia a SALIR bien visible
+function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement}
+function fsToggle(){const d=document.documentElement;try{if(fsEl()){(document.exitFullscreen||document.webkitExitFullscreen).call(document)}else{const r=d.requestFullscreen||d.webkitRequestFullscreen;if(r){const p=r.call(d,{navigationUI:'hide'});if(p&&p.catch)p.catch(()=>toast('PANTALLA COMPLETA','Su navegador no lo permite aquí. En iPhone: Compartir › Agregar a inicio','info'));try{screen.orientation.lock('landscape').catch(()=>{})}catch(_){}}else toast('PANTALLA COMPLETA','En iPhone: Compartir › Agregar a pantalla de inicio','info')}}catch(e){}}
+function fsPaint(){const on=!!fsEl();$('fsBtn').classList.toggle('on',on);$('fsBtn').textContent=S?(on?'✕ SALIR':'⛶'):(on?'✕ SALIR DE PANTALLA COMPLETA':'⛶ PANTALLA COMPLETA');setTimeout(fit,120)}
+$('fsBtn').onclick=fsToggle;document.addEventListener('fullscreenchange',fsPaint);document.addEventListener('webkitfullscreenchange',fsPaint);
 $('mini').style.pointerEvents='auto';$('mini').style.cursor='pointer';$('mini').title='Ver mapa [M]';$('mini').addEventListener('click',()=>{if(S&&!S.over)onKey('m')});
 $('game').addEventListener('click',()=>{if(S&&S.mapOpen)S.mapOpen=false});if(TOUCH)document.body.classList.add('touch');
 for(const b of document.querySelectorAll('#touch [data-k]')){const k=b.dataset.k;
   const down=e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}audioInit();if(!keys[k])pressed[k]=true;keys[k]=true;b.classList.add('on');onKey(k)};
   const up=e=>{keys[k]=false;b.classList.remove('on')};
   b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault())}
-addEventListener('resize',fit);fit();refreshMenu();
+addEventListener('resize',fit);applyProf();fit();refreshMenu();if(!PROF)openWelcome();
 requestAnimationFrame(frame);
 </script>
 </body>
