@@ -1181,57 +1181,79 @@ function buildSede(k){const D=SEDES[k],Rg=REGION[D.r];const W=buildPlantel();W.g
   W.labels=(W.labels||[]).concat([{x:150,y:108,t:'PLANTEL DE '+D.n.normalize('NFD').replace(/[̀-ͯ]/g,''),col:'#fff'}]);
   if(D.r==='seco'){W.cows=[];for(let i=0;i<5;i++){const x=520+R()*100,y=360+R()*90;if(!pavedW(W,x,y))W.cows.push({x,y,ox:x,oy:y,h:R()*6,t:R()*5})}}
   return W}
-// ===================== PLANTEL DE HEREDIA (patio pequeño antes de salir a calle) =====================
-// Patio de unos 77 x 27 m: entrada, primera curva (izquierda), segunda curva (derecha), vuelta en U al fondo, zigzag de 4 conos,
-// ALTO, retroceso en línea recta, parqueo en reversa y salida por dos carriles donde se sube el instructor. Medidas aproximadas.
-const PH={w:240,h:92,lane1:36,lane2:76,zz:[190,168,146,124],alto:34,retro:100,bays:[29,44,59],bay:1,exitX:90};
-function buildPatioHeredia(W,o){const L=(x,y)=>[o.x+x,o.y+y];W.patioO=o;
+// ===================== PLANTEL DE HEREDIA (prueba B1, antes de salir a calle) =====================
+// Basado en tomas aéreas del plantel de la sede de Heredia (San Pedro de Barva). Franja larga con, de norte a sur:
+// el carril de FILA (revisión de la fase 1), el carril de REVERSA entre conos, los espacios del PARQUEO EN REVERSA y el carril del ZIGZAG.
+// Recorrido: fila -> al fondo, primera curva a la derecha, la "entradita" entre conos, segunda curva -> zigzag de regreso ->
+// ALTO junto a la isla rayada -> vuelta a la derecha al carril de reversa -> reversa en línea recta -> parqueo en reversa ->
+// dos carriles de salida, donde otro evaluador se sube para llevarlo a calle. Medidas aproximadas (unos 75 x 34 m).
+const PH={w:240,h:110,q:14,a:38,z:93,zz:[180,158,136,114,92],alto:62,fwd:172,retro:66,bays:[100,114,128],bay:1,bayY:63,gate:[213,235],isla:[[24,80],[60,80],[60,52]]};
+function buildPatioHeredia(W,o){const L=(x,y)=>[o.x+x,o.y+y];W.patioO=o;W.patioEsp=o.esp;
   const cone=(x,y,q={})=>W.cones.push(Object.assign({x,y,vx:0,vy:0,hit:false},q));
-  const coneLine=(pts,step)=>{for(let i=0;i<pts.length-1;i++){const A=pts[i],B=pts[i+1],Ln=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<Ln;t+=step)cone(A[0]+(B[0]-A[0])*t/Ln,A[1]+(B[1]-A[1])*t/Ln)}};
-  // curvas: carril marcado con conos a ambos lados
-  const CUR=[[26,76],[48,68],[74,68],[100,82],[126,76]].map(([x,y])=>L(x,y));W.patioCurve=CUR;
-  coneLine(offLine(CUR,-11),8);coneLine(offLine(CUR,11),8);
-  // separador central (para que la vuelta en U sea al fondo) y zigzag
-  coneLine([L(132,55),L(206,55)],8);for(const x of PH.zz){const[cx,cy]=L(x,PH.lane1);cone(cx,cy,{zz:1})}
-  // espacios de parqueo (verticales, contra la pared norte); el del centro es el de la prueba
-  W.pslots=[];PH.bays.forEach((bx,i)=>{const[cx,cy]=L(bx,12);const s={cx,cy,ang:Math.PI/2,hl:12,hw:7,target:i===PH.bay};W.opaved.push(s);W.oslots.push(s);W.pslots.push(s);
-    if(i!==PH.bay)addParked(W,cx,cy+1,Math.PI/2,CARCOLS[(i*5+1)%CARCOLS.length],i?'suv':'sedan')});
-  W.pslot=W.pslots[PH.bay];{const q=W.pslot;for(const sd of[-1,1])cone(q.cx+sd*(q.hw+1),q.cy-q.hl+1.5)}
-  // malla alrededor del patio, con la entrada (oeste) y la salida (norte)
+  const coneLine=(a,b,step,skip)=>{const Ln=Math.hypot(b[0]-a[0],b[1]-a[1]);for(let t=0;t<=Ln;t+=step){const x=a[0]+(b[0]-a[0])*t/Ln,y=a[1]+(b[1]-a[1])*t/Ln;if(skip&&skip(x-o.x,y-o.y))continue;cone(x,y)}};
+  // carril de reversa: conos a los dos lados (con espacio frente al parqueo para poder maniobrar)
+  const gap=x=>x>88&&x<146;
+  coneLine(L(64,29),L(180,29),9,gap);coneLine(L(64,47),L(180,47),9,gap);
+  // separación entre el parqueo y el carril del zigzag; conitos del zigzag
+  coneLine(L(64,79),L(200,79),9);for(const x of PH.zz){const[cx,cy]=L(x,PH.z);cone(cx,cy,{zz:1})}
+  // la "entradita" del fondo: un paso angosto entre conos
+  for(const gx of PH.gate)for(const gy of[46,58])cone(...L(gx,gy));
+  // parqueo en reversa: 3 espacios abiertos hacia el carril de reversa; el del centro es el de la prueba
+  W.pslots=[];PH.bays.forEach((bx,i)=>{const[cx,cy]=L(bx,PH.bayY);const s={cx,cy,ang:Math.PI/2,hl:13,hw:7,target:i===PH.bay};W.opaved.push(s);W.oslots.push(s);W.pslots.push(s);
+    if(i!==PH.bay)addParked(W,cx,cy,-Math.PI/2,CARCOLS[(i*5+1)%CARCOLS.length],i?'suv':'sedan')});
+  W.pslot=W.pslots[PH.bay];{const q=W.pslot;for(const sd of[-1,1])for(const e of[-1,1])cone(q.cx+sd*(q.hw+1),q.cy+e*(q.hl-1.5))}
+  // isla rayada junto al ALTO (no se puede pisar)
+  W.isla=PH.isla.map(([x,y])=>L(x,y));
+  // malla alrededor; en el lado oeste, la entrada (carril de fila) y la salida (dos carriles)
   const fen=(a,b)=>{W.fences.push([a[0],a[1],b[0],b[1]]);const Ln=Math.hypot(b[0]-a[0],b[1]-a[1]);for(let k=0;k<=Ln;k+=3)W.circObs.push({x:a[0]+(b[0]-a[0])*k/Ln,y:a[1]+(b[1]-a[1])*k/Ln,r:1.5,type:'muro'})};
-  fen(L(0,0),L(PH.exitX-13,0));fen(L(PH.exitX+13,0),L(PH.w,0));fen(L(PH.w,0),L(PH.w,PH.h));fen(L(PH.w,PH.h),L(0,PH.h));fen(L(0,PH.h),L(0,PH.lane2+13));fen(L(0,PH.lane2-13),L(0,0));
-  // instructor esperando junto a los dos carriles de salida
-  W.instr={r:{seg:[[o.x+PH.exitX+17,o.y-38],[o.x+PH.exitX+17,o.y-38]]},s:0,sp:0,an:0,x:0,y:0,col:'#1d3557',staff:true};W.walkers.push(W.instr);
+  fen(L(22,0),L(PH.w,0));fen(L(PH.w,0),L(PH.w,PH.h));fen(L(PH.w,PH.h),L(0,PH.h));fen(L(0,PH.h),L(0,52));
+  // evaluadores: el de la fila (fase 1) y el que espera en los carriles de salida para ir a calle
+  W.eval1={r:{seg:[[o.x+40,o.y+3],[o.x+40,o.y+3]]},s:0,sp:0,an:0,x:0,y:0,col:'#1d3557',staff:true};W.instr={r:{seg:[[W.patioEsp.x+16,W.patioEsp.y],[W.patioEsp.x+16,W.patioEsp.y]]},s:0,sp:0,an:0,x:0,y:0,col:'#1d3557',staff:true};W.walkers.push(W.eval1,W.instr);
   W.patioDraw=x=>{const P2=(t,px,py,col='#ecece4',rot=0)=>ptext(x,t,Math.round(o.x+px),Math.round(o.y+py),col,rot);
     const bar=(x0,y0,x1,y1,col,w=2)=>{x.fillStyle=col;const Ln=Math.hypot(x1-x0,y1-y0);for(let k=0;k<=Ln;k+=.5)x.fillRect(Math.round(o.x+x0+(x1-x0)*k/Ln),Math.round(o.y+y0+(y1-y0)*k/Ln),w,w)};
-    bar(PH.alto,25,PH.alto,47,'#ecece4');P2('ALTO',PH.alto+4,32,'#ecece4',3);bar(PH.retro,25,PH.retro,47,'#f2c230');P2('RETRO',PH.retro+4,30,'#f2c230',3);
-    P2('ZIGZAG',150,40,'#ffd23f');P2('CURVAS',50,78,'#ffd23f');P2('ENTRADA',-30,PH.h+3,'#ffd23f');P2('SALIDA',PH.exitX+16,-12,'#ffd23f');
-    P2('1',PH.bays[0]-1,2);P2('2',PH.bays[1]-1,2,'#ffd23f');P2('3',PH.bays[2]-1,2);P2('PLANTEL DE HEREDIA',120,PH.h-8,'#ffffff');
-    // dos carriles de salida: línea punteada al centro y línea de ESPERE
-    x.fillStyle='#ecece4';for(let yy=o.y-96;yy<o.y;yy+=6)x.fillRect(o.x+PH.exitX,yy,1,3);bar(PH.exitX-11,-38,PH.exitX+11,-38,'#ecece4');P2('ESPERE',PH.exitX-12,-46,'#ecece4');
-    }}
-// tareas del patio; después siguen las del recorrido en calle
-function patioTasks(){const W=S.W,o=W.patioO,G=(x,y)=>({x:o.x+x,y:o.y+y}),near=(x,y,r)=>Math.hypot(S.P.x-o.x-x,S.P.y-o.y-y)<r,lx=()=>S.P.x-o.x,ly=()=>S.P.y-o.y;return[
-  {txt:'PLANTEL DE HEREDIA: póngase el cinturón [C] y entre despacio al plantel.',tgt:G(12,PH.lane2),check(){return near(12,PH.lane2,16)}},
-  {txt:'PRIMERA CURVA (a la IZQUIERDA): siga el carril entre los conos sin tocarlos.',tgt:G(74,68),check(){return near(74,68,14)}},
-  {txt:'SEGUNDA CURVA (a la DERECHA): siga entre los conos.',tgt:G(126,PH.lane2),check(){return near(126,PH.lane2,14)}},
-  {txt:'Siga hasta el fondo y dé la vuelta en U para regresar por el carril de arriba.',tgt:G(214,PH.lane1),check(){return near(214,PH.lane1,18)}},
-  {txt:'ZIGZAG: pase los 4 conos alternando el lado (uno por la derecha, el siguiente por la izquierda) sin tocarlos.',tgt:G(112,PH.lane1),start(){this.sd=[];this.k=0},
-   check(){const x=lx(),y=ly();while(this.k<PH.zz.length&&x<PH.zz[this.k]){this.sd.push(Math.sign(y-PH.lane1)||1);this.k++}
-     if(this.k>=PH.zz.length&&x<PH.zz[PH.zz.length-1]-12){let ok=true;for(let i=1;i<this.sd.length;i++)if(this.sd[i]===this.sd[i-1])ok=false;if(!ok)fault('zz','No hizo el zigzag completo (debe alternar el lado de cada cono)','II');return true}return false},ok:'¡Zigzag completado!'},
-  {txt:'ALTO: deténgase por completo con el frente en la línea de ALTO.',tgt:G(PH.alto+7,PH.lane1),
-   check(){const x=lx(),y=ly();if(still('phAlto',x>PH.alto+1&&x<PH.alto+18&&Math.abs(y-PH.lane1)<12,1))return true;if(x<PH.alto-6){fault('phAltoX','No se detuvo en la línea de ALTO','I');return true}return false},ok:'¡ALTO correcto!'},
-  {txt:'RETROCESO: ponga la reversa (toque S dos veces) y retroceda en línea recta hasta pasar la línea amarilla.',tgt:G(PH.retro+8,PH.lane1),
-   check(){const P=S.P,x=lx(),y=ly();if(P.gear===-1){if(P.v<-1)this.mv=true;if(Math.abs(y-PH.lane1)>11&&!this.lat){this.lat=1;fault('phRecto','No retrocedió en línea recta','III')}
-       if(this.mv&&Math.abs(P.v)<.3){this.st=(this.st||0)+S.dt;if(this.st>1.2&&!this.fl){this.fl=1;fault('phRstop','Detenerse durante el retroceso','IV')}}else this.st=0}
-     if(x>PH.retro+6){if(!this.mv)fault('phNoRet','No realizó el retroceso en reversa','III');return true}return false},ok:'¡Retroceso completado!'},
-  {txt:'PARQUEO EN REVERSA: estaciónese DE RETROCESO en el espacio 2 (el amarillo, entre los dos carros), con el frente hacia afuera.',tgt:{x:0,y:0},start(){this.tgt={x:W.pslot.cx,y:W.pslot.cy}},ok:'¡Parqueo en reversa correcto!',
-   check(){const P=S.P,q=W.pslot,dx=P.x-q.cx,dy=P.y-q.cy,c=Math.cos(q.ang),s=Math.sin(q.ang),al=dx*c+dy*s,lt=-dx*s+dy*c,inB=Math.abs(al)<5&&Math.abs(lt)<2.2,hd=Math.cos(P.h-q.ang);
+    // líneas de carriles
+    for(let xx=8;xx<PH.w-30;xx+=10)bar(xx,26,xx+5,26,'#ecece4',1);bar(64,PH.a-1,64,PH.a+1,'#ecece4',1);
+    x.strokeStyle='#ecece4';x.lineWidth=1;x.strokeRect(o.x+2.5,o.y+2.5,PH.w-5,PH.h-5);
+    // isla rayada
+    const I=W.isla;x.fillStyle='#ecece4';x.beginPath();x.moveTo(I[0][0],I[0][1]);for(const q of I)x.lineTo(q[0],q[1]);x.closePath();x.save();x.clip();for(let k=-40;k<60;k+=5){x.fillRect(Math.round(I[0][0]+k),Math.round(I[2][1]),2,40)}x.restore();x.strokeStyle='#ecece4';x.stroke();
+    // ALTO del zigzag, líneas de la reversa
+    bar(PH.alto,82,PH.alto,104,'#ecece4');P2('ALTO',PH.alto-12,90,'#ecece4',3);
+    bar(PH.fwd,30,PH.fwd,46,'#ecece4');bar(PH.fwd+3,30,PH.fwd+3,46,'#ecece4');bar(PH.retro,30,PH.retro,46,'#f2c230');bar(PH.retro+3,30,PH.retro+3,46,'#f2c230');
+    P2('REVERSA',110,32,'#ffd23f');P2('ZIGZAG',140,99,'#ffd23f');P2('FILA',90,8,'#ffd23f');P2('ENTRADITA',196,64,'#ffd23f',1);P2('PARQUEO',100,80,'#ffd23f');
+    P2('1',PH.bays[0]-1,72);P2('2',PH.bays[1]-1,72,'#ffd23f');P2('3',PH.bays[2]-1,72);P2('PLANTEL DE HEREDIA - B1',70,PH.h+4,'#ffffff');
+    // flechas de sentido
+    for(const[ax,ay,dx]of[[150,14,1],[200,93,-1],[30,93,-1]]){x.fillStyle='#ecece4';for(let k=0;k<6;k++)x.fillRect(Math.round(o.x+ax+dx*k),Math.round(o.y+ay),1,1);x.fillRect(Math.round(o.x+ax+dx*4),Math.round(o.y+ay-1),1,3)}
+    // dos carriles de salida: línea punteada y ESPERE
+    const E=W.patioEsp;bar(E.x-o.x-11,E.y-o.y,E.x-o.x+11,E.y-o.y,'#ecece4');P2('ESPERE',E.x-o.x-12,E.y-o.y-9,'#ecece4');P2('SALIDA',E.x-o.x-30,E.y-o.y+16,'#ffd23f')}}
+// tareas del plantel; después siguen las del recorrido en calle
+function patioTasks(){const W=S.W,o=W.patioO,G=(x,y)=>({x:o.x+x,y:o.y+y}),near=(x,y,r)=>Math.hypot(S.P.x-o.x-x,S.P.y-o.y-y)<r,lx=()=>S.P.x-o.x,ly=()=>S.P.y-o.y;
+  const dlg=(t,lines,key,cond)=>{if(!S.dlg&&!t.done1&&still(key,cond,1.2)){S.dlg={lines,i:0,t:0};if(t.onDlg)t.onDlg()}if(S.dlg&&!S.dlg.auto){S.dlg.t+=S.dt;if(S.dlg.t>3.2){S.dlg.i++;S.dlg.t=0}if(S.dlg.i>=S.dlg.lines.length){S.dlg=null;t.done1=true}}return!!t.done1};
+  return[
+  {txt:'PLANTEL DE HEREDIA (B1): póngase el cinturón [C], entre por el carril de la FILA y deténgase junto al evaluador para la REVISIÓN (fase 1).',tgt:G(40,PH.q),
+   check(){return dlg(this,PH_F1,'phF1',near(40,PH.q,14))},ok:'¡Revisión aprobada!'},
+  {txt:'Avance por la FILA hasta el fondo del plantel.',tgt:G(196,PH.q),check(){return near(196,PH.q,16)}},
+  {txt:'PRIMERA CURVA a la DERECHA y pase la ENTRADITA, el paso angosto entre los conos, sin tocarlos.',tgt:G(224,52),check(){return near(224,52,12)}},
+  {txt:'SEGUNDA CURVA a la DERECHA hacia el carril del ZIGZAG.',tgt:G(196,PH.z),check(){return near(196,PH.z,16)}},
+  {txt:'ZIGZAG: pase los 5 conitos alternando el lado (uno por la derecha, el siguiente por la izquierda) sin tocarlos.',tgt:G(80,PH.z),start(){this.sd=[];this.k=0},
+   check(){const x=lx(),y=ly();while(this.k<PH.zz.length&&x<PH.zz[this.k]){this.sd.push(Math.sign(y-PH.z)||1);this.k++}
+     if(this.k>=PH.zz.length&&x<PH.zz[PH.zz.length-1]-10){let ok=true;for(let i=1;i<this.sd.length;i++)if(this.sd[i]===this.sd[i-1])ok=false;if(!ok)fault('zz','No hizo el zigzag completo (debe alternar el lado de cada cono)','II');return true}return false},ok:'¡Zigzag completado!'},
+  {txt:'ALTO: deténgase por completo con el frente en la línea de ALTO, junto a la isla rayada.',tgt:G(PH.alto+8,PH.z),
+   check(){const x=lx(),y=ly();if(still('phAlto',x>PH.alto+1&&x<PH.alto+18&&Math.abs(y-PH.z)<13,1))return true;if(x<PH.alto-6){fault('phAltoX','No se detuvo en la línea de ALTO','I');return true}return false},ok:'¡ALTO correcto!'},
+  {txt:'Doble a la DERECHA alrededor de la isla rayada (sin pisarla) y entre al carril de REVERSA, entre los conos.',tgt:G(70,PH.a),check(){if(!this.f&&inPoly(S.P.x,S.P.y,W.isla)){this.f=1;fault('isla','Pasar por encima de la zona rayada','III')}return near(70,PH.a,12)}},
+  {txt:'REVERSA: avance por el carril entre los conos hasta la doble línea blanca y deténgase.',tgt:G(PH.fwd-8,PH.a),ok:'¡Reversa completada!',
+   check(){const P=S.P,x=lx(),y=ly();
+     if(!this.ph){if(still('phFwd',x>PH.fwd-16&&x<PH.fwd+2&&Math.abs(y-PH.a)<9,.6)){this.ph=1;this.txt='REVERSA: ponga la reversa (toque S dos veces) y retroceda en línea recta, sin detenerse, hasta la doble línea AMARILLA.';this.tgt=G(PH.retro-2,PH.a);toast('AHORA EN REVERSA','Mire hacia atrás y retroceda recto, sin detenerse','info')}return false}
+     if(P.gear===-1){if(P.v<-1)this.mv=true;if(Math.abs(y-PH.a)>9&&!this.lat){this.lat=1;fault('phRecto','No retrocedió en línea recta','III')}
+       if(this.mv&&Math.abs(P.v)<.3){this.st=(this.st||0)+S.dt;if(this.st>1&&!this.fl){this.fl=1;fault('phRstop','Detenerse durante la conducción en reversa','IV')}}else this.st=0}
+     if(x<PH.retro+4){if(!this.mv)fault('phNoRet','No realizó la conducción en reversa','III');return true}return false}},
+  {txt:'PARQUEO EN REVERSA: estaciónese DE RETROCESO en el espacio 2 (el amarillo, entre los dos carros), con el frente hacia el carril. Cada cono que toque le quita puntos.',tgt:{x:0,y:0},start(){this.tgt={x:W.pslot.cx,y:W.pslot.cy}},ok:'¡Parqueo en reversa correcto!',
+   check(){const P=S.P,q=W.pslot,dx=P.x-q.cx,dy=P.y-q.cy,al=dy,lt=-dx,inB=Math.abs(al)<5&&Math.abs(lt)<2.2,hd=Math.cos(P.h+Math.PI/2);
      if(inB&&hd<-.9&&Math.abs(P.v)<.5&&!this.warn){this.warn=1;toast('DE FRENTE NO','Este parqueo se hace en REVERSA: salga y entre retrocediendo','bad')}return still('phPark',inB&&hd>.92,1.2)}},
-  {txt:'SALIDA: salga del espacio, tome los DOS CARRILES de salida y deténgase en la línea ESPERE: ahí se sube el instructor.',tgt:G(PH.exitX,-30),
-   check(){const P=S.P;if(!S.dlg&&!this.done1&&still('phEsp',Math.abs(lx()-PH.exitX)<13&&ly()>-44&&ly()<-20,1.2)){S.dlg={lines:PH_DLG,i:0,t:0};W.walkers=W.walkers.filter(w=>w!==W.instr)}
-     if(S.dlg){S.dlg.t+=S.dt;if(S.dlg.t>3.2){S.dlg.i++;S.dlg.t=0}if(S.dlg.i>=S.dlg.lines.length){S.dlg=null;this.done1=true}}return!!this.done1},ok:'¡Plantel terminado! Ahora a la calle'}]}
-const PH_DLG=[['INSTRUCTOR','Muy bien, terminó la parte del plantel.'],['INSTRUCTOR','(se sube al carro) Ahora vamos a salir a calle. Con calma.'],['INSTRUCTOR','Al llegar a la calle La Amada, doble a la DERECHA. Recuerde el ALTO antes de la Ruta 126.']];
+  {txt:'SALIDA: salga con cuidado del espacio (sin bajar conos), vaya a los DOS CARRILES de salida y deténgase en la línea ESPERE: ahí se sube el evaluador que lo lleva a calle.',tgt:{x:0,y:0},start(){this.tgt={x:W.patioEsp.x,y:W.patioEsp.y+6}},
+   onDlg(){W.walkers=W.walkers.filter(w=>w!==W.instr)},
+   check(){const E=W.patioEsp;return dlg(this,PH_DLG,'phEsp',Math.abs(S.P.x-E.x)<13&&S.P.y>E.y-2&&S.P.y<E.y+22)},ok:'¡Plantel terminado! Ahora a la calle'}]}
+const PH_F1=[['EVALUADOR','Buenos días. Vamos con la revisión del vehículo: fase uno.'],['EVALUADOR','Encienda las luces, las direccionales y las escobillas... ahora la reversa y el freno.'],['EVALUADOR','Todo en orden. Avance hasta el fondo, haga los ejercicios y no toque los conos. ¡Suerte!']];
+const PH_DLG=[['EVALUADOR','Muy bien, terminó la parte del plantel. Acomódese aquí.'],['EVALUADOR DE CALLE','(se sube al carro) Buenos días. Ahora vamos a salir a calle. Con calma.'],['EVALUADOR DE CALLE','Al llegar a la calle La Amada, doble a la DERECHA. Recuerde el ALTO antes de la Ruta 126.']];
 // ===================== RECORRIDOS OFICIALES DE LAS SEDES (DGEV) =====================
 // Basados en los recorridos publicados por la Dirección General de Educación Vial (educacionvial.go.cr).
 // Calles simplificadas (≈1,2 unidades por metro); puntos de referencia según la descripción oficial.
@@ -1311,12 +1333,12 @@ const OFICIALES={
       {x:607,y:1250,t:'Doble a la IZQUIERDA (norte) por la Calle 2 hasta la Y griega.'},{x:607,y:260,t:'Siga al NORTE 800 metros por la Ruta 228 hasta la Regional de Educación Vial.'}]},
   heredia:{id:'heredia',n:'HEREDIA',w:1100,h:1250,seed:55,limit:40,
     streets:[{p:[[300,30],[310,110],[330,250],[380,420],[430,560],[470,700],[520,830],[560,960],[600,1100],[640,1220]],curve:1,main:5,types:['bus',null,'moto',null,'pickup']},
-      {p:[[310,110],[240,150],[160,190],[90,210]],curve:1},{p:[[90,210],[40,234],[22,282],[22,350],[34,374],[52,376]],curve:1,hw:11,nohouse:true},{p:[[130,306],[130,262],[130,203]],hw:12,nohouse:true,noCenter:true,oneway:true},{p:[[475,715],[720,715]]},{p:[[720,715],[720,595]]},{p:[[720,595],[445,595]]},{p:[[380,420],[700,330]],curve:0},{p:[[430,560],[200,640]]},{p:[[560,960],[800,960]]}],
+      {p:[[310,110],[240,150],[160,190],[90,210]],curve:1},{p:[[104,206],[94,240],[72,268],[66,292],[74,304],[86,304]],curve:1,hw:11,nohouse:true},{p:[[82,328],[40,326],[26,300],[26,250],[50,224],[90,210]],curve:1,hw:12,nohouse:true,noCenter:true,oneway:true},{p:[[475,715],[720,715]]},{p:[[720,715],[720,595]]},{p:[[720,595],[445,595]]},{p:[[380,420],[700,330]],curve:0},{p:[[430,560],[200,640]]},{p:[[560,960],[800,960]]}],
     lm:[{x:160,y:225,w:100,h:58,t:'EDUCACION VIAL',col:'#f2e8cf',roof:'#1d4e89',H:12},{x:335,y:85,w:60,h:30,t:'TRES MARIAS',col:'#f4f1de',roof:'#9c6644',H:8},{x:338,y:508,w:52,h:30,t:'SUPERCORNER',col:'#ffd23f',roof:'#c1121f',H:9},
       {x:495,y:660,w:60,h:34,t:'SUPER SANCHEZ',col:'#a8dadc',roof:'#1d3557',H:9},{x:624,y:1056,w:110,h:50,t:'TERMINAL LA FORTALEZA',col:'#cfd6da',roof:'#5c677d',H:10},{x:436,y:884,w:80,h:70,park:1,t:'LA HERRADURA'}],
     stops:[[462,715,1,0],[458,595,-1,0],[296,118,.9,-.4]],
     labels:[{x:395,y:470,t:'RUTA 126',col:'#fff',rot:1},{x:150,y:160,t:'CALLE LA AMADA',col:'#fff'},{x:480,y:440,t:'CALLE EL TANQUE',col:'#fff'},{x:520,y:605,t:'PUENTE SALAS',col:'#fff'}],
-    patio:{x:40,y:300},start:{x:22,y:286,h:Math.PI/2},
+    patio:{x:70,y:290,esp:{x:26,y:262}},start:{x:96,y:232,h:1.86},
     route:[{x:300,y:118,t:'Salga hacia el ESTE por la Calle La Amada hasta la Ruta 126 (Las Tres Marías). ALTO antes de salir.'},
       {x:470,y:705,t:'Doble a la DERECHA (sur) y baje por la Ruta 126 con sus curvas hasta el Súper Sánchez.'},
       {x:715,y:708,t:'Doble a la IZQUIERDA (este) 200 metros.'},{x:713,y:600,t:'Doble a la IZQUIERDA (norte) 100 metros.'},{x:450,y:600,t:'Doble a la IZQUIERDA (oeste) y regrese a la Ruta 126.'},
