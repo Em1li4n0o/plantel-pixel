@@ -1867,7 +1867,7 @@ function updatePlayer(W,P,dt){
   if(!gas){const d=(1.4+.0012*P.v*P.v)*dt;P.v=Math.abs(P.v)<d?0:P.v-Math.sign(P.v)*d}
   // pendientes: la gravedad empuja cuesta abajo; con freno o freno de mano el carro se sostiene
   const sl=slopeAt(W,P.x,P.y);P.slope=sl||null;P.slAl=0;
-  if(sl){const al=Math.cos(P.h)*sl.dx+Math.sin(P.h)*sl.dy;P.slAl=al;const held=(P.brake||hb)&&Math.abs(P.v)<2.5;if(!held)P.v+=32.7*sl.grade*al*dt;else if(Math.abs(P.v)<.6)P.v=0}
+  if(sl){const al=Math.cos(P.h)*sl.dx+Math.sin(P.h)*sl.dy;P.slAl=al;const held=(P.brake||hb)&&Math.abs(P.v)<2.5;if(!held){const creep=P.gear===1&&al<0&&Math.abs(P.v)<3&&!(keys.w||keys.arrowup)?.075:0;P.v+=32.7*Math.max(0,sl.grade-creep)*al*dt}else if(Math.abs(P.v)<.6)P.v=0}
   // marcha baja (compresionar): freno de motor y velocidad limitada
   if(P.low&&P.gear===1){if(!gas&&P.v>2)P.v-=5*(P.v/22)*dt;if(P.v>27)P.v-=Math.min(P.v-27,14*dt)}
   if(S.arcade){const tb=(keys.shift)&&P.gear===1&&P.nitro>0;P.boost=tb;if(tb){P.v=Math.min(sp.vmax*1.4,P.v+sp.acc*1.6*dt);P.nitro=Math.max(0,P.nitro-dt*.35)}else P.nitro=Math.min(1,P.nitro+dt*.12);
@@ -2115,7 +2115,7 @@ function drawWorld(W,P,ix,iy,t){
   if(S&&S.cop&&S.W===W){const C=S.cop,fl=Math.floor(t*8)%2===0;g.fillStyle=fl?'rgba(47,107,255,.28)':'rgba(255,42,74,.28)';g.fillRect(X(C.x)-12,Y(C.y)-12,24,24);drawCar(g,C.x,C.y,C.h,C.col,{on:fl,brake:C.arrest},ix,iy,'police')}
   if(P&&P.hornT>0){P.hornT-=1/60;const sx=X(P.x),sy=Y(P.y)-16;g.fillStyle='#000';g.fillRect(sx-12,sy-1,25,9);g.fillStyle='#fff';g.fillRect(sx-11,sy,23,7);ptext(g,'PIII!',sx-9,sy+1,'#1b4965')}
   if(P&&!(S&&S.respawn>0&&blinkOn))drawCar(g,P.x,P.y,P.h,P.col,{boost:P.boost&&Math.floor(t*20)%2,brake:P.brake,rev:P.gear===-1,bl:P.blinkL||P.haz,br:P.blinkR||P.haz,on:blinkOn},ix,iy,P.type);
-  if(S&&S.foot&&S.W===W){const F=S.foot;ped(F);const bx=X(F.x),by=Y(F.y)-9+Math.round(Math.sin(t*5));g.fillStyle='#000';g.fillRect(bx-3,by-1,7,4);g.fillStyle='#ffd23f';g.fillRect(bx-2,by,5,1);g.fillRect(bx-1,by+1,3,1);g.fillRect(bx,by+2,1,1)}
+  if(S&&S.foot&&S.W===W){const F=S.foot;drawWalker2D(g,X(F.x),Y(F.y),F.face!=null?F.face:F.h,F.an,F.v,F);const bx=X(F.x),by=Y(F.y)-9+Math.round(Math.sin(t*5));g.fillStyle='#000';g.fillRect(bx-3,by-1,7,4);g.fillStyle='#ffd23f';g.fillRect(bx-2,by,5,1);g.fillRect(bx-1,by+1,3,1);g.fillRect(bx,by+2,1,1)}
   for(const R of W.rails){
     for(const s of W.stops){if(s.kind!=='rail'||s.light!==R)continue;const warn=railWarn(W,R,s.ca,t);const p=polePos(s);
       const ph=Math.floor(t*4)%2;if(warn){g.fillStyle=ph?'#ff2a2a':'#550000';g.fillRect(X(p[0])-3,Y(p[1])+3,2,2);g.fillStyle=ph?'#550000':'#ff2a2a';g.fillRect(X(p[0])+2,Y(p[1])+3,2,2)}
@@ -2328,7 +2328,7 @@ function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];con
     ctx.fillStyle=p.col;ctx.fillRect(B.x-w/2,T.y+hh*.2,w,hh*.42);ctx.fillStyle=shade(p.col,-.2);ctx.fillRect(B.x-w/2-w*.22,T.y+hh*.22-sw*.2,w*.22,hh*.34);ctx.fillRect(B.x+w/2,T.y+hh*.22+sw*.2,w*.22,hh*.34);
     const hr=Math.max(1,.55*B.k);ctx.fillStyle=p.skin;ctx.beginPath();ctx.arc(T.x,T.y+hh*.1,hr,0,7);ctx.fill();ctx.fillStyle=p.hair;ctx.beginPath();ctx.arc(T.x,T.y+hh*.1-hr*.2,hr,Math.PI,0);ctx.fill()});
   for(const z of W.zebras)for(const p of z.peds)ped3(p);
-  if(W.walkers)for(const p of W.walkers)ped3(p);if(S&&S.foot&&S.chase&&S.W===W&&!mirror)ped3({x:S.foot.x,y:S.foot.y,col:'#ffd23f'});if(W.jay)for(const p of W.jay)ped3(p);
+  if(W.walkers)for(const p of W.walkers)ped3(p);if(S&&S.foot&&S.chase&&S.W===W&&!mirror)ped3(S.foot);if(W.jay)for(const p of W.jay)ped3(p);
   if(W.works)for(const r of W.works)add(r.x+r.w/2,r.y+r.h/2,12,()=>box(ctx,C,V,[[r.x,r.y],[r.x+r.w,r.y],[r.x+r.w,r.y+r.h],[r.x,r.y+r.h]],0,3.2,'#ff6a00',{top:'#fff'}));
   if(W.broken)for(const b of W.broken)add(b.x,b.y,10,()=>car3D(ctx,C,V,{x:b.x,y:b.y,h:b.h,type:b.type,col:b.col,L:b.L,Wd:b.Wd,bl:true,br:true},blinkOn));
   for(const k of W.cones)add(k.x,k.y,1,()=>{const B=bill(C,V,k.x,k.y,0),T=bill(C,V,k.x,k.y,2.4);if(!B)return;const w=Math.max(1,.9*B.k);ctx.fillStyle=k.hit?'#b34700':'#ff7b00';ctx.beginPath();ctx.moveTo(B.x-w,B.y);ctx.lineTo(B.x+w,B.y);ctx.lineTo(T.x,T.y);ctx.fill();ctx.fillStyle='#fff';ctx.fillRect(B.x-w*.45,B.y-(B.y-T.y)*.55,w*.9,Math.max(1,(B.y-T.y)*.15))});
@@ -2426,6 +2426,14 @@ function emergStep(W,P,dt){if(!W.adj||!W.inter||S.foot)return;S.emT=(S.emT==null
   const a=back,b=on[idx+1],di=u2(a,b);let sx=r.o==='h'?pc-dir*110:r.c,sy=r.o==='h'?r.c:pc-dir*110;if((r.o==='h'?(sx-a[0])*dir:(sy-a[1])*dir)<0){sx=r.o==='h'?a[0]+dir*20:r.c;sy=r.o==='h'?r.c:a[1]+dir*20}
   if(Math.hypot(sx-P.x,sy-P.y)<70)return;
   const c=mkCar('ambulance',{emerg:true,nav:1,nn:[a,b,navPick(W,a,b)],q:[],x:sx-di[1]*7,y:sy+di[0]*7,h:Math.atan2(di[1],di[0]),v:30,vmax:60,cap:64,drv:1.45,ok:{},wait:0,lo:7,sir:0,collT:99});navFill(W,c);W.ai.push(c);W.emerg=c}
+// Persona vista desde arriba: sombra, piernas y brazos que se alternan al caminar, torso, cabeza con pelo.
+function drawWalker2D(g,x,y,h,an,v,F){if(!F.skin){F.skin='#e0ac69';F.hair='#2b1b10';F.pants='#2b3a55';F.col='#2a9df4'}const sw=v>.3?Math.sin(an*9)*(v>10?2.2:1.4):0;
+  g.save();g.translate(Math.round(x),Math.round(y));g.rotate(h);g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.ellipse(1,1,3.2,2.4,0,0,7);g.fill();
+  g.fillStyle=F.pants;g.fillRect(Math.round(sw)-1,-2,2,1.6);g.fillRect(Math.round(-sw)-1,.6,2,1.6);g.fillStyle='#222';g.fillRect(Math.round(sw)+1,-2,1,1.6);g.fillRect(Math.round(-sw)+1,.6,1,1.6);
+  g.fillStyle=F.skin;g.fillRect(Math.round(-sw*.8)-.5,-3.4,1.6,1.2);g.fillRect(Math.round(sw*.8)-.5,2.2,1.6,1.2);
+  g.fillStyle=F.col;g.fillRect(-1.6,-2.6,3.2,5.2);g.fillStyle=shade(F.col,-.25);g.fillRect(-1.6,1.6,3.2,1);
+  g.fillStyle=F.skin;g.beginPath();g.arc(.3,0,1.5,0,7);g.fill();g.fillStyle=F.hair;g.beginPath();g.arc(-.1,0,1.5,Math.PI*.55,Math.PI*1.45);g.fill();g.restore()}
+
 // ===================== POLICÍA DE TRÁNSITO =====================
 // En manejo libre: 4 infracciones en 90 s y llega una patrulla que no se detiene por nada hasta alcanzarlo.
 const OFI='OFICIAL DE TRÁNSITO';
@@ -2532,14 +2540,16 @@ function toggleFoot(){const P=S.P;
   if(S.exam){toast('NO DISPONIBLE','Puede bajarse en Manejo libre, San José libre y Alajuela (no durante un examen)','info');return}
   if(Math.abs(P.v)>1){toast('DETÉNGASE','para bajarse del vehículo','info');return}
   P.v=0;P.thr=0;const c=Math.cos(P.h),sn=Math.sin(P.h),d=P.Wd/2+4;let fx=P.x+sn*d,fy=P.y-c*d;if(footBlocked(S.W,fx,fy)){fx=P.x-sn*d;fy=P.y+c*d}
-  S.foot={x:fx,y:fy,h:P.h,v:0,an:0,foot:true,L:3,Wd:3,col:'#ffd23f'};S.look=0;sfx.gear();
+  S.foot={x:fx,y:fy,h:P.h,face:P.h,v:0,vx:0,vy:0,an:0,foot:true,L:3,Wd:3,col:'#2a9df4',skin:'#e0ac69',hair:'#2b1b10',pants:'#2b3a55',ht:4.8};S.look=0;sfx.gear();
   toast('A PIE',TOUCH?'◀ ▶ girar · GAS caminar · MANO correr · A PIE para subirse':'WASD caminar · ESPACIO correr · T subirse','info')}
-function footBlocked(W,x,y){if(x<2||y<2||x>W.w-2||y>W.h-2)return true;for(const o of W.obst)if(x>o.x&&x<o.x+o.w&&y>o.y&&y<o.y+o.h)return true;
+function footBlocked(W,x,y){if(x<2||y<2||x>W.w-2||y>W.h-2)return true;if(S&&S.P&&S.foot&&Math.abs(S.P.x-x)<20&&Math.abs(S.P.y-y)<20)for(const c of circles(S.P))if(Math.hypot(c.x-x,c.y-y)<c.r+1.2)return true;for(const o of W.obst)if(x>o.x&&x<o.x+o.w&&y>o.y&&y<o.y+o.h)return true;
   if(W.circObs)for(const q of W.circObs)if(q.type!=='isla'&&Math.hypot(x-q.x,y-q.y)<q.r)return true;return false}
 function updateFoot(W,dt){const F=S.foot;const run=keys[' ']||keys.shift;const sp=run?17:6.5;let mx=0,my=0;
-  if((S.fp)||TOUCH){const tr=(keys.a||keys.arrowleft?-1:0)+(keys.d||keys.arrowright?1:0);F.h=nA(F.h+tr*2.6*dt);const f=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?.6:0);mx=Math.cos(F.h)*f;my=Math.sin(F.h)*f}
+  if((S.fp)||TOUCH){const tr=(keys.a||keys.arrowleft?-1:0)+(keys.d||keys.arrowright?1:0);F.h=nA(F.h+tr*3*dt);const f=(keys.w||keys.arrowup?1:0)-(keys.s||keys.arrowdown?.6:0);mx=Math.cos(F.h)*f;my=Math.sin(F.h)*f}
   else{mx=(keys.d||keys.arrowright?1:0)-(keys.a||keys.arrowleft?1:0);my=(keys.s||keys.arrowdown?1:0)-(keys.w||keys.arrowup?1:0);const l=Math.hypot(mx,my);if(l){mx/=l;my/=l;F.h=Math.atan2(my,mx)}}
-  F.v=Math.hypot(mx,my)*sp;if(F.v>0)F.an+=dt*(run?1.8:1);const nx=F.x+mx*sp*dt,ny=F.y+my*sp*dt;if(!footBlocked(W,nx,F.y))F.x=nx;if(!footBlocked(W,F.x,ny))F.y=ny;
+  const k=Math.min(1,dt*9);F.vx=(F.vx||0)+(mx*sp-(F.vx||0))*k;F.vy=(F.vy||0)+(my*sp-(F.vy||0))*k;F.v=Math.hypot(F.vx,F.vy);if(F.v>.3)F.an+=dt*F.v*.16;
+  {const f0=F.face==null?F.h:F.face,tg=(S.fp||TOUCH)?F.h:(F.v>.5?Math.atan2(F.vy,F.vx):f0);F.face=f0+nA(tg-f0)*Math.min(1,dt*12)}
+  const nx=F.x+F.vx*dt,ny=F.y+F.vy*dt;if(!footBlocked(W,nx,F.y))F.x=nx;else F.vx=0;if(!footBlocked(W,F.x,ny))F.y=ny;else F.vy=0;
   for(const c of W.ai.concat(W.ringCars)){const d=Math.hypot(c.x-F.x,c.y-F.y);if(d<c.L/2+2){const a=Math.atan2(F.y-c.y,F.x-c.x);F.x=c.x+Math.cos(a)*(c.L/2+2.5);F.y=c.y+Math.sin(a)*(c.L/2+2.5);
     if(c.v>6&&!(S.cd.hitme>S.t)){S.cd.hitme=S.t+3;S.shake=.4;sfx.crash();toast('¡CUIDADO!','Cruce por los pasos peatonales y mire a ambos lados','bad')}}}}
 // Mapa: clic o toque en un lugar para ir ahí (solo fuera de los exámenes)
@@ -2664,12 +2674,12 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     const zm=S.zoom||1,vw=VW/zm,vh=VH/zm,FC=S.foot||P;S.cx=FC.x-vw/2+(Math.random()-.5)*sh;S.cy=FC.y-vh/2+(Math.random()-.5)*sh;
     const ix=Math.round(S.cx*zm)/zm,iy=Math.round(S.cy*zm)/zm;$('hud').classList.toggle('fp',!!S.fp&&!S.chase);$('hud').classList.toggle('map',!!S.mapOpen);
     if(S.mapOpen){const tg=updateHUD();drawFullMap(W,P,S.t,tg)}
-    else if(S.fp&&S.foot&&S.chase){const F=S.foot;S.camH=nA((S.camH||F.h)+nA(F.h-(S.camH||F.h))*Math.min(1,dt*3));const ch=S.camH+(S.yaw||0),c=Math.cos(ch),s=Math.sin(ch);VMAIN.hz=Math.round(74+(S.lp||0)*80);
-      render3D(VMAIN,{x:F.x-c*11,y:F.y-s*11,z:6.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
+    else if(S.fp&&S.foot&&S.chase){const F=S.foot;S.camH=nA((S.camH||F.h)+nA(F.h-(S.camH||F.h))*Math.min(1,dt*4));const ch0=S.camH+(S.yaw||0),cx=F.x-Math.cos(ch0)*9,cy=F.y-Math.sin(ch0)*9,ch=Math.atan2(F.y-cy,F.x-cx),c=Math.cos(ch),s=Math.sin(ch);VMAIN.hz=Math.round(70+(S.lp||0)*80);
+      render3D(VMAIN,{x:cx,y:cy,z:5.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
     else if(S.fp&&S.foot){const F=S.foot,lt=keys.z?-1.05:keys.x?1.05:0;S.look=(S.look||0)+(lt-(S.look||0))*Math.min(1,dt*7);const hh=F.h+S.look+(S.yaw||0);VMAIN.hz=Math.round((S.lp||0)*90)+84+Math.round(Math.sin(F.an*9)*(F.v>1?1:0));
       render3D(VMAIN,{x:F.x,y:F.y,z:3,h:hh,c:Math.cos(hh),s:Math.sin(hh)},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
-    else if(S.fp&&S.chase&&!S.foot){S.camH=nA(S.camH+nA(P.h-S.camH)*Math.min(1,dt*4));const ch=S.camH+(S.yaw||0),c=Math.cos(ch),s=Math.sin(ch),back=24+Math.abs(P.v)*.06;VMAIN.hz=Math.round(66+(S.lp||0)*80);
-      render3D(VMAIN,{x:P.x-c*back,y:P.y-s*back,z:10.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
+    else if(S.fp&&S.chase&&!S.foot){S.camH=nA(S.camH+nA(P.h-S.camH)*Math.min(1,dt*6));const ch0=S.camH+(S.yaw||0),back=24+Math.abs(P.v)*.06,cx=P.x-Math.cos(ch0)*back,cy=P.y-Math.sin(ch0)*back,ch=Math.atan2(P.y-cy,P.x-cx),c=Math.cos(ch),s=Math.sin(ch);VMAIN.hz=Math.round(66+(S.lp||0)*80);
+      render3D(VMAIN,{x:cx,y:cy,z:10.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
     else if(S.fp){const c=Math.cos(P.h),s=Math.sin(P.h);
       // cabeza: Z/X mirar a los lados (espejos laterales), F mirar hacia arriba; se inclina sola al detenerse junto a un semáforo
       const lt=keys.z?-1.05:keys.x?1.05:0;S.look=(S.look||0)+(lt-(S.look||0))*Math.min(1,dt*7);
