@@ -205,14 +205,16 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <div class="sub">Practique la prueba tal como se hace en cada plantel</div>
     <div class="grid pl">
       <button id="plSJ">1 · SAN JOSÉ<small>DISPONIBLE</small></button>
-      <button data-sede="heredia">2 · HEREDIA<small>VERSIÓN PRELIMINAR</small></button>
-      <button data-sede="alajuela">3 · ALAJUELA<small>VERSIÓN PRELIMINAR</small></button>
-      <button data-sede="perez">4 · PÉREZ ZELEDÓN<small>VERSIÓN PRELIMINAR</small></button>
-      <button data-sede="rioclaro">5 · RÍO CLARO<small>VERSIÓN PRELIMINAR</small></button>
-      <button data-sede="limon">6 · LIMÓN<small>VERSIÓN PRELIMINAR</small></button>
-      <button data-sede="guapiles">7 · GUÁPILES<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-of="heredia">2 · HEREDIA<small>RECORRIDO OFICIAL · RUTA 126</small></button>
+      <button data-of="alajuela">3 · ALAJUELA<small>RECORRIDO OFICIAL · CALLE 24</small></button>
+      <button data-of="sanramon">4 · SAN RAMÓN<small>RECORRIDO OFICIAL · AVENIDA 11</small></button>
+      <button data-of="cartago">5 · CARTAGO<small>CIRCUITO + RUTA 228</small></button>
+      <button data-sede="perez">6 · PÉREZ ZELEDÓN<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="rioclaro">7 · RÍO CLARO<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="limon">LIMÓN<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="guapiles">GUÁPILES<small>VERSIÓN PRELIMINAR</small></button>
       <button data-sede="sancarlos">8 · SAN CARLOS<small>VERSIÓN PRELIMINAR</small></button>
-      <button data-sede="nicoya">9 · NICOYA<small>VERSIÓN PRELIMINAR</small></button>
+      <button data-sede="nicoya">NICOYA<small>VERSIÓN PRELIMINAR</small></button>
       <button data-sede="puntarenas">PUNTARENAS<small>VERSIÓN PRELIMINAR</small></button>
       <button data-sede="liberia">LIBERIA<small>VERSIÓN PRELIMINAR</small></button>
     </div>
@@ -1171,6 +1173,89 @@ function buildSede(k){const D=SEDES[k],Rg=REGION[D.r];const W=buildPlantel();W.g
   W.labels=(W.labels||[]).concat([{x:150,y:108,t:'PLANTEL DE '+D.n.normalize('NFD').replace(/[̀-ͯ]/g,''),col:'#fff'}]);
   if(D.r==='seco'){W.cows=[];for(let i=0;i<5;i++){const x=520+R()*100,y=360+R()*90;if(!pavedW(W,x,y))W.cows.push({x,y,ox:x,oy:y,h:R()*6,t:R()*5})}}
   return W}
+// ===================== RECORRIDOS OFICIALES DE LAS SEDES (DGEV) =====================
+// Basados en los recorridos publicados por la Dirección General de Educación Vial (educacionvial.go.cr).
+// Calles simplificadas (≈1,2 unidades por metro); puntos de referencia según la descripción oficial.
+function buildOficial(D){HW=13;const W=newWorld('of_'+D.id,D.w,D.h);W.limit=D.limit||40;W.oficial=D;W.labels=[];W.parks=[];W.plazas=[];
+  const B=b=>{W.obst.push(b);W.blds.push(b);return b};
+  for(const st of D.streets){const pts=st.p.length>2&&st.curve?smoothLine(st.p,10):st.p;const pa=addPath(W,pts);pa.hw=st.hw||13;st.pts=pts}
+  // puntos de referencia (edificios con nombre) y parques
+  for(const L of D.lm||[]){if(L.park){W.parks.push({x:L.x,y:L.y,w:L.w,h:L.h});W.labels.push({x:L.x+3,y:L.y+3,t:L.t,col:'#fff'});continue}
+    B({x:L.x,y:L.y,w:L.w,h:L.h,type:'bld',col:L.col||'#e9e4d6',roof:L.roof||'#9aa2a9',label:L.t,H:L.H||14})}
+  // casas a ambos lados de cada calle
+  const R=rng(D.seed||5),ov=(a,b,m)=>a.x<b.x+b.w+m&&a.x+a.w+m>b.x&&a.y<b.y+b.h+m&&a.y+a.h+m>b.y;
+  for(const st of D.streets){if(st.nohouse)continue;const pts=st.pts;let carry=8;for(let i=0;i<pts.length-1;i++){const a=pts[i],b=pts[i+1],L=Math.hypot(b[0]-a[0],b[1]-a[1]),ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;
+    let d=carry;for(;d<L;d+=20+R()*10){for(const sd of[-1,1]){const off=(st.hw||13)+13+R()*4,cx=a[0]+ux*d-uy*off*sd,cy=a[1]+uy*d+ux*off*sd,w=14+R()*8|0,h=14+R()*6|0;
+      const b2={x:cx-w/2|0,y:cy-h/2|0,w,h,type:'bld',house:true,col:pick(D.houseCols||['#f4a261','#e9c46a','#a8dadc','#ffadad','#caffbf','#bdb2ff','#f1faee','#ffd6a5']),roof:pick(['#bc4749','#9c6644','#7f5539','#b5533c','#8d99ae'])};
+      if([[b2.x,b2.y],[b2.x+w,b2.y],[b2.x,b2.y+h],[b2.x+w,b2.y+h],[cx,cy]].some(([x,y])=>pavedW(W,x,y)))continue;if(W.blds.some(o=>ov(b2,o,3))||W.parks.some(o=>ov(b2,o,2)))continue;if(b2.x<4||b2.y<4||b2.x+w>W.w-4||b2.y+h>W.h-4)continue;B(b2)}}carry=d-L}}
+  // ALTO en las bocacalles indicadas
+  W.pstops=(D.stops||[]).map(([x,y,ux,uy],i)=>({x,y,ux,uy,w:13,code:'altoOf'+i,txt:'No hizo ALTO total en la intersección',minV:99}));
+  W.drawExtra=x=>{for(const s of W.pstops){const nx=-s.uy,ny=s.ux;x.fillStyle='#ecece4';for(let k=-12;k<=0;k+=.5)x.fillRect(Math.round(s.x+nx*k),Math.round(s.y+ny*k),2,2);ptext(x,'ALTO',Math.round(s.x-s.ux*9-8+nx*-6),Math.round(s.y-s.uy*9-2+ny*-6),'#ecece4')}
+    if(D.extra)D.extra(x,W)};
+  for(const z of D.zones||[])W.zones.push(z);
+  for(const l of D.labels||[])W.labels.push(l);
+  for(const p of W.parks)addTrees(W,R,10,Object.assign({inside:true},p),3);addTrees(W,R,D.trees||160,{x:0,y:0,w:W.w,h:W.h},16);
+  // tráfico en las calles principales (ida y vuelta)
+  for(const st of D.streets)if(st.main){const pts=st.pts,loop=pts.concat(pts.slice(1,-1).reverse());spawnOnLoop(W,makePathLoop(loop,6.5),st.main,32,st.types)}
+  W.sidewalks=[];W.walkers=[];for(const L of D.lm||[]){if(L.park)continue;const cand=[[[L.x,L.y+L.h+5],[L.x+L.w,L.y+L.h+5]],[[L.x,L.y-5],[L.x+L.w,L.y-5]],[[L.x-5,L.y],[L.x-5,L.y+L.h]],[[L.x+L.w+5,L.y],[L.x+L.w+5,L.y+L.h]]];const sg=cand.find(([a,b])=>[a,b,[(a[0]+b[0])/2,(a[1]+b[1])/2]].every(q=>!pavedW(W,q[0],q[1])&&!W.blds.some(o=>o!==L&&q[0]>o.x-2&&q[0]<o.x+o.w+2&&q[1]>o.y-2&&q[1]<o.y+o.h+2)));if(sg)for(let k=0;k<2;k++)W.walkers.push({r:{seg:sg},s:Math.random()*100,sp:3+Math.random()*3,an:0,x:0,y:0,col:pick(CARCOLS)})}
+  if(D.yard){W.paved.push({x:200,y:120,w:330,h:170,tag:'yard'});for(let k=0;k<6;k++){const cx=270+k*40,cy=k%2?160:200;W.cones.push({x:cx,y:cy-14,vx:0,vy:0,hit:false},{x:cx,y:cy+14,vx:0,vy:0,hit:false})}}
+  W.spawn=D.start;W.dests=[{n:D.n,x:D.start.x,y:D.start.y}];W.jay=null;return W}
+function oficialTasks(){const D=S.W.oficial;const T=D.route.map((r,i)=>({txt:r.t,tgt:{x:r.x,y:r.y},check(){return Math.hypot(S.P.x-r.x,S.P.y-r.y)<22}}));
+  T[0].txt='RECORRIDO OFICIAL '+D.n+': póngase el cinturón [C]. '+T[0].txt;const E=D.route[D.route.length-1];
+  T.push({txt:'Llegue frente a la Regional de Educación Vial y deténgase por completo para terminar.',tgt:{x:E.x,y:E.y},check(){return still('finOf',Math.hypot(S.P.x-E.x,S.P.y-E.y)<24,1)}});return T}
+const OFICIALES={
+  sanramon:{id:'sanramon',n:'SAN RAMÓN',w:1600,h:900,seed:21,limit:40,
+    streets:[{p:[[100,300],[1560,300]],main:4,types:['bus',null,'moto',null]},{p:[[60,180],[1560,180]]},{p:[[60,420],[900,420]]},{p:[[60,540],[900,540]]},{p:[[60,660],[900,660]]},
+      {p:[[180,100],[180,780]]},{p:[[300,100],[300,780]],main:2},{p:[[420,100],[420,780]]},{p:[[540,100],[540,780]]},{p:[[660,100],[660,780]]},{p:[[900,100],[900,700]]},{p:[[1260,180],[1260,300]]}],
+    lm:[{x:1210,y:220,w:100,h:62,t:'EDUCACION VIAL',col:'#f2e8cf',roof:'#1d4e89',H:12},{x:700,y:205,w:180,h:70,t:'HOSPITAL C.L. VALVERDE VEGA',col:'#eef2f5',roof:'#8d99ae',H:24},
+      {x:190,y:205,w:95,h:70,t:'ESC. J.J. SALAS',col:'#f2e8cf',roof:'#bc4749',H:10},{x:196,y:556,w:90,h:90,park:1,t:'PLAZA LA SABANA'},{x:316,y:556,w:50,h:30,t:'MAYCA',col:'#ffd23f',roof:'#c1121f',H:9},{x:30,y:556,w:130,h:40,t:'CAI',col:'#cfd6da',roof:'#5c677d',H:9}],
+    stops:[[300,287,0,1],[300,553,0,-1],[420,673,0,-1],[287,540,1,0]],
+    zones:[{x:150,y:160,w:300,h:180,limit:25,name:'ESCUELA'},{x:680,y:160,w:240,h:160,limit:25,name:'HOSPITAL'}],
+    labels:[{x:950,y:310,t:'AVENIDA 11',col:'#fff'},{x:305,y:700,t:'CALLE 12',col:'#fff',rot:1},{x:425,y:700,t:'CALLE 10',col:'#fff',rot:1},{x:620,y:670,t:'AVENIDA 5',col:'#fff'},{x:620,y:550,t:'AVENIDA 7',col:'#fff'}],
+    start:{x:1240,y:307,h:Math.PI},
+    route:[{x:300,y:307,t:'Salga hacia el OESTE por la Avenida 11, pase frente al Hospital Carlos Luis Valverde Vega (zona de 25 km/h) hasta la esquina de la Escuela José Joaquín Salas.'},
+      {x:307,y:660,t:'Doble a la IZQUIERDA (sur) por la Calle 12, 300 metros, hasta la Avenida 5.'},
+      {x:420,y:653,t:'Doble a la IZQUIERDA (este) por la Avenida 5, 100 metros, hasta la Calle 10.'},
+      {x:413,y:540,t:'Doble a la IZQUIERDA (norte) por la Calle 10, 100 metros, hasta la Avenida 7.'},
+      {x:300,y:533,t:'Doble a la IZQUIERDA (oeste) por la Avenida 7, 100 metros, hasta la esquina de MAYCA (calle 12).'},
+      {x:293,y:300,t:'Doble a la DERECHA (norte) por la Calle 12, 200 metros, hasta la Escuela José Joaquín Salas.'},
+      {x:1230,y:293,t:'Doble a la DERECHA (este) y regrese 800 metros por la Avenida 11 hasta la Regional de Educación Vial.'}]},
+  alajuela:{id:'alajuela',n:'ALAJUELA',w:1100,h:1800,seed:33,limit:40,
+    streets:[{p:[[40,300],[1060,300]],main:3},{p:[[40,180],[1060,180]]},{p:[[40,420],[1060,420]]},{p:[[40,1620],[1060,1620]],main:3},{p:[[200,900],[1060,900]]},{p:[[200,1260],[1060,1260]]},
+      {p:[[300,60],[300,1760]],main:4,types:['bus',null,'moto',null]},{p:[[420,60],[420,900]]},{p:[[540,60],[540,900]]},{p:[[660,60],[660,900]]},{p:[[780,60],[780,1760]]},{p:[[900,60],[900,1760]]},{p:[[200,60],[200,1760]]}],
+    lm:[{x:740,y:1640,w:110,h:60,t:'EDUCACION VIAL',col:'#f2e8cf',roof:'#1d4e89',H:12},{x:316,y:196,w:90,h:90,t:'MUTUAL ALAJUELA',col:'#eef2f5',roof:'#2a9d8f',H:20},{x:796,y:196,w:90,h:90,t:'INA',col:'#f2e8cf',roof:'#1d3557',H:14},
+      {x:796,y:316,w:90,h:90,park:1,t:'PARQUE CRISTO REY'},{x:676,y:76,w:90,h:90,t:'SERVICENTRO',col:'#e63946',roof:'#f1f1f1',H:8},{x:216,y:1636,w:70,h:40,t:'BAR MANCHESTER',col:'#9c6644',roof:'#5c4b37',H:8}],
+    stops:[[300,313,0,-1],[787,300,-1,0],[780,193,0,-1],[667,180,-1,0],[660,287,0,1],[300,1607,0,1]],
+    labels:[{x:305,y:1000,t:'CALLE 24',col:'#fff',rot:1},{x:500,y:310,t:'AVENIDA 1',col:'#fff'},{x:560,y:190,t:'AVENIDA 3',col:'#fff'},{x:785,y:600,t:'CALLE 16',col:'#fff',rot:1},{x:665,y:600,t:'CALLE 18',col:'#fff',rot:1}],
+    start:{x:760,y:1613,h:Math.PI},
+    route:[{x:300,y:1613,t:'Salga hacia el OESTE 400 metros hasta la Calle 24.'},{x:307,y:300,t:'Doble a la DERECHA (norte) y suba 1100 metros por la Calle 24, por el costado oeste de la Mutual Alajuela, hasta la Avenida 1.'},
+      {x:780,y:307,t:'Doble a la DERECHA (este) por la Avenida 1 hasta el Parque Cristo Rey (Calle 16).'},{x:787,y:180,t:'Doble a la IZQUIERDA (norte) por la Calle 16, frente al INA, hasta la Avenida 3.'},
+      {x:660,y:173,t:'Doble a la IZQUIERDA (oeste) por la Avenida 3, frente a la estación de servicio Cristo Rey.'},{x:653,y:300,t:'Doble a la IZQUIERDA (sur) por la Calle 18 hasta la Avenida 1.'},
+      {x:300,y:293,t:'Doble a la DERECHA (oeste) por la Avenida 1, pasando detrás de la Mutual, hasta la Calle 24.'},{x:293,y:1620,t:'Doble a la IZQUIERDA (sur) y baje 1100 metros por la Calle 24 hasta el Bar Manchester.'},
+      {x:760,y:1627,t:'Doble a la IZQUIERDA (este) 400 metros hasta el MOPT (Regional de Educación Vial).'}]},
+  cartago:{id:'cartago',n:'CARTAGO',w:1000,h:1700,seed:44,limit:40,
+    streets:[{p:[[600,40],[600,1200]],main:3,types:['bus',null,'pickup',null]},{p:[[600,1200],[600,1560]],main:1},{p:[[600,1200],[440,1370]],nohouse:false},{p:[[440,1370],[600,1500]]},{p:[[200,230],[600,230]],hw:12,nohouse:true}],
+    lm:[{x:620,y:180,w:110,h:70,t:'EDUCACION VIAL',col:'#f2e8cf',roof:'#1d4e89',H:12},{x:470,y:1430,w:80,h:50,t:'ESC. DE SORDOS',col:'#f2e8cf',roof:'#bc4749',H:10}],
+    stops:[[600,1187,0,1],[453,1356,.7,-.7]],
+    labels:[{x:610,y:700,t:'RUTA 228',col:'#fff',rot:1},{x:612,y:1190,t:'Y GRIEGA',col:'#ffd23f'},{x:470,y:1280,t:'DIAGONAL 13',col:'#fff'},{x:520,y:1450,t:'CALLE 14',col:'#fff'},{x:612,y:1350,t:'CALLE 2',col:'#fff',rot:1},{x:220,y:110,t:'CIRCUITO INTERNO',col:'#ffd23f'}],
+    extra(x,W){x.fillStyle='#55585e';x.fillRect(200,120,330,170);x.fillStyle='#ecece4';x.fillRect(200,120,330,1);x.fillRect(200,289,330,1)},
+    yard:true,start:{x:230,y:237,h:0},
+    route:[{x:300,y:180,t:'CIRCUITO INTERNO: pase el zigzag de conos sin tocarlos.'},{x:470,y:180,t:'Siga por el circuito interno y salga hacia la Ruta 228.'},
+      {x:607,y:240,t:'Salga a la DERECHA (sur) por la Ruta 228 (ceda el paso al salir) y avance 800 metros.'},{x:607,y:1190,t:'Llegue a la Y GRIEGA.'},
+      {x:450,y:1360,t:'Doble a la DERECHA por la Diagonal 13 (suroeste), 200 metros.'},{x:590,y:1490,t:'Doble a la IZQUIERDA por la Calle 14 hasta la Escuela de Sordos.'},
+      {x:607,y:1250,t:'Doble a la IZQUIERDA (norte) por la Calle 2 hasta la Y griega.'},{x:607,y:260,t:'Siga al NORTE 800 metros por la Ruta 228 hasta la Regional de Educación Vial.'}]},
+  heredia:{id:'heredia',n:'HEREDIA',w:1100,h:1250,seed:55,limit:40,
+    streets:[{p:[[300,30],[310,110],[330,250],[380,420],[430,560],[470,700],[520,830],[560,960],[600,1100],[640,1220]],curve:1,main:5,types:['bus',null,'moto',null,'pickup']},
+      {p:[[310,110],[240,150],[160,190],[90,210]],curve:1},{p:[[475,715],[720,715]]},{p:[[720,715],[720,595]]},{p:[[720,595],[445,595]]},{p:[[380,420],[700,330]],curve:0},{p:[[430,560],[200,640]]},{p:[[560,960],[800,960]]}],
+    lm:[{x:110,y:215,w:100,h:60,t:'EDUCACION VIAL',col:'#f2e8cf',roof:'#1d4e89',H:12},{x:335,y:85,w:60,h:30,t:'TRES MARIAS',col:'#f4f1de',roof:'#9c6644',H:8},{x:370,y:540,w:52,h:30,t:'SUPERCORNER',col:'#ffd23f',roof:'#c1121f',H:9},
+      {x:495,y:660,w:60,h:34,t:'SUPER SANCHEZ',col:'#a8dadc',roof:'#1d3557',H:9},{x:600,y:1080,w:110,h:50,t:'TERMINAL LA FORTALEZA',col:'#cfd6da',roof:'#5c677d',H:10},{x:460,y:860,w:80,h:70,park:1,t:'LA HERRADURA'}],
+    stops:[[462,715,1,0],[458,595,-1,0],[296,118,.9,-.4]],
+    labels:[{x:395,y:470,t:'RUTA 126',col:'#fff',rot:1},{x:150,y:160,t:'CALLE LA AMADA',col:'#fff'},{x:480,y:440,t:'CALLE EL TANQUE',col:'#fff'},{x:520,y:605,t:'PUENTE SALAS',col:'#fff'}],
+    start:{x:150,y:195,h:-.4},
+    route:[{x:300,y:118,t:'Salga hacia el ESTE por la Calle La Amada hasta la Ruta 126 (Las Tres Marías). ALTO antes de salir.'},
+      {x:470,y:705,t:'Doble a la DERECHA (sur) y baje por la Ruta 126 con sus curvas hasta el Súper Sánchez.'},
+      {x:715,y:708,t:'Doble a la IZQUIERDA (este) 200 metros.'},{x:713,y:600,t:'Doble a la IZQUIERDA (norte) 100 metros.'},{x:450,y:600,t:'Doble a la IZQUIERDA (oeste) y regrese a la Ruta 126.'},
+      {x:310,y:115,t:'Doble a la DERECHA (norte) por la Ruta 126 hasta Las Tres Marías.'},{x:160,y:195,t:'Doble a la IZQUIERDA por la Calle La Amada hasta la Regional de Licencias de Heredia.'}]}};
 // ===================== ALAJUELA: AEROPUERTO, MODO TAXI Y LA GUÁCIMA =====================
 let MODE_NOW=null;
 function buildAlajuela(){HW=14;const W=newWorld('alajuela',3000,2000);W.limit=40;W.taxi=true;
@@ -1546,7 +1631,7 @@ async function makeReport(){const rep={v:1,id:sid(),n:store.get('pp_name','')||'
   return out.replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
 function openProgress(){show('prgScr');ui='prg';$('prgName').value=store.get('pp_name','');$('prgSchool').value=store.get('pp_school','');$('prgCodeBox').classList.add('hidden');$('prgMsg').textContent='';
   const h=store.get('pp_hist',[]);let html='';
-  for(const m of['teorico','sanjose',...Object.keys(SEDES).map(k=>'pl_'+k),'plantel','street','centro','r27','r32','tilaran','alajuela','manuel','cerro','city','sjlibre']){const a=h.filter(x=>x.m===m&&!x.prac);if(!a.length)continue;const best=Math.max(...a.map(x=>x.s));const pass=a.filter(x=>x.ok).length;const last=a.slice(-5);const avg=Math.round(last.reduce((s,x)=>s+x.s,0)/last.length);
+  for(const m of['teorico','sanjose',...Object.keys(OFICIALES).map(k=>'of_'+k),...Object.keys(SEDES).map(k=>'pl_'+k),'plantel','street','centro','r27','r32','tilaran','alajuela','manuel','cerro','city','sjlibre']){const a=h.filter(x=>x.m===m&&!x.prac);if(!a.length)continue;const best=Math.max(...a.map(x=>x.s));const pass=a.filter(x=>x.ok).length;const last=a.slice(-5);const avg=Math.round(last.reduce((s,x)=>s+x.s,0)/last.length);
     html+=`<div><b style="color:var(--acc)">${MNAME[m]}</b>: ${a.length} intento${a.length>1?'s':''} · ${(m==='city'||m==='sjlibre'||m==='alajuela')?'mejor '+best+' pts':pass+' aprobado'+(pass===1?'':'s')+' · mejor '+best+' · promedio de los últimos '+last.length+': '+avg}</div>`}
   const fc={};for(const a of h)for(const f of a.f||[])fc[f[0]]=(fc[f[0]]||0)+1;const top=Object.entries(fc).sort((a,b)=>b[1]-a[1]).slice(0,5);
   if(top.length)html+=`<div style="margin-top:calc(var(--u)*3);color:var(--acc)">FALTAS QUE MÁS REPITE</div>`+top.map(([t,n])=>`<div class="c2">${n}× ${t}</div>`).join('');
@@ -1564,13 +1649,14 @@ $('prgBack').onclick=()=>back();
 let S=null,A=null,ui='menu';
 function spawnState(W){const ty=isArc(CAR.type)&&!ARCOK?'sedan':(MODE_NOW==='alajuela'&&!isArc(CAR.type)?'taxi':CAR.type),v=VEH[ty];return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,thr:0,bp:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:carCol(),type:ty,sp:v,nitro:1,L:v.L,Wd:v.Wd,player:true}}
 const ROUTES={centro:1,r27:1,r32:1,tilaran:1,sjlibre:1,alajuela:1,manuel:1,cerro:1};
-const MODES={manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERTE · RUTA 2',alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};for(const k in SEDES){MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';MNAME['pl_'+k]='PLANTEL '+SEDES[k].n}
+const MODES={manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERTE · RUTA 2',alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};for(const k in OFICIALES){MODES['of_'+k]='RECORRIDO OFICIAL · '+OFICIALES[k].n;MNAME['of_'+k]='RECORRIDO '+OFICIALES[k].n}
+for(const k in SEDES){MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';MNAME['pl_'+k]='PLANTEL '+SEDES[k].n}
 function start(mode){
   logDrive();ARCOK=mode==='city'||mode==='sjlibre'||mode==='alajuela';MODE_NOW=mode;
-  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
+  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCiudadVial():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city'&&mode!=='sjlibre'&&mode!=='alajuela',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);S.chase=S.fp&&store.get('pp_chase',false);S.camH=S.P.h;S.zoom=store.get('pp_zoom',1.5);S.mapOpen=false;
-  S.tasks=mode==='tuto'?tutoTasks():(mode==='plantel'||mode.startsWith('pl_'))?plantelTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
+  S.tasks=mode==='tuto'?tutoTasks():(mode==='plantel'||mode.startsWith('pl_'))?plantelTasks():mode.startsWith('of_')?oficialTasks():mode==='sanjose'?cvTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
   const mw=W.w>1200?170:130,mh=Math.round(mw*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
   show(null);$('hud').classList.remove('hidden');ui=null;
   $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio',false);shush();
@@ -1599,7 +1685,7 @@ function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
   if(S.mode==='tuto'){$('endTitle').textContent='¡TUTORIAL COMPLETADO!';$('endTitle').style.color='var(--good)';$('endLic').classList.add('hidden');$('endSub').textContent='Ya sabe manejar el simulador. Siga con el EXAMEN TEÓRICO (1) o practique en MANEJO LIBRE (5). Las reglas completas están en REGLAS (9).';$('endList').innerHTML='';show('end');ui='end';sfx.fanfare();return}
   const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();checkDaily();$('bReplay').classList.toggle('hidden',!S.faults.length);say(reason==='crash'?'Accidente. Prueba terminada.':ok?'¡Felicidades, aprobó!':'Reprobado. Siga practicando.',true);$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   let extra='';const prog=store.get('pp_prog',{});
-  const pk=(S.mode==='sanjose'||S.mode.startsWith('pl_'))?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
+  const pk=(S.mode==='sanjose'||S.mode.startsWith('pl_')||S.mode.startsWith('of_'))?'plantel':S.mode;if(ok){const prev=prog[pk];if(!prev||prev.score<S.score)prog[pk]={score:S.score,date:new Date().toLocaleDateString('es-CR'),car:CAR.type};store.set('pp_prog',prog)}
   const lic=prog.plantel&&prog.street&&prog.teorico;
   if(ok&&lic&&!ROUTES[S.mode]){extra=' · ¡GANÓ SU LICENCIA!';$('endLic').classList.remove('hidden');$('licName').value=store.get('pp_name','');drawLicense($('licEnd'));setTimeout(sfx.fanfare,500)}
   else{$('endLic').classList.add('hidden');if(ok&&!ROUTES[S.mode])extra=' · Para la licencia le falta: '+[['teorico','TEÓRICO'],['plantel','PLANTEL'],['street','CALLE']].filter(([k])=>!prog[k]).map(a=>a[1]).join(', ')}
@@ -2583,7 +2669,7 @@ function onKey(k){
     if(ui==='rules'){if(k==='escape'||k==='enter')back();return}
     if(ui==='lic'){if(k==='escape'||k==='enter')back();return}
     if(ui==='prg'){if(k==='escape')back();return}
-    if(ui==='pl'){if(k==='1')start('sanjose');{const b=[...document.querySelectorAll('#plScr [data-sede]')].find(b=>b.textContent.trim().startsWith(k+' ·'));if(b)start('pl_'+b.dataset.sede)}if(k==='escape')back();return}
+    if(ui==='pl'){if(k==='1')start('sanjose');{const b=[...document.querySelectorAll('#plScr [data-sede],#plScr [data-of]')].find(b=>b.textContent.trim().startsWith(k+' ·'));if(b)start(b.dataset.of?'of_'+b.dataset.of:'pl_'+b.dataset.sede)}if(k==='escape')back();return}
     if(ui==='rt'){if(k==='1')start('centro');if(k==='2')start('r27');if(k==='3')start('sjlibre');if(k==='4')start('r32');if(k==='5')start('tilaran');if(k==='6')start('alajuela');if(k==='7')start('manuel');if(k==='8')start('cerro');if(k==='escape')back();return}
     if(ui==='garage'){if(k==='a'||k==='arrowleft')garage(-1,0);if(k==='d'||k==='arrowright')garage(1,0);if(k==='w'||k==='arrowup')garage(0,-1);if(k==='s'||k==='arrowdown')garage(0,1);if(k==='enter'||k==='escape')back();return}
     if(ui==='theory'){theoryKey(k);return}
@@ -2618,7 +2704,7 @@ function back(){show('menu');ui='menu';refreshMenu()}
 function openPlanteles(){show('plScr');ui='pl'}
 function openRutas(){show('rtScr');ui='rt'}
 function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);if(engG&&S.paused)engG.gain.value=0}
-$('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};for(const b of document.querySelectorAll('#plScr [data-sede]'))b.onclick=()=>{audioInit();start('pl_'+b.dataset.sede)};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtM').onclick=()=>{audioInit();start('manuel')};$('rtD').onclick=()=>{audioInit();start('cerro')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
+$('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};for(const b of document.querySelectorAll('#plScr [data-sede]'))b.onclick=()=>{audioInit();start('pl_'+b.dataset.sede)};for(const b of document.querySelectorAll('#plScr [data-of]'))b.onclick=()=>{audioInit();start('of_'+b.dataset.of)};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtM').onclick=()=>{audioInit();start('manuel')};$('rtD').onclick=()=>{audioInit();start('cerro')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
 $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
 $('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
