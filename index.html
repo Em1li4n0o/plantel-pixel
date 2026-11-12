@@ -157,7 +157,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <div id="toasts"></div>
     <div id="banner"></div>
     <div id="dlg" class="hidden"></div>
-    <div id="keys">WASD manejar · S freno (otro toque = reversa) · Q/E direccionales · H intermitentes · C cinturón · B pitar · G marcha baja · V vista piloto (Z/X lados · F arriba) · T bajarse/subirse · SHIFT turbo (arcade) · L luces · O radio · I voz del instructor · ESPACIO freno de mano · P pausa · M mapa · +/- zoom · N sonido · R reiniciar</div>
+    <div id="keys">WASD manejar · S freno (otro toque = reversa) · Q/E direccionales · H intermitentes · C cinturón · B pitar · G marcha baja · V vista piloto (Z/X lados · F arriba) · T bajarse/subirse · ARRASTRE mirar alrededor · SHIFT turbo (arcade) · L luces · O radio · I voz del instructor · ESPACIO freno de mano · P pausa · M mapa · +/- zoom · N sonido · R reiniciar</div>
   </div>
 
   <div id="menu" class="screen">
@@ -2194,7 +2194,7 @@ function render3D(V,C,W,P,t,mirror){CURW=W;if(W.hm)C.z+=hgt(W,C.x,C.y);
   LIGHTQ=[];drawObjects3D(V,C,W,P,t,mirror?220:340,mirror);atmo3D(V,C,W,P,t,mirror);flushLights(V.ctx,C,V);
   if(S&&S.W===W){const ctx=V.ctx;if(S.inTun&&W.tunPts){ctx.save();ctx.globalCompositeOperation='lighter';for(const q of W.tunPts){const B=bill(C,V,q[0],q[1],9.5);if(B&&B.f<200)glow(ctx,B.x,B.y,Math.max(2,2.2*B.k),'rgba(255,170,60,.9)')}ctx.restore()}
     if(S.fogK>.02){ctx.fillStyle=`rgba(214,222,228,${.55*S.fogK})`;ctx.fillRect(0,0,V.w,V.h)}}}
-function cockpit(P,t){const col=P.col;const ox=Math.round(-(S.look||0)*215),oy=Math.round((S.pitch||0)*70);
+function cockpit(P,t){const col=P.col;const ox=Math.round(-clamp((S.look||0)+(S.yaw||0),-1.4,1.4)*215),oy=Math.round((S.pitch||0)*70);
   if(isMoto(P.type)){// vista desde la moto o la bici: tanque, manubrio con espejos y tablero pequeño
     const bk=VEH[P.type].bike,kmh=Math.round(Math.abs(P.v)*KMH),lim=S.lim||S.W.limit,on=Math.floor(t*2.6)%2===0;g.save();g.translate(ox,oy);
     if(!bk){g.fillStyle=shade(col,-.15);g.beginPath();g.moveTo(140,216);g.lineTo(162,192);g.lineTo(222,192);g.lineTo(244,216);g.fill();g.fillStyle=shade(col,.25);g.fillRect(170,193,44,2)}
@@ -2362,6 +2362,14 @@ function mapClick(e){if(!S||!S.mapOpen||!S.mapT)return false;const r=$('game').g
   else{const q=snapRoad(S.W,wx,wy);if(!q)return true;const P=S.P;P.x=q.x;P.y=q.y;P.h=q.h;P.v=0;P.thr=0;P.steer=0}
   S.mapOpen=false;sfx.good();toast('¡LISTO!','Llegó al lugar elegido','good');return true}
 
+// ===================== MIRAR ALREDEDOR (mouse o dedo) =====================
+// En vista de piloto, desde atrás o a pie: arrastre sobre la pantalla para girar la cámara; al soltar vuelve sola al frente.
+const DRAG={on:false,id:null,x:0,y:0,t:0};
+addEventListener('pointerdown',e=>{if(!S||!S.fp||S.mapOpen||S.over||S.replay)return;const t=e.target;if(t.closest&&t.closest('button,.tb,#dlg,input,a'))return;if(!(t.id==='game'||(t.closest&&t.closest('#hud,#wrap'))))return;DRAG.on=true;DRAG.id=e.pointerId;DRAG.x=e.clientX;DRAG.y=e.clientY});
+addEventListener('pointermove',e=>{if(!DRAG.on||e.pointerId!==DRAG.id||!S)return;const r=$('game').getBoundingClientRect(),k=VW/r.width;S.yaw=clamp((S.yaw||0)+(e.clientX-DRAG.x)*k*.012,-3.1,3.1);S.lp=clamp((S.lp||0)+(e.clientY-DRAG.y)*k*.008,-.9,.9);DRAG.x=e.clientX;DRAG.y=e.clientY;DRAG.t=performance.now()});
+addEventListener('pointerup',e=>{if(e.pointerId===DRAG.id){DRAG.on=false;DRAG.t=performance.now()}});addEventListener('pointercancel',()=>{DRAG.on=false});
+function lookRelax(dt){if(!S||DRAG.on||performance.now()-DRAG.t<1200)return;const k=Math.min(1,dt*3);S.yaw=(S.yaw||0)*(1-k);S.lp=(S.lp||0)*(1-k);if(Math.abs(S.yaw)<.002)S.yaw=0}
+
 // ===================== ENTRADA =====================
 const keys={},pressed={};
 addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA'){if(e.key==='Escape')e.target.blur();return}const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright'].includes(k))e.preventDefault();if(!keys[k])pressed[k]=true;keys[k]=true;if(!e.repeat)onKey(k);audioInit()});
@@ -2453,24 +2461,25 @@ function frame(now){requestAnimationFrame(frame);try{tick(now)}catch(e){console.
 function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   if(ui==='theory'){if(TH.mode)thHead();const q=TH.mode&&TH.list[TH.i];if(q&&q.s&&q.s.endsWith('f'))drawSign(q.s,performance.now()/1000)}
   if(S&&S.replay){drawReplay(dt);return}
+  lookRelax(dt);
   if(S){
     if(!S.paused&&!S.over&&!S.mapOpen){acc+=dt;while(acc>=1/60){step(1/60);acc-=1/60;for(const k in pressed)delete pressed[k];if(S.over)break}}else{acc=0;for(const k in pressed)delete pressed[k]}
     const W=S.W,P=S.P;const sh=S.shake>0?(S.shake-=dt,S.shake*6):0;// cámara: el carro siempre al centro de la pantalla; zoom con + / -
     const zm=S.zoom||1,vw=VW/zm,vh=VH/zm,FC=S.foot||P;S.cx=FC.x-vw/2+(Math.random()-.5)*sh;S.cy=FC.y-vh/2+(Math.random()-.5)*sh;
     const ix=Math.round(S.cx*zm)/zm,iy=Math.round(S.cy*zm)/zm;$('hud').classList.toggle('fp',!!S.fp&&!S.chase);$('hud').classList.toggle('map',!!S.mapOpen);
     if(S.mapOpen){const tg=updateHUD();drawFullMap(W,P,S.t,tg)}
-    else if(S.fp&&S.foot&&S.chase){const F=S.foot;S.camH=nA((S.camH||F.h)+nA(F.h-(S.camH||F.h))*Math.min(1,dt*3));const ch=S.camH,c=Math.cos(ch),s=Math.sin(ch);VMAIN.hz=74;
+    else if(S.fp&&S.foot&&S.chase){const F=S.foot;S.camH=nA((S.camH||F.h)+nA(F.h-(S.camH||F.h))*Math.min(1,dt*3));const ch=S.camH+(S.yaw||0),c=Math.cos(ch),s=Math.sin(ch);VMAIN.hz=Math.round(74+(S.lp||0)*80);
       render3D(VMAIN,{x:F.x-c*11,y:F.y-s*11,z:6.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
-    else if(S.fp&&S.foot){const F=S.foot,lt=keys.z?-1.05:keys.x?1.05:0;S.look=(S.look||0)+(lt-(S.look||0))*Math.min(1,dt*7);const hh=F.h+S.look;VMAIN.hz=84+Math.round(Math.sin(F.an*9)*(F.v>1?1:0));
+    else if(S.fp&&S.foot){const F=S.foot,lt=keys.z?-1.05:keys.x?1.05:0;S.look=(S.look||0)+(lt-(S.look||0))*Math.min(1,dt*7);const hh=F.h+S.look+(S.yaw||0);VMAIN.hz=Math.round((S.lp||0)*90)+84+Math.round(Math.sin(F.an*9)*(F.v>1?1:0));
       render3D(VMAIN,{x:F.x,y:F.y,z:3,h:hh,c:Math.cos(hh),s:Math.sin(hh)},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(F,tg);drawMini(W,F,tg)}
-    else if(S.fp&&S.chase&&!S.foot){S.camH=nA(S.camH+nA(P.h-S.camH)*Math.min(1,dt*4));const ch=S.camH,c=Math.cos(ch),s=Math.sin(ch),back=24+Math.abs(P.v)*.06;VMAIN.hz=66;
+    else if(S.fp&&S.chase&&!S.foot){S.camH=nA(S.camH+nA(P.h-S.camH)*Math.min(1,dt*4));const ch=S.camH+(S.yaw||0),c=Math.cos(ch),s=Math.sin(ch),back=24+Math.abs(P.v)*.06;VMAIN.hz=Math.round(66+(S.lp||0)*80);
       render3D(VMAIN,{x:P.x-c*back,y:P.y-s*back,z:10.5,h:ch,c,s},W,P,S.t,false);g.drawImage(VMAIN.c,0,0);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
     else if(S.fp){const c=Math.cos(P.h),s=Math.sin(P.h);
       // cabeza: Z/X mirar a los lados (espejos laterales), F mirar hacia arriba; se inclina sola al detenerse junto a un semáforo
       const lt=keys.z?-1.05:keys.x?1.05:0;S.look=(S.look||0)+(lt-(S.look||0))*Math.min(1,dt*7);
       let pt=keys.f?1:0;if(!pt&&Math.abs(P.v)<4)for(const st of W.stops){if(st.kind!=='light')continue;const hz2=st.dir==='E'||st.dir==='W';const lat=hz2?P.y:P.x;if(lat<st.a-3||lat>st.b+3)continue;const sg=(st.dir==='E'||st.dir==='S')?1:-1;const d=(st.pos-(hz2?P.x:P.y))*sg;const dv=dirVec[st.dir];if(d>-2&&d<30&&(c*dv[0]+s*dv[1])>.5){pt=.75;break}}
-      S.pitch=(S.pitch||0)+(pt-(S.pitch||0))*Math.min(1,dt*5);const slp=P.slope?P.slAl*P.slope.grade:0;S.slp=(S.slp||0)+(slp-(S.slp||0))*Math.min(1,dt*4);VMAIN.hz=Math.round(84+S.pitch*80-S.slp*280);
-      const hh=P.h+S.look;render3D(VMAIN,{x:P.x+c+s*1.5,y:P.y+s-c*1.5,z:4,h:hh,c:Math.cos(hh),s:Math.sin(hh)},W,P,S.t,false);
+      S.pitch=(S.pitch||0)+(pt-(S.pitch||0))*Math.min(1,dt*5);const slp=P.slope?P.slAl*P.slope.grade:0;S.slp=(S.slp||0)+(slp-(S.slp||0))*Math.min(1,dt*4);VMAIN.hz=Math.round(84+S.pitch*80-S.slp*280+(S.lp||0)*90);
+      const hh=P.h+S.look+(S.yaw||0);render3D(VMAIN,{x:P.x+c+s*1.5,y:P.y+s-c*1.5,z:4,h:hh,c:Math.cos(hh),s:Math.sin(hh)},W,P,S.t,false);
       render3D(VMIR,{x:P.x-c*2+s*1.5,y:P.y-s*2-c*1.5,z:4.3,h:P.h+Math.PI,c:-c,s:-s},W,P,S.t,true);
       if(S.look<-.25){const a=P.h+Math.PI+.22;render3D(VSL,{x:P.x+c*1.5+s*5,y:P.y+s*1.5-c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
       if(S.look>.25){const a=P.h+Math.PI-.22;render3D(VSR,{x:P.x+c*1.5-s*5,y:P.y+s*1.5+c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
