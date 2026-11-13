@@ -1000,16 +1000,18 @@ function buildCustom(D){const K=4;D=D||{w:80,h:60,roads:[{pts:[[10,30],[70,30]],
   for(const g of D.rings||[]){const pts=[];for(let i=0;i<=56;i++){const a=-i/56*Math.PI*2;pts.push([(g.x+Math.cos(a)*g.r)*K,(g.y+Math.sin(a)*g.r)*K])}const q=addPath(W,pts),w=(g.lanes||1)*(g.laneW||4.5);q.hw=w*K/2;q.oneway=true;q.noCenter=true;
     W.circObs.push({x:g.x*K,y:g.y*K,r:Math.max(1,(g.r-w/2)*K-.6),type:'isla'})}
   for(const a of D.areas||[])if(a.kind==='asfalto'&&a.pts&&a.pts.length>2){const q=P(a.pts);W.ppaved.push(q);W.planes.push(q)}
+  W.roofs=[];for(const a of D.areas||[])if(a.kind==='techo'&&a.pts&&a.pts.length>2){const q=P(a.pts);q.h=(a.h||4.2)*K;W.roofs.push(q)}
   for(const b of D.bldgs||[]){if(!b.pts||b.pts.length<3)continue;const pp=P(b.pts),cx=pp.reduce((s,r)=>s+r[0],0)/pp.length,cy=pp.reduce((s,r)=>s+r[1],0)/pp.length;
     W.pblds.push({p:pp,ht:(b.h||6)*K*.5,col:b.col||'#ecebe4',roof:shade(b.col||'#ecebe4',-.12),cx,cy,rad:Math.max(...pp.map(r=>Math.hypot(r[0]-cx,r[1]-cy)))});
     for(let i=0;i<pp.length;i++){const A=pp[i],B=pp[(i+1)%pp.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=2.5)W.circObs.push({x:A[0]+(B[0]-A[0])*t/L,y:A[1]+(B[1]-A[1])*t/L,r:1.5,type:'muro'})}}
   for(const c of D.cones||[])W.cones.push({x:c.x*K,y:c.y*K,vx:0,vy:0,hit:false,green:c.col==='v',fatal:c.fatal?'Tocó un cono marcado: prueba perdida':undefined});
   W.pstops=[];W.cedas=[];(D.signs||[]).forEach((s,i)=>{const o={x:s.x*K,y:s.y*K,ux:Math.cos(s.ang||0),uy:Math.sin(s.ang||0),w:(s.w||7)*K/2};if(s.kind==='alto')W.pstops.push(Object.assign(o,{code:'alto'+i,txt:'No hizo ALTO total',minV:99}));else W.cedas.push(o)});
+  for(const q of W.roofs)for(let i=0;i<q.length;i++){const A=q[i],B=q[(i+1)%q.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=24){const x=A[0]+(B[0]-A[0])*t/L,y=A[1]+(B[1]-A[1])*t/L;if(pavedW(W,x,y))continue;const b={x:x-1,y:y-1,w:2,h:2,ht:q.h,type:'bld',col:'#8d99ae',roof:'#5c677d',poste:true};W.blds.push(b);W.circObs.push({x,y,r:1.3,type:'poste'})}}
   W.pslots=[];for(const s of D.slots||[]){const o={cx:s.x*K,cy:s.y*K,ang:s.ang||0,hl:(s.l||5)*K/2,hw:(s.w||2.5)*K/2,target:!!s.target,num:s.num};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);if(s.ocupado&&!s.target)addParked(W,o.cx,o.cy,o.ang,pick(CARCOLS),pick(['sedan','hatch','suv']))}
   W.pslot=W.pslots.find(o=>o.target)||null;
   for(const p of D.people||[]){const x=p.x*K,y=p.y*K;W.walkers.push({r:{seg:[[x,y],[x,y]]},s:0,sp:0,an:Math.random()*9,x:0,y:0,staff:p.kind==='evaluador',col:p.kind==='evaluador'?'#1d3557':undefined})}
   const st=D.start||{x:(D.w||100)/2,y:(D.h||80)/2,ang:0};W.spawn={x:st.x*K,y:st.y*K,h:st.ang||0};W.dests=[{n:'INICIO',x:W.spawn.x,y:W.spawn.y}];W.jay=null;
-  W.drawUnder=x=>{x.fillStyle='#4f8a3c';x.fillRect(0,0,W.w,W.h);const R=rng(77);for(let i=0;i<W.w*W.h/40;i++){x.fillStyle=R()<.5?'#5a9844':'#447a34';x.fillRect(R()*W.w|0,R()*W.h|0,2,1)}
+  W.drawUnder=x=>{const cc=D.ground==='concreto';x.fillStyle=cc?'#8a867c':'#4f8a3c';x.fillRect(0,0,W.w,W.h);const R=rng(77);for(let i=0;i<W.w*W.h/40;i++){x.fillStyle=cc?(R()<.5?'#948f84':'#7f7b72'):(R()<.5?'#5a9844':'#447a34');x.fillRect(R()*W.w|0,R()*W.h|0,2,1)}
     const fillP=(pts,c,st)=>{const pp=P(pts);x.fillStyle=c;x.beginPath();x.moveTo(pp[0][0],pp[0][1]);for(const r of pp)x.lineTo(r[0],r[1]);x.closePath();x.fill();if(st){x.strokeStyle=st;x.lineWidth=1;x.stroke()}};
     for(const a of D.areas||[])if(a.kind!=='asfalto'&&a.pts&&a.pts.length>2)fillP(a.pts,a.kind==='zacate'?'#4c9a45':'#b9b6ac',a.kind==='zacate'?'#f2c230':'#8d8a80');
     for(const b of D.bldgs||[])if(b.pts&&b.pts.length>2){fillP(b.pts.map(q=>[q[0]+.8,q[1]+.8]),'rgba(0,0,0,.3)');fillP(b.pts,b.col||'#ecebe4','rgba(18,16,28,.6)')}
@@ -2614,7 +2616,7 @@ function drawWorld(W,P,ix,iy,t){
   if(W.tower){const b=W.tower,ph=(Math.sin(t*3)+1)/2,col=ph>.5?'#ff3df2':'#3df2ff',gl=ph>.5?'#ff3df255':'#3df2ff55';const tx=X(b.x+b.w/2-23),ty=Y(b.y+27);
     if(tx>-60&&tx<VW+10&&ty>-30&&ty<VH+10){{const lx=X(b.x+b.w/2)-26,ly=Y(b.y+b.h/2)-17;g.fillStyle=ph>.5?'rgba(61,99,242,.55)':'rgba(61,99,242,.2)';g.fillRect(lx-3,ly-3,58,40);g.drawImage(PZLOGO,lx,ly)}
       if(Math.floor(t*2)%2){g.fillStyle='#ff2a2a';g.fillRect(X(b.x+3),Y(b.y+3),2,2);g.fillRect(X(b.x+b.w-5),Y(b.y+b.h-5),2,2)}}}
-  if(W.roof){const q=W.roof;g.save();g.globalAlpha=.62;g.fillStyle='#1f3f8f';g.beginPath();g.moveTo(X(q[0][0]),Y(q[0][1]));for(const r of q)g.lineTo(X(r[0]),Y(r[1]));g.fill();g.globalAlpha=.5;g.strokeStyle='#8fb4ff';g.lineWidth=1;
+  for(const q of(W.roofs||(W.roof?[W.roof]:[]))){g.save();g.globalAlpha=.62;g.fillStyle='#1f3f8f';g.beginPath();g.moveTo(X(q[0][0]),Y(q[0][1]));for(const r of q)g.lineTo(X(r[0]),Y(r[1]));g.fill();g.globalAlpha=.5;g.strokeStyle='#8fb4ff';g.lineWidth=1;
     for(let k=1;k<12;k++){const a=k/12;g.beginPath();g.moveTo(X(q[0][0]+(q[3][0]-q[0][0])*a),Y(q[0][1]+(q[3][1]-q[0][1])*a));g.lineTo(X(q[1][0]+(q[2][0]-q[1][0])*a),Y(q[1][1]+(q[2][1]-q[1][1])*a));g.stroke()}g.restore()}
   if(W.tolls)for(const T of W.tolls){const bx=X(T.x+T.dir*13);if(bx<-5||bx>VW+5)continue;const near=Math.abs(P.x-T.x)<120&&Math.abs(P.y-T.y)<16;
     for(const ly of[T.y-8,T.y+8]){g.fillStyle='#2b2d42';g.fillRect(bx-1,Y(ly+(ly<T.y?-7:7))-1,3,3);if(near&&!T.paid&&Math.abs(P.y-ly)<9){for(let k=0;k<12;k++){g.fillStyle=(k>>1)%2?'#fff':'#e63946';g.fillRect(bx,Y(ly-6)+k,1,1)}}}}
@@ -2789,6 +2791,7 @@ function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];con
   const add=(x,y,rad,fn)=>{const q=camXform(C,x,y);if(q.f<-rad||q.f>maxD)return;if(Math.abs(q.r)>Math.max(0,q.f)*(V.cx/V.foc)+rad+6)return;items.push({d:q.f,fn,x,y,rad,r:q.r})};
   const addO=(x,y,rad,fn)=>add(x,y,rad,mirror||TOUCH?fn:()=>{OUTL3D=2;try{fn()}finally{OUTL3D=0}});
   if(S&&S.exam&&!mirror){const tk=S.tasks[S.task];if(tk&&tk.zone){poly(ctx,proj(C,V,zonePts(tk.zone).map(p=>[p[0],p[1],.05])),Math.floor(t*2.6)%2?'rgba(255,210,63,.45)':'rgba(255,210,63,.2)')}}
+  if(W.roofs)for(const q of W.roofs){const cx=q.reduce((s,r)=>s+r[0],0)/q.length,cy=q.reduce((s,r)=>s+r[1],0)/q.length,rad=Math.max(...q.map(r=>Math.hypot(r[0]-cx,r[1]-cy)));add(cx,cy,rad,()=>poly(ctx,proj(C,V,q.map(r=>[r[0],r[1],q.h||16])),'rgba(31,63,143,.88)'))}
   if(W.pblds)for(const b of W.pblds)add(b.cx,b.cy,b.rad,()=>box(ctx,C,V,b.p,0,b.ht,b.col,{win:true,top:b.roof}));
   for(const b of W.blds)addO(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<85+Math.max(b.w,b.h)/2;
     if(b.parts){parts3D(ctx,C,V,b,near);if(!b.tower)return}
