@@ -2217,10 +2217,12 @@ function streetTasks(){return[
 // ===================== FÍSICA DEL JUGADOR =====================
 function circles(o){const L=o.L||14,r=(o.Wd||8)/2,c=Math.cos(o.h),s=Math.sin(o.h);const half=L/2-r;const n=Math.max(2,Math.ceil(2*half/r)+1);const out=[];
   for(let i=0;i<n;i++){const k=-half+2*half*i/(n-1);out.push({x:o.x+c*k,y:o.y+s*k,r})}return out}
+let SQG=null,SQO=null;
+function muG(){return 32.7*.8*(S.grip||1)*(S.arcade?1.25:1)}
 function updatePlayer(W,P,dt){
   const sp=P.sp;const up=keys.w||keys.arrowup,dn=keys.s||keys.arrowdown,lf=keys.a||keys.arrowleft,rt=keys.d||keys.arrowright,hb=keys[' '];
   const pU=pressed.w||pressed.arrowup,pD=pressed.s||pressed.arrowdown;const stopped=Math.abs(P.v)<.6;
-  P.brake=false;let gas=false;
+  P.brake=false;let gas=false;P.aLong=0;
   // pedales progresivos: el acelerador se hunde poco a poco, el freno un poco más rápido
   const gasKey=P.gear===1?up:dn,brkKey=P.gear===1?dn:up;
   P.thr=gasKey?Math.min(1,P.thr+dt*.6):Math.max(0,P.thr-dt*3);
@@ -2228,12 +2230,12 @@ function updatePlayer(W,P,dt){
   const thr=.2+.8*P.thr,bp=.3+.7*P.bp;
   if(P.gear===1){
     if(pD&&stopped){P.gear=-1;P.v=0;P.thr=0;sfx.gear()}
-    else{if(up){P.v+=sp.acc*thr*dt*(1-Math.max(0,P.v)/sp.vmax);gas=true}
-      if(dn){P.brake=true;if(P.v>0)P.v=Math.max(0,P.v-sp.brk*bp*dt*(S.grip||1));else P.v=0}}
+    else{if(up){const a=sp.acc*thr*(1-Math.max(0,P.v)/sp.vmax);P.aLong=a;P.v+=a*dt;gas=true}
+      if(dn){P.brake=true;if(P.v>0){const dec=Math.min(sp.brk*1.45*bp,muG());P.aLong=-dec;P.v=Math.max(0,P.v-dec*dt)}else P.v=0}}
   }else{
     if(pU&&stopped){P.gear=1;P.v=0;P.thr=0;sfx.gear()}
     else{if(dn){P.v-=4*thr*dt*(1-Math.max(0,-P.v)/12);gas=true}
-      if(up){P.brake=true;if(P.v<0)P.v=Math.min(0,P.v+sp.brk*bp*dt*(S.grip||1));else P.v=0}}
+      if(up){P.brake=true;if(P.v<0){const dec=Math.min(sp.brk*1.45*bp,muG());P.aLong=-dec;P.v=Math.min(0,P.v+dec*dt)}else P.v=0}}
   }
   if(hb){P.brake=true;const d=48*dt;P.v=Math.abs(P.v)<d?0:P.v-Math.sign(P.v)*d}
   if(!gas){const d=(1.4+.0012*P.v*P.v)*dt;P.v=Math.abs(P.v)<d?0:P.v-Math.sign(P.v)*d}
@@ -2244,10 +2246,17 @@ function updatePlayer(W,P,dt){
   if(P.low&&P.gear===1){if(!gas&&P.v>2)P.v-=5*(P.v/22)*dt;if(P.v>27)P.v-=Math.min(P.v-27,14*dt)}
   if(S.arcade){const tb=(keys.shift)&&P.gear===1&&P.nitro>0;P.boost=tb;if(tb){P.v=Math.min(sp.vmax*1.4,P.v+sp.acc*1.6*dt);P.nitro=Math.max(0,P.nitro-dt*.35)}else P.nitro=Math.min(1,P.nitro+dt*.12);
     if(P.spin){P.h=nA(P.h+P.spin*dt);P.spin*=Math.pow(.08,dt);if(Math.abs(P.spin)<.05)P.spin=0}}
-  const maxS=sp.steer/(1+Math.abs(P.v)/75);const tgt=((rt?1:0)-(lf?1:0))*maxS;const rate=(tgt===0?4:2.8)*dt;P.steer+=clamp(tgt-P.steer,-rate,rate);
-  {let yaw=P.v/sp.wb*Math.tan(P.steer);const g=S.grip||1;if(g<1&&Math.abs(P.v)>30)yaw*=.7+.3*g;if(S.arcade&&hb&&Math.abs(P.v)>25&&Math.abs(P.steer)>.15){yaw*=1.7;P.v*=1-.25*dt}P.h=nA(P.h+yaw*dt)}
+  // volante más duro (menos ángulo) a alta velocidad, como la dirección real
+  const maxS=sp.steer/(1+Math.abs(P.v)/60);const tgt=((rt?1:0)-(lf?1:0))*maxS;const rate=(tgt===0?4:2.8)*dt;P.steer+=clamp(tgt-P.steer,-rate,rate);
+  {let yaw=P.v/sp.wb*Math.tan(P.steer);const aMax=muG()*1.12,aL=Math.min(Math.abs(P.aLong||0),aMax*.95);
+    // transferencia de peso: al frenar se carga el frente (gira un poco más), al acelerar se descarga (gira menos)
+    const wt=P.aLong<0?1+.1*Math.min(1,-P.aLong/20):1-.12*Math.min(1,(P.aLong||0)/8);
+    const latMax=Math.sqrt(aMax*aMax-aL*aL)*wt,lat=Math.abs(P.v*yaw);P.slip=0;
+    if(lat>latMax&&Math.abs(P.v)>3){const k=latMax/lat;P.slip=Math.min(1,1-k+.05);yaw*=k;P.v-=Math.sign(P.v)*Math.min(Math.abs(P.v),(lat-latMax)*.12*dt)}if(S.arcade&&hb&&Math.abs(P.v)>25&&Math.abs(P.steer)>.15){yaw*=1.7;P.v*=1-.25*dt}P.h=nA(P.h+yaw*dt)}
   P.x+=Math.cos(P.h)*P.v*dt;P.y+=Math.sin(P.h)*P.v*dt;
-  if((P.brake&&Math.abs(P.v)>32)||(hb&&Math.abs(P.v)>18)||(Math.abs(P.steer)>.4&&Math.abs(P.v)>45)){const sk=W.skid.getContext('2d');sk.fillStyle='rgba(15,15,18,.55)';const c=Math.cos(P.h),s=Math.sin(P.h);
+  // aviso educativo: entró muy rápido a la curva
+  if(P.slip>.22&&Math.abs(P.v)*KMH>22){S.slipT=(S.slipT||0)+dt;if(S.slipT>.5&&!(S.slipWarn>S.t)){S.slipWarn=S.t+10;toast('¡MUY RÁPIDO PARA ESA CURVA!','Las llantas no agarran: frene ANTES de la curva, en recta, y gire suave','bad');say('Muy rápido para esa curva. Frene antes, en recta.')}}else S.slipT=0;
+  if((P.brake&&-(P.aLong||0)>=muG()*.97&&Math.abs(P.v)>20)||(hb&&Math.abs(P.v)>18)||P.slip>.2){const sk=W.skid.getContext('2d');sk.fillStyle='rgba(15,15,18,.55)';const c=Math.cos(P.h),s=Math.sin(P.h);
     for(const l of[-P.Wd/2+1,P.Wd/2-1])sk.fillRect(Math.round(P.x-c*(P.L/2-2)-s*l),Math.round(P.y-s*(P.L/2-2)+c*l),1,1)}
   let hit=null,spd=Math.abs(P.v);
   for(let it=0;it<2;it++){for(const o of W.obst){if(P.x<o.x-14||P.x>o.x+o.w+14||P.y<o.y-14||P.y>o.y+o.h+14)continue;
@@ -3291,8 +3300,11 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     else{g.fillStyle='#2f6b2a';g.fillRect(0,0,VW,VH);g.save();g.setTransform(zm,0,0,zm,0,0);drawWorld(W,P,ix,iy,S.t);g.restore();atmo2D(W,P,ix,iy,zm,S.t);evOver(false);const tg=updateHUD();if(tg&&!S.over)drawTarget(tg,ix,iy,S.t,zm);drawMini(W,P,tg)}
     if(P.sea>0&&!S.over){g.fillStyle=`rgba(20,110,160,${Math.min(.55,P.sea*.3)})`;g.fillRect(0,0,VW,VH)}
     if(!S.mapOpen)post32();
+    if(engG&&AC){if(!SQG){try{const o=AC.createOscillator(),gn=AC.createGain();o.type='sawtooth';o.frequency.value=820;gn.gain.value=0;const f=AC.createBiquadFilter();f.type='bandpass';f.frequency.value=1100;f.Q.value=3;o.connect(f);f.connect(gn);gn.connect(master);o.start();SQO=o;SQG=gn}catch(e){SQG={gain:{}}}}
+      const sl=(muted||S.paused||S.over)?0:Math.max(P.slip||0,P.brake&&-(P.aLong||0)>=muG()*.97&&Math.abs(P.v)>20?.5:0);SQG.gain.value=Math.min(.05,sl*.07);if(SQO)SQO.frequency.value=760+Math.random()*120}
     if(engG&&AC){engG.gain.value=(muted||S.paused||S.over)?0:.035;eng.frequency.value=38+Math.abs(P.v)*1.7+(keys.w||keys.s?8:0)}
   }else{
+    if(SQG&&SQG.gain)SQG.gain.value=0;
     for(const k in pressed)delete pressed[k];
     if(!A){const W=buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;A={W,t:0,cx:300,cy:380}}
     A.t+=dt;updateWorld(A.W,null,dt,A.t);A.cx=330+Math.sin(A.t*.05)*300;A.cy=380+Math.cos(A.t*.07)*230;
