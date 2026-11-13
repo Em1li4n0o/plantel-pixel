@@ -889,7 +889,7 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
     W.pblds.push({p:pp,ht:(b.h||6)*K*.5,col:b.col||'#ecebe4',roof:shade(b.col||'#ecebe4',-.12),cx,cy,rad:Math.max(...pp.map(r=>Math.hypot(r[0]-cx,r[1]-cy)))});
     for(let i=0;i<pp.length;i++){const A=pp[i],B=pp[(i+1)%pp.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=2.5)W.circObs.push({x:A[0]+(B[0]-A[0])*t/L,y:A[1]+(B[1]-A[1])*t/L,r:1.5,type:'muro'})}}
   for(const c of D.cones||[])W.cones.push({x:c.x*K,y:c.y*K,vx:0,vy:0,hit:false,green:c.col==='v',fatal:c.fatal?'Tocó un cono marcado: prueba perdida':undefined});
-  W.pstops=[];W.cedas=[];(D.signs||[]).forEach((s,i)=>{const o={x:s.x*K,y:s.y*K,ux:Math.cos(s.ang||0),uy:Math.sin(s.ang||0),w:(s.w||7)*K/2};if(s.kind==='alto')W.pstops.push(Object.assign(o,{code:'alto'+i,txt:'No hizo ALTO total',minV:99}));else W.cedas.push(o)});
+  W.pstops=[];W.cedas=[];W.cLights=[];(D.signs||[]).forEach((s,i)=>{const o={x:s.x*K,y:s.y*K,ux:Math.cos(s.ang||0),uy:Math.sin(s.ang||0),w:(s.w||7)*K/2};if(s.kind==='sem3'||s.kind==='sem2'){W.cLights.push(Object.assign(o,{id:i,kind:s.kind,verde:+s.verde||12,amarillo:+s.amarillo||3,rojo:+s.rojo||12,desfase:+s.desfase||0}));return}if(s.kind==='alto')W.pstops.push(Object.assign(o,{code:'alto'+i,txt:'No hizo ALTO total',minV:99}));else W.cedas.push(o)});
   for(const q of W.roofs)for(let i=0;i<q.length;i++){const A=q[i],B=q[(i+1)%q.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=24){const x=A[0]+(B[0]-A[0])*t/L,y=A[1]+(B[1]-A[1])*t/L;if(pavedW(W,x,y))continue;const b={x:x-1,y:y-1,w:2,h:2,ht:q.h,type:'bld',col:'#8d99ae',roof:'#5c677d',poste:true};W.blds.push(b);W.circObs.push({x,y,r:1.3,type:'poste'})}}
   // vallas: malla y verja (líneas que no se pueden atravesar), muro y barrera naranja (con volumen en 3D)
   for(const f of D.fences||[]){if(!f.pts||f.pts.length<2||f.kind==='pintura')continue;const q=P(f.pts);
@@ -927,6 +927,7 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
     for(const a of D.areas||[])if(a.kind==='amarillo'&&a.pts&&a.pts.length>2){const q=P(a.pts);x.fillStyle='#f2c230';x.beginPath();x.moveTo(q[0][0],q[0][1]);for(const t of q)x.lineTo(t[0],t[1]);x.closePath();x.fill()}
     for(const f of D.fences||[])if(f.kind==='pintura'&&f.pts&&f.pts.length>1)lineP(P(f.pts),'#f2c230',null,Math.max(1,(f.w||.15)*K));
     for(const s of W.pstops){bar(s.x,s.y,-s.uy,s.ux,-s.w+1,s.w-1,'#ecece4');floor('ALTO',s.x-s.ux*7,s.y-s.uy*7,s.ux,s.uy);sign(s.x+(-s.uy)*(s.w+3),s.y+s.ux*(s.w+3),'alto')}
+    for(const s of W.cLights||[])bar(s.x,s.y,-s.uy,s.ux,-s.w+1,s.w-1,'#ecece4');
     for(const s of W.cedas){bar(s.x,s.y,-s.uy,s.ux,-s.w,s.w,'#ecece4',2,1);floor('CEDA',s.x-s.ux*7,s.y-s.uy*7,s.ux,s.uy);sign(s.x+(-s.uy)*(s.w+3),s.y+s.ux*(s.w+3),'ceda')}
     for(const t of D.texts||[]){const a=t.ang||0,rot=((Math.round(a/(Math.PI/2))%4)+4)%4,L=String(t.t).length*4-1,w=rot%2?5:L,h=rot%2?L:5;ptext(x,String(t.t),Math.round(t.x*K-w/2),Math.round(t.y*K-h/2),t.col||'#ecece4',rot)}
     for(const o of W.pslots)if(o.num!=null){ptext(x,String(o.num),Math.round(o.cx)-2,Math.round(o.cy)-2,o.target?'#ffd23f':'#ecece4')}
@@ -944,6 +945,10 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
 const DLG_INGRESO=[['INSTRUCTOR','¡Buenos días! Bienvenido al plantel. Deténgase aquí un momento, por favor.'],['INSTRUCTOR','Me permite su cédula, el dictamen médico y los papeles del carro.'],['INSTRUCTOR','(revisa los documentos) Todo en orden. Gracias.'],['INSTRUCTOR','Con calma, respire. ¡Mucha suerte, todo va a salir muy bien!']];
 const DLG_FILA0=[['EVALUADOR','Ahora le voy a revisar el vehículo. Haga lo que le voy pidiendo, yo reviso por fuera.']];
 const DLG_FILA1=[['EVALUADOR','Muy bien, el vehículo está en orden.'],['EVALUADOR','Ojo: en el examen oficial le van a revisar MÁS cosas: llantas, cinturón, luces de freno y de retroceso, limpiaparabrisas, asiento y espejos bien acomodados.'],['EVALUADOR','Prepárese con un instructor de manejo o vea videos de la prueba práctica de Ciudad Vial antes de ir.'],['EVALUADOR','Espere su turno en la fila. Cuando lo llamen, empieza la fase dos.']];
+// SEMÁFOROS de los planteles creados: 3 luces (verde, amarillo, rojo) o 2 luces (verde y rojo). Ciclo en segundos, con desfase.
+function semState(L,t){const g=L.verde,y=L.kind==='sem3'?L.amarillo:0,rd=L.rojo,T=g+y+rd,k=(((t+L.desfase)%T)+T)%T;return k<g?'V':k<g+y?'A':'R'}
+function semRules(W,P,dt){for(const L of W.cLights){const dx=P.x-L.x,dy=P.y-L.y,al=dx*L.ux+dy*L.uy,lat=Math.abs(dy*L.ux-dx*L.uy),hd=Math.cos(P.h)*L.ux+Math.sin(P.h)*L.uy;
+  if(lat<L.w+2&&hd>.3&&P.gear===1){if(L.prev!=null&&L.prev<=0&&al>0){const st=semState(L,S.t);if(st==='R')fault('semR'+L.id,'Pasarse el semáforo en ROJO','I',10);else if(st==='A'&&Math.abs(P.v)*KMH>15)toast('AMARILLO','Con amarillo se detiene si puede hacerlo con seguridad','info')}L.prev=al}else L.prev=null}}
 function customExam(W,D){const K=4,E=D.exam;if(!E||!E.length)return null;const T=[],G=(x,y)=>({x:x*K,y:y*K}),near=(p,r)=>Math.hypot(S.P.x-p.x,S.P.y-p.y)<r*K;
   for(const st of E){const p=st.x!=null?G(st.x,st.y):null;
     if(st.tipo==='fase1'){T.push({txt:(st.txt||'FASE 1: póngase el cinturón [C], avance despacio y deténgase junto al EVALUADOR.'),tgt:p,check(){if(this.dl||still('f1',near(p,6),.8))return dlgRun(this,CV2_F1);return false},ok:'¡Documentos en orden!'});
@@ -2572,6 +2577,8 @@ function drawWorld(W,P,ix,iy,t){
   if(W.tower){const b=W.tower,ph=(Math.sin(t*3)+1)/2,col=ph>.5?'#ff3df2':'#3df2ff',gl=ph>.5?'#ff3df255':'#3df2ff55';const tx=X(b.x+b.w/2-23),ty=Y(b.y+27);
     if(tx>-60&&tx<VW+10&&ty>-30&&ty<VH+10){{const lx=X(b.x+b.w/2)-26,ly=Y(b.y+b.h/2)-17;g.fillStyle=ph>.5?'rgba(61,99,242,.55)':'rgba(61,99,242,.2)';g.fillRect(lx-3,ly-3,58,40);g.drawImage(PZLOGO,lx,ly)}
       if(Math.floor(t*2)%2){g.fillStyle='#ff2a2a';g.fillRect(X(b.x+3),Y(b.y+3),2,2);g.fillRect(X(b.x+b.w-5),Y(b.y+b.h-5),2,2)}}}
+  if(W.cLights)for(const L of W.cLights){const st=semState(L,t),px=X(L.x+(-L.uy)*(L.w+3)),py=Y(L.y+L.ux*(L.w+3)),n=L.kind==='sem3'?3:2;g.fillStyle='#111';g.fillRect(Math.round(px)-2,Math.round(py)-2-n*2,5,n*4+1);
+    const cols=L.kind==='sem3'?[['R','#ff2a2a'],['A','#ffd23f'],['V','#3ddc84']]:[['R','#ff2a2a'],['V','#3ddc84']];cols.forEach(([k,c],i)=>{g.fillStyle=st===k?c:'#333';g.fillRect(Math.round(px)-1,Math.round(py)-1-n*2+i*4,3,3)})}
   for(const q of(W.roofs||(W.roof?[W.roof]:[]))){g.save();g.globalAlpha=.62;g.fillStyle='#1f3f8f';g.beginPath();g.moveTo(X(q[0][0]),Y(q[0][1]));for(const r of q)g.lineTo(X(r[0]),Y(r[1]));g.fill();g.globalAlpha=.5;g.strokeStyle='#8fb4ff';g.lineWidth=1;
     for(let k=1;k<12;k++){const a=k/12;g.beginPath();g.moveTo(X(q[0][0]+(q[3][0]-q[0][0])*a),Y(q[0][1]+(q[3][1]-q[0][1])*a));g.lineTo(X(q[1][0]+(q[2][0]-q[1][0])*a),Y(q[1][1]+(q[2][1]-q[1][1])*a));g.stroke()}g.restore()}
   if(W.tolls)for(const T of W.tolls){const bx=X(T.x+T.dir*13);if(bx<-5||bx>VW+5)continue;const near=Math.abs(P.x-T.x)<120&&Math.abs(P.y-T.y)<16;
@@ -2747,6 +2754,9 @@ function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];con
   const add=(x,y,rad,fn)=>{const q=camXform(C,x,y);if(q.f<-rad||q.f>maxD)return;if(Math.abs(q.r)>Math.max(0,q.f)*(V.cx/V.foc)+rad+6)return;items.push({d:q.f,fn,x,y,rad,r:q.r})};
   const addO=(x,y,rad,fn)=>add(x,y,rad,mirror||TOUCH?fn:()=>{OUTL3D=2;try{fn()}finally{OUTL3D=0}});
   if(S&&S.exam&&!mirror){const tk=S.tasks[S.task];if(tk&&tk.zone){poly(ctx,proj(C,V,zonePts(tk.zone).map(p=>[p[0],p[1],.05])),Math.floor(t*2.6)%2?'rgba(255,210,63,.45)':'rgba(255,210,63,.2)')}}
+  if(W.cLights)for(const L of W.cLights){const sx=L.x+(-L.uy)*(L.w+3),sy=L.y+L.ux*(L.w+3);add(sx,sy,2,()=>{box(ctx,C,V,[[sx-.5,sy-.5],[sx+.5,sy-.5],[sx+.5,sy+.5],[sx-.5,sy+.5]],0,13,'#5c677d');const n=L.kind==='sem3'?3:2,st=semState(L,t);
+    box(ctx,C,V,[[sx-1.2,sy-1.2],[sx+1.2,sy-1.2],[sx+1.2,sy+1.2],[sx-1.2,sy+1.2]],13,13+n*2.2,'#1b1b22');const cols=L.kind==='sem3'?[['R','#ff2a2a'],['A','#ffd23f'],['V','#3ddc84']]:[['R','#ff2a2a'],['V','#3ddc84']];
+    cols.forEach(([k,c],i)=>{const B=bill(C,V,sx-L.ux*1.3,sy-L.uy*1.3,13+n*2.2-1.1-i*2.2);if(!B)return;ctx.fillStyle=st===k?c:'#2a2a30';ctx.beginPath();ctx.arc(B.x,B.y,Math.max(1,.8*B.k),0,7);ctx.fill();if(st===k)glow(ctx,B.x,B.y,Math.max(3,2.2*B.k),c+'66')})})}
   if(W.roofs)for(const q of W.roofs){const cx=q.reduce((s,r)=>s+r[0],0)/q.length,cy=q.reduce((s,r)=>s+r[1],0)/q.length,rad=Math.max(...q.map(r=>Math.hypot(r[0]-cx,r[1]-cy)));add(cx,cy,rad,()=>poly(ctx,proj(C,V,q.map(r=>[r[0],r[1],q.h||16])),'rgba(31,63,143,.88)'))}
   if(W.pblds)for(const b of W.pblds)add(b.cx,b.cy,b.rad,()=>box(ctx,C,V,b.p,0,b.ht,b.col,{win:true,top:b.roof}));
   for(const b of W.blds)addO(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<85+Math.max(b.w,b.h)/2;
@@ -3321,7 +3331,7 @@ function step(dt){
   if(S.foot){updateFoot(W,dt);P.v=0;P.thr=0;updateWorld(W,P,dt,S.t);return}
   const px=P.x,py=P.y;
   updatePlayer(W,P,dt);if(S.over)return;
-  rules(W,P,px,py,dt);if(S.over)return;if(W.tolls)tollRules(W,P,dt);if(W.r32)r32Rules(W,P,dt);if(W.pstops)pstopRules(W,P,dt);if(S.over)return;
+  rules(W,P,px,py,dt);if(S.over)return;if(W.tolls)tollRules(W,P,dt);if(W.r32)r32Rules(W,P,dt);if(W.pstops)pstopRules(W,P,dt);if(W.cLights&&W.cLights.length)semRules(W,P,dt);if(S.over)return;
   updateWorld(W,P,dt,S.t);if(S.over)return;
   if(S.exam){const tk=S.tasks[S.task];if(tk){if(!tk.started){tk.started=true;tk.start&&tk.start();say(tk.txt,true)}
       if(tk.check()){toast('✔ '+(tk.ok||'¡LISTO!'),'','good');sfx.good();S.task++;if(S.task>=S.tasks.length)endExam('done')}}}
