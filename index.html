@@ -862,47 +862,47 @@ function buildCV2(){HW=7;const W=newWorld('cvial',382,392);W.limit=20;W.ppaved=[
   const cone=(x,y,o={})=>W.cones.push(Object.assign({x,y,vx:0,vy:0,hit:false},o)),near=(x,y,d)=>W.cones.some(k=>Math.hypot(k.x-x,k.y-y)<d);
   const coneRow=(pts,off,step=7,o={})=>{const q=offLine(smoothLine(T(pts),3),off);let acc=0;for(let i=1;i<q.length;i++){const A=q[i-1],B=q[i],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<L;t+=1){acc+=1;if(acc>=step){acc=0;const x=A[0]+(B[0]-A[0])*t/L,y=A[1]+(B[1]-A[1])*t/L;if(!near(x,y,step*.6))cone(x,y,o)}}}};
   // ---- calle sur (entrada por la caseta del este, frente al techo solar)
-  const SOUTH=[[1105,1052],[1000,1052],[860,1054],[600,1055],[300,1055],[175,1052],[150,1040]];path(SOUTH,9);
+  const SOUTH=[[1105,1052],[1000,1052],[860,1054],[600,1055],[300,1055],[175,1052],[150,1040]];path(SOUTH,11);
   // ---- conector hacia el carril del toldo (fila) y carril del toldo hacia el oeste
-  const TOLDO=[[835,1052],[810,1010],[770,965],[700,952],[500,951],[300,951],[235,945],[205,920],[192,880],[188,800],[184,720],[182,670]];path(TOLDO,7,one);
+  const TOLDO=[[835,1052],[810,1010],[775,962],[700,946],[500,945],[300,945],[245,940],[215,915],[204,880],[200,800],[196,720],[194,670]];path(TOLDO,9.5,one);
   // ---- carril en S (zigzag) hasta la rotonda
-  const SL=[[182,670],[200,640],[240,624],[290,645],[322,690],[370,733],[440,750],[500,746],[548,738],[592,736],[615,700],[606,652],[574,612],[530,585]];path(SL,7.5,one);
+  const SL=[[194,670],[208,640],[240,624],[290,645],[322,690],[370,733],[440,750],[500,746],[548,738],[592,736],[615,700],[606,652],[574,612],[530,585]];path(SL,10,one);
   // ---- rotonda (antihorario visto desde arriba)
   const RC=[425,495],RR=112,ring=[];for(let i=0;i<=48;i++){const a=-i/48*Math.PI*2;ring.push([RC[0]+Math.cos(a)*RR,RC[1]+Math.sin(a)*RR])}
-  {const q=addPath(W,T(ring));q.hw=8;Object.assign(q,one)}const[rcx,rcy]=D2(...RC);W.rb={x:rcx,y:rcy,r:RR*CV2.k};W.circObs.push({x:rcx,y:rcy,r:RR*CV2.k-9.5,type:'isla'});
+  {const q=addPath(W,T(ring));q.hw=10;Object.assign(q,one)}const[rcx,rcy]=D2(...RC);W.rb={x:rcx,y:rcy,r:RR*CV2.k};W.circObs.push({x:rcx,y:rcy,r:RR*CV2.k-12,type:'isla'});
   // ---- vuelta alrededor de la isla del norte (antihorario) y bajada a los carriles de reversa
   const KC=[375,255],KR=92,kh=[[425,382],[430,350]];for(let i=0;i<=30;i++){const a=(60-i*10)*Math.PI/180;kh.push([KC[0]+Math.cos(a)*KR,KC[1]+Math.sin(a)*KR])}
-  kh.push([285,362],[225,385],[180,420],[150,455],[131,490],[130,508]);path(kh,7.5,one);const[kcx,kcy]=D2(...KC);W.circObs.push({x:kcx,y:kcy,r:KR*CV2.k-9,type:'isla'});
+  kh.push([285,362],[225,385],[180,420],[150,455],[131,490],[134,508]);path(kh,10,one);const[kcx,kcy]=D2(...KC);W.circObs.push({x:kcx,y:kcy,r:KR*CV2.k-12,type:'isla'});
   // ---- REVERSA: dos carriles rectos (oeste = DERECHO para quien baja; este = IZQUIERDO), ALTO abajo, conos verdes, vallas naranjas atrás
-  const RV={x0:78,xm:112.5,x1:147,y0:395,yb:515,ya:905};W.rv=RV;plane([[RV.x0-4,RV.y0-30],[RV.x1+4,RV.y0-30],[RV.x1+4,RV.ya+40],[RV.x0-4,RV.ya+40]]);
+  const RV={x0:68,xm:112,x1:156,y0:395,yb:515,ya:905};W.rv=RV;plane([[RV.x0-4,RV.y0-30],[RV.x1+4,RV.y0-30],[RV.x1+4,RV.ya+40],[RV.x0-4,RV.ya+40]]);
   W.rvL=[{n:'DERECHO',x:D2((RV.x0+RV.xm)/2,0)[0]},{n:'IZQUIERDO',x:D2((RV.xm+RV.x1)/2,0)[0]}];
   for(const xx of[RV.x0,RV.xm,RV.x1])coneRow([[xx,RV.yb+8],[xx,RV.ya-8]],0,9,{fatal:'Tocó un cono en la reversa: −22 puntos, prueba perdida'});
   for(const xx of[RV.x0,RV.xm,RV.x1])for(const yy of[RV.yb,RV.ya]){const[x,y]=D2(xx,yy);cone(x,y,{fatal:'Tocó un cono verde de la reversa: prueba perdida',green:true})}
   {const[a,y]=D2(RV.x0,RV.y0),[b]=D2(RV.x1,RV.y0);W.barrier={x0:a,x1:b,y};W.obst.push({x:a,y:y-2.5,w:b-a,h:3,type:'valla'})}
   // salida de la reversa: segundo ALTO antes de la calle sur
-  path([[112,895],[114,950],[120,1000],[135,1035],[165,1052]],8,one);
+  path([[112,895],[114,950],[120,1000],[135,1035],[165,1052]],10,one);
   // ---- estacionamiento en reversa bajo el techo solar (espacios 1..6 de este a oeste), valla atrás
-  W.pslots=[];const SPX=[702,668,634,600,566,532],tgt=(Math.random()*4)|0;
-  SPX.forEach((sx,i)=>{const[cx,cy]=D2(sx,1013),o={cx,cy,ang:Math.PI/2,hl:9,hw:5.5,target:i===tgt,num:i+1};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);
+  W.pslots=[];const SPX=[708,671,634,597,560,523],tgt=(Math.random()*4)|0;
+  SPX.forEach((sx,i)=>{const[cx,cy]=D2(sx,1013),o={cx,cy,ang:Math.PI/2,hl:9,hw:6,target:i===tgt,num:i+1};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);
     if(i!==tgt&&(i===tgt+1||i===tgt-1||i>=4))addParked(W,cx,cy+.5,Math.PI/2,CARCOLS[(i*5+1)%CARCOLS.length],pick(['sedan','hatch','suv']))});
   W.pslot=W.pslots[tgt];{const o=W.pslot;for(const sd of[-1,1])cone(o.cx+sd*(o.hw+.6),o.cy+o.hl-1,{fatal:'Tocó un cono del estacionamiento: prueba perdida'})}
   {const[a,y]=D2(160,978),[b]=D2(770,978);W.fences.push([a,y,b,y]);for(let x=a;x<=b;x+=2.5)W.circObs.push({x,y,r:1.2,type:'valla'})}
   for(const sx of[719,651,583,515,447,379,311,243,175]){const[x,y]=D2(sx,982);const b={x:x-1,y:y-1,w:2,h:2,ht:4.2,type:'bld',col:'#8d99ae',roof:'#5c677d',poste:true};W.blds.push(b);W.circObs.push({x,y,r:1.3,type:'poste'})}
   W.solar=T([[160,962],[770,962],[770,1036],[160,1036]]);W.roof=W.solar;
   // ---- conos del carril en S (orillas), de la rotonda (isla) y de la isla del norte
-  coneRow(SL.slice(1,-2),9.5,8);coneRow(SL.slice(1,-2),-9.5,8);
-  for(let i=0;i<24;i++){const a=i/24*Math.PI*2;cone(rcx+Math.cos(a)*(RR*CV2.k-8.5),rcy+Math.sin(a)*(RR*CV2.k-8.5))}
+  coneRow(SL.slice(1,-2),12,8);coneRow(SL.slice(1,-2),-12,8);
+  for(let i=0;i<24;i++){const a=i/24*Math.PI*2;cone(rcx+Math.cos(a)*(RR*CV2.k-11),rcy+Math.sin(a)*(RR*CV2.k-11))}
   // ---- ALTO y CEDA
   const stop=(x,y,ux,uy,code,txt,w=10)=>{const[a,b]=D2(x,y);return{x:a,y:b,ux,uy,w,code,txt,minV:99}};
-  W.pstops=[stop(112.5,RV.ya,0,1,'altoR','No hizo ALTO total al final de los carriles de reversa',13),stop(120,1000,.12,.99,'altoS','No hizo ALTO total antes de la calle del estacionamiento',9)];
+  W.pstops=[stop(112,RV.ya,0,1,'altoR','No hizo ALTO total al final de los carriles de reversa',16),stop(120,1000,.12,.99,'altoS','No hizo ALTO total antes de la calle del estacionamiento',9)];
   {const[a,b]=D2(545,595);W.cedas=[{x:a,y:b,ux:-.72,uy:-.69,w:8}]}
-  {const[a,b]=D2(905,1054);W.check={x:a,y:b}}{const[a,b]=D2(560,951);W.qline={x:a,y:b,ux:-1,uy:0,w:8}}
+  {const[a,b]=D2(905,1054);W.check={x:a,y:b}}{const[a,b]=D2(560,945);W.qline={x:a,y:b,ux:-1,uy:0,w:10}}
   // ---- edificios: oficinas del COSEVI, techo largo del noreste, toldos de las familias, casetas
   const OFF=[{p:[[642,585],[760,570],[905,860],[900,920],[760,975],[640,975]],ht:16,col:'#f1f0ea',label:'COSEVI'},{p:[[510,300],[548,290],[690,560],[655,575]],ht:7,col:'#e9e9e2',label:'TECHO'},
     {p:[[490,620],[545,620],[545,690],[490,690]],ht:6,col:'#e0d4b0'},{p:[[345,100],[395,100],[395,150],[345,150]],ht:5,col:'#dfe7d0'}];
   for(const o of OFF){const pp=T(o.p),cx=pp.reduce((s,r)=>s+r[0],0)/pp.length,cy=pp.reduce((s,r)=>s+r[1],0)/pp.length;W.pblds.push({p:pp,ht:o.ht,col:o.col,roof:shade(o.col,-.12),cx,cy,rad:Math.max(...pp.map(r=>Math.hypot(r[0]-cx,r[1]-cy)))});
     for(let i=0;i<pp.length;i++){const A=pp[i],B=pp[(i+1)%pp.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=2.5){const x=A[0]+(B[0]-A[0])*t/L,y=A[1]+(B[1]-A[1])*t/L;if(!pavedW(W,x,y))W.circObs.push({x,y,r:1.5,type:'muro'})}}}
-  W.toldos=[T([[255,858],[485,858],[485,922],[255,922]]),T([[492,866],[632,866],[632,920],[492,920]])];
+  W.toldos=[T([[262,846],[485,846],[485,910],[262,910]]),T([[492,852],[632,852],[632,908],[492,908]])];
   for(const q of W.toldos)for(const[x,y]of[q[0],q[1],q[2],q[3]]){const b={x:x-1,y:y-1,w:2,h:2,ht:4.5,type:'bld',col:'#9aa5b1',roof:'#6c757d',pillar:true};W.obst.push(b);W.blds.push(b)}
   // caseta de entrada (fase 1)
   {const[x,y]=D2(930,1012);const b={x:x-5,y:y-4,w:10,h:7,ht:4,type:'bld',col:'#f1faee',roof:'#2e8b57'};W.obst.push(b);W.blds.push(b);W.booth={x,y}}
@@ -921,7 +921,7 @@ function buildCV2(){HW=7;const W=newWorld('cvial',382,392);W.limit=20;W.ppaved=[
       if(q.road){x.strokeStyle='#ecece4';x.setLineDash([5,5]);x.lineWidth=1;for(let k=1;k<6;k++){const a=D2(470+k*110,0),b=D2(1110,980-k*190+k*30);x.beginPath();x.moveTo(a[0],a[1]);x.lineTo(b[0],b[1]);x.stroke()}x.setLineDash([])}
       if(!q.lot&&!q.road){x.strokeStyle=shade(q.c,-.25);for(let k=0;k<W.w;k+=4){x.beginPath();x.moveTo(k,pp[0][1]);x.lineTo(k,pp[2][1]);x.stroke()}}}
     // isla de la rotonda y de la isla norte (zacate con borde amarillo)
-    for(const[cx,cy,r]of[[rcx,rcy,RR*CV2.k-9.5],[kcx,kcy,KR*CV2.k-9]]){fillCirc(x,cx,cy,r+1,'#f2c230');fillCirc(x,cx,cy,r,'#4c9a45')}
+    for(const[cx,cy,r]of[[rcx,rcy,RR*CV2.k-12],[kcx,kcy,KR*CV2.k-12]]){fillCirc(x,cx,cy,r+1,'#f2c230');fillCirc(x,cx,cy,r,'#4c9a45')}
     for(const o of OFF){const pp=T(o.p);x.fillStyle='rgba(0,0,0,.3)';x.beginPath();x.moveTo(pp[0][0]+3,pp[0][1]+3);for(const r of pp)x.lineTo(r[0]+3,r[1]+3);x.fill();x.fillStyle=o.col;x.beginPath();x.moveTo(pp[0][0],pp[0][1]);for(const r of pp)x.lineTo(r[0],r[1]);x.closePath();x.fill();x.strokeStyle='rgba(18,16,28,.6)';x.lineWidth=1;x.stroke()}};
   W.drawExtra=x=>{const bar=(cx,cy,nx,ny,a,b,col,w=2,dash=0)=>{x.fillStyle=col;for(let k=a;k<=b;k+=.5)if(!dash||((k-a)%3)<2)x.fillRect(Math.round(cx+nx*k),Math.round(cy+ny*k),w,w)};
     const floor=(t,px,py,ux,uy)=>{const rot=Math.abs(uy)>=Math.abs(ux)?(uy<0?0:2):(ux>0?1:3),L=t.length*4-1;const w=rot%2?5:L,h=rot%2?L:5;ptext(x,t,Math.round(px-w/2),Math.round(py-h/2),'#ecece4',rot)};
@@ -960,7 +960,7 @@ function cv2Tasks(){const W=S.W,G=(x,y)=>{const[a,b]=D2(x,y);return{x:a,y:b}},ne
   {txt:'FASE 1 · Ponga las luces de emergencia (intermitentes) [H].',tgt:{x:0,y:0},start(){this.tgt={x:S.W.booth.x-8,y:S.W.booth.y+11}},check(){return!!S.P.haz},ok:'Intermitentes: bien'},
   {txt:'FASE 1 · Apague las intermitentes [H] y pise el FRENO [S] dos segundos para revisar las luces de freno.',tgt:{x:0,y:0},start(){this.tgt={x:S.W.booth.x-8,y:S.W.booth.y+11}},check(){return!S.P.haz&&still('frn',!!S.P.brake||(keys.s||keys.arrowdown),2)}},
   {txt:'FASE 1 terminada. Escuche al evaluador.',tgt:{x:0,y:0},start(){this.tgt={x:S.W.booth.x-8,y:S.W.booth.y+11}},check(){return dlgRun(this,CV2_F2)}},
-  {txt:'FILA: entre por el conector a la DERECHA, avance bajo el toldo y deténgase en la línea de ESPERE hasta que lo llamen.',tgt:G(575,951),
+  {txt:'FILA: entre por el conector a la DERECHA, avance bajo el toldo y deténgase en la línea de ESPERE hasta que lo llamen.',tgt:G(575,945),
    check(){const P=S.P,q=W.qline,al=(P.x-q.x)*q.ux+(P.y-q.y)*q.uy,lt=Math.abs(P.y-q.y);if(this.dl||still('fila',al>-24&&al<2&&lt<q.w+2,1.5))return dlgRun(this,CV2_Q);return false},ok:'¡Su turno!'},
   {txt:'ZIGZAG: siga el carril en S sin tocar los conos (−12 puntos por cono).',tgt:G(590,736),check(){return near(590,736,16)}},
   {txt:'ROTONDA: CEDA el paso al entrar, mantenga la direccional IZQUIERDA [Q] adentro, dé la VUELTA COMPLETA y salga hacia el NORTE con direccional DERECHA [E].',tgt:G(425,382),start(){S.lap=0;S.la=null;S.inR=false;S.rsl=0},
