@@ -76,6 +76,7 @@ main{grid-area:main;position:relative;overflow:hidden;background:#2f6b2a}
   <button data-tool="area" data-kind="zacate">Zacate / isla <kbd>Z</kbd></button>
   <button data-tool="area" data-kind="acera">Acera <kbd>D</kbd></button>
   <button data-tool="area" data-kind="techo">Techo / toldo solar <kbd>U</kbd></button>
+  <button data-tool="area" data-kind="limite">Límite del plantel <kbd>5</kbd></button>
   <button data-tool="fence" data-kind="malla">Valla de malla <kbd>F</kbd></button>
   <button data-tool="fence" data-kind="verja">Verja de hierro <kbd>J</kbd></button>
   <button data-tool="fence" data-kind="muro">Muro / tapia <kbd>H</kbd></button>
@@ -187,6 +188,8 @@ function draw(){const g=cx,dpr=devicePixelRatio;g.setTransform(dpr,0,0,dpr,0,0);
   if(draft){g.strokeStyle='#ffd23f';g.lineWidth=2;g.setLineDash([4,3]);const pts=draft.pts.concat(hover?[[hover.x,hover.y]]:[]);if(draft.kind==='road'){line(pts,draft.w,'rgba(58,58,67,.6)');}g.beginPath();pts.forEach((q,i)=>{const[a,b]=W2S(q[0],q[1]);i?g.lineTo(a,b):g.moveTo(a,b)});g.stroke();g.setLineDash([])}
   if(drag&&drag.mode==='vec'){const[a,b]=W2S(drag.p0.x,drag.p0.y),[c2,d2]=W2S(drag.p1.x,drag.p1.y);g.strokeStyle='#ffd23f';g.lineWidth=2;g.beginPath();g.moveTo(a,b);g.lineTo(c2,d2);g.stroke();if(drag.tool==='ring'){g.beginPath();g.arc(a,b,Math.hypot(c2-a,d2-b),0,7);g.stroke()}}
   for(const q of ISSUES)if(q.x!=null){const[a,b]=W2S(q.x,q.y);g.strokeStyle='#ff2a2a';g.lineWidth=2.5;g.beginPath();g.arc(a,b,9,0,7);g.stroke()}
+  {const lim=M.areas.find(a=>a.kind==='limite'&&a.pts.length>2);if(lim){g.save();g.beginPath();g.rect(0,0,W,H);lim.pts.forEach((q,i)=>{const[a,b]=W2S(q[0],q[1]);i?g.lineTo(a,b):g.moveTo(a,b)});g.closePath();g.fillStyle='rgba(8,8,16,.55)';g.fill('evenodd');g.restore();
+    g.beginPath();lim.pts.forEach((q,i)=>{const[a,b]=W2S(q[0],q[1]);i?g.lineTo(a,b):g.moveTo(a,b)});g.closePath();g.lineWidth=3;g.strokeStyle='#ff4d4d';g.setLineDash([8,6]);g.stroke();g.strokeStyle='#ffffff';g.lineDashOffset=7;g.stroke();g.setLineDash([]);g.lineDashOffset=0}}
   if(cal&&cal.p0){const[a,b]=W2S(cal.p0.x,cal.p0.y);g.fillStyle='#ff4d4d';g.beginPath();g.arc(a,b,5,0,7);g.fill()}
   // barra de escala y carro de referencia
   {const bar=view.z>12?5:view.z>4?10:20;g.fillStyle='rgba(10,10,20,.75)';g.fillRect(10,10,bar*view.z+90,40);g.fillStyle='#fff';g.fillRect(16,20,bar*view.z,4);g.font='600 12px system-ui';g.textAlign='left';g.fillText(bar+' m',bar*view.z+22,27);
@@ -194,7 +197,7 @@ function draw(){const g=cx,dpr=devicePixelRatio;g.setTransform(dpr,0,0,dpr,0,0);
   if(M.bg&&BG.img)g.fillStyle='rgba(255,255,255,.8)',g.font='11px system-ui',g.textAlign='right',g.fillText(M.bg.src||'',W-10,H-50)}
 // ---------- herramientas ----------
 const HINTS={sel:'Clic para seleccionar. Arrastre para mover. Supr para borrar. Rueda: zoom. Clic derecho y arrastre: mover la vista.',del:'Clic sobre un elemento para borrarlo.',pan:'Arrastre para mover la vista. Rueda para acercar.',
-  road:'Clic para poner puntos de la calle (la línea central). Doble clic o Enter para terminar. Esc cancela.',ring:'Clic en el centro y arrastre hasta el centro del carril de la rotonda.',area:'Clic para poner las esquinas. Doble clic o Enter para cerrar.',
+  road:'Clic para poner puntos de la calle (la línea central). Doble clic o Enter para terminar. Esc cancela.',ring:'Clic en el centro y arrastre hasta el centro del carril de la rotonda.',area:'Clic para poner las esquinas. Doble clic o Enter para cerrar. (Límite del plantel: rodee TODO el plantel; en el juego solo existe lo de adentro.)',
   fence:'Clic para cada punto de la valla. Doble clic o Enter para terminar.',pole:'Clic para poner el poste.',tree:'Clic para poner el árbol.',slope:'Clic en lo ALTO de la subida y arrastre hacia ABAJO (el sentido en que baja).',cone:'Clic: un cono. Arrastre: una fila de conos (cada 1,5 m; se cambia a la derecha).',sign:'Clic donde va la línea y arrastre en el SENTIDO en que llega el carro.',text:'Clic donde va el texto (se escribe a la derecha).',
   slot:'Clic en el centro del espacio y arrastre hacia la SALIDA del espacio (por donde entra el carro).',bldg:'Clic para las esquinas del edificio. Doble clic o Enter para cerrar.',person:'Clic para poner la persona.',start:'Clic donde arranca el carro y arrastre hacia donde mira.',
   cal:'CALIBRAR: haga clic en dos puntos del fondo cuya distancia real conoce (por ejemplo el ancho de un carril).'};
@@ -238,7 +241,7 @@ addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.ke
   if((e.ctrlKey||e.metaKey)&&k==='z'){undo();e.preventDefault();return}
   if(k==='enter'){finishDraft();return}if(k==='escape'){draft=null;cal=null;draw();return}
   if((k==='delete'||k==='backspace')&&sel&&sel.type!=='start'){M[sel.type].splice(sel.i,1);sel=null;save();return}
-  const map={v:'[data-tool=sel]',x:'[data-tool=del]',m:'[data-tool=pan]',c:'[data-tool=road][data-lanes="2"]','1':'[data-tool=road][data-lanes="1"]',w:'[data-tool=road][data-lanes="1w"]',r:'[data-tool=ring][data-lanes="1"]','2':'[data-tool=ring][data-lanes="2"]',a:'[data-kind=asfalto]',k:'[data-tool=cone][data-col=n]',g:'[data-tool=cone][data-col=v]',s:'[data-kind=alto]',y:'[data-kind=ceda]',t:'[data-tool=text]',p:'[data-tool=slot]',b:'[data-tool=bldg]',z:'[data-kind=zacate]',d:'[data-kind=acera]',u:'[data-kind=techo]',f:'[data-kind=malla]',j:'[data-kind=verja]',h:'[data-kind=muro]',n:'[data-kind=barrera]',l:'[data-kind=luz]',q:'[data-kind=poste]','3':'[data-tool=tree]','4':'[data-tool=slope]',e:'[data-kind=evaluador]',o:'[data-kind=persona]',i:'[data-tool=start]'};
+  const map={v:'[data-tool=sel]',x:'[data-tool=del]',m:'[data-tool=pan]',c:'[data-tool=road][data-lanes="2"]','1':'[data-tool=road][data-lanes="1"]',w:'[data-tool=road][data-lanes="1w"]',r:'[data-tool=ring][data-lanes="1"]','2':'[data-tool=ring][data-lanes="2"]',a:'[data-kind=asfalto]',k:'[data-tool=cone][data-col=n]',g:'[data-tool=cone][data-col=v]',s:'[data-kind=alto]',y:'[data-kind=ceda]',t:'[data-tool=text]',p:'[data-tool=slot]',b:'[data-tool=bldg]',z:'[data-kind=zacate]',d:'[data-kind=acera]',u:'[data-kind=techo]','5':'[data-kind=limite]',f:'[data-kind=malla]',j:'[data-kind=verja]',h:'[data-kind=muro]',n:'[data-kind=barrera]',l:'[data-kind=luz]',q:'[data-kind=poste]','3':'[data-tool=tree]','4':'[data-tool=slope]',e:'[data-kind=evaluador]',o:'[data-kind=persona]',i:'[data-tool=start]'};
   if(map[k]){const b=document.querySelector(map[k]);if(b)setTool(b.dataset.tool,b)}});
 // ---------- panel de propiedades ----------
 function field(lbl,val,on,type='number',step='0.1'){const id='f'+Math.random().toString(36).slice(2);return{html:`<label>${lbl}<input id="${id}" type="${type}" step="${step}" value="${val??''}"></label>`,id,on}}
@@ -257,7 +260,7 @@ function props(){const P=$('props');let f=[],title='Plantel',note='';
   else if(sel.type==='slots'){title='Espacio de parqueo';f=[field('Número',e.num,v=>e.num=v,'text'),field('Ancho (m)',e.w,v=>e.w=+v),field('Largo (m)',e.l,v=>e.l=+v),field('Ángulo (°)',Math.round((e.ang||0)*180/Math.PI),v=>e.ang=(+v)*Math.PI/180,'number','5'),check('Espacio de la prueba (amarillo)',e.target,v=>{M.slots.forEach(s=>s.target=false);e.target=v}),check('Ocupado por un carro',e.ocupado,v=>e.ocupado=v)];note='El carro debe quedar estacionado de RETROCESO: con el frente hacia la salida del espacio.'}
   else if(sel.type==='texts'){title='Texto';f=[field('Texto',e.t,v=>e.t=String(v).toUpperCase(),'text'),field('Tamaño (m)',e.size||1.2,v=>e.size=+v),field('Ángulo (°)',Math.round((e.ang||0)*180/Math.PI),v=>e.ang=(+v)*Math.PI/180,'number','5'),choose('Color',e.col||'#ecece4',[['#ecece4','Blanco'],['#f2c230','Amarillo']],v=>e.col=v)]}
   else if(sel.type==='bldgs'){title='Edificio';f=[field('Nombre',e.label,v=>e.label=v,'text'),field('Altura (m)',e.h,v=>e.h=+v),choose('Color',e.col,[['#ecebe4','Blanco'],['#d9c7a3','Beige'],['#9fb7c9','Celeste'],['#c96e5a','Ladrillo'],['#7f8c8d','Gris'],['#2e8b57','Verde']],v=>e.col=v)]}
-  else if(sel.type==='areas'){title='Área';f=[choose('Tipo',e.kind,[['asfalto','Asfalto (se puede manejar)'],['zacate','Zacate / isla'],['acera','Acera'],['techo','Techo / toldo solar']],v=>e.kind=v)].concat(e.kind==='techo'?[field('Altura del techo (m)',e.h||4.2,v=>e.h=+v)]:[])}
+  else if(sel.type==='areas'){title='Área';f=[choose('Tipo',e.kind,[['asfalto','Asfalto (se puede manejar)'],['zacate','Zacate / isla'],['acera','Acera'],['techo','Techo / toldo solar'],['limite','Límite del plantel']],v=>e.kind=v)].concat(e.kind==='techo'?[field('Altura del techo (m)',e.h||4.2,v=>e.h=+v)]:[])}
   else if(sel.type==='cones'){title='Cono';f=[choose('Color',e.col,[['n','Naranja'],['v','Verde']],v=>e.col=v),check('Si lo toca pierde la prueba',e.fatal,v=>e.fatal=v)]}
   else if(sel.type==='fences'){title='Valla';f=[choose('Tipo',e.kind,[['malla','Valla de malla'],['verja','Verja de hierro'],['muro','Muro / tapia'],['barrera','Barrera naranja']],v=>e.kind=v)];note='El carro no puede atravesarla.'}
   else if(sel.type==='poles'){title='Poste';f=[choose('Tipo',e.kind,[['luz','Poste de luz'],['poste','Poste / columna']],v=>e.kind=v)]}
@@ -273,12 +276,17 @@ $('bBg').onclick=()=>$('fBg').click();
 $('fBg').onchange=()=>{const f=$('fBg').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>setBg(rd.result,{x:0,y:0,mpp:.1,op:.75,src:'Imagen propia — calibre con «Calibrar fondo»'});rd.readAsDataURL(f)};
 function setBg(url,b){const i=new Image();i.onload=()=>{BG.img=i;M.bg=b;try{localStorage.setItem('pp_custom_bg',url)}catch(e){alert('La imagen es muy grande para guardarla en el navegador; se verá solo en esta sesión.')}save()};i.src=url}
 $('bCal').onclick=()=>{if(!M.bg){alert('Primero ponga una imagen de fondo.');return}setTool('sel',null);cal={};$('hint').textContent=HINTS.cal};
-$('bSat').onclick=async()=>{const z=19,la0=9.9113,la1=9.9131,lo0=-84.0756,lo1=-84.0739,n=2**z,tx=l=>(l+180)/360*n,ty=l=>{const r=l*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n};
-  const x0=tx(lo0),x1=tx(lo1),y0=ty(la1),y1=ty(la0),c=document.createElement('canvas');c.width=Math.round((x1-x0)*256);c.height=Math.round((y1-y0)*256);const g=c.getContext('2d');$('hint').textContent='Descargando la foto satelital…';
-  const load=s=>new Promise(r=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s});
-  for(let y=Math.floor(y0);y<=Math.floor(y1);y++)for(let x=Math.floor(x0);x<=Math.floor(x1);x++){const i=await load(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`);if(i)g.drawImage(i,(x-x0)*256,(y-y0)*256)}
-  const mpp=156543.03*Math.cos(9.912*Math.PI/180)/n;if(M.w<c.width*mpp)M.w=Math.ceil(c.width*mpp);if(M.h<c.height*mpp)M.h=Math.ceil(c.height*mpp);
-  setBg(c.toDataURL('image/jpeg',.85),{x:0,y:0,mpp,op:.8,src:'Imagen: Esri World Imagery · Ciudad Vial, Paso Ancho'});fit();$('hint').textContent='Fondo listo (escala real). Trace las calles encima.'};
+const SATZ=19,SATN=2**SATZ,stx=l=>(l+180)/360*SATN*256,sty=l=>{const q=l*Math.PI/180;return(1-Math.log(Math.tan(q)+1/Math.cos(q))/Math.PI)/2*SATN*256};
+const SAT0={lat:9.9131,lon:-84.0756};// esquina de la primera foto de Ciudad Vial (para alinear dibujos viejos)
+async function satArea(la0,la1,lo0,lo1,label){const X0=stx(lo0),X1=stx(lo1),Y0=sty(la1),Y1=sty(la0),c=document.createElement('canvas');c.width=Math.round(X1-X0);c.height=Math.round(Y1-Y0);const g=c.getContext('2d');$('hint').textContent='Descargando la foto satelital…';
+  const load=src=>new Promise(r=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src});
+  for(let ty=Math.floor(Y0/256);ty<=Math.floor(Y1/256);ty++)for(let tx=Math.floor(X0/256);tx<=Math.floor(X1/256);tx++){const i=await load(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${SATZ}/${ty}/${tx}`);if(i)g.drawImage(i,tx*256-X0,ty*256-Y0)}
+  const mpp=156543.03*Math.cos(((la0+la1)/2)*Math.PI/180)/SATN;
+  // alinear: la foto vieja tenía su esquina en geo (o en SAT0 si no se guardó) y estaba puesta en (bg.x,bg.y)
+  let x=0,y=0;if(M.bg){const old=M.bg.geo||{X0:stx(SAT0.lon),Y0:sty(SAT0.lat)};x=M.bg.x+(X0-old.X0)*M.bg.mpp;y=M.bg.y+(Y0-old.Y0)*M.bg.mpp}
+  setBg(c.toDataURL('image/jpeg',.82),{x,y,mpp,op:M.bg?M.bg.op??.8:.8,src:'Imagen: Esri World Imagery · '+label,geo:{X0,Y0}});
+  const r=cv.getBoundingClientRect();view.z=Math.min(r.width/(c.width*mpp),r.height/(c.height*mpp));view.x=x;view.y=y;draw();$('hint').textContent='Foto lista (escala real). Ahora se ve la calle de afuera: trace la entrada y luego el «Límite del plantel».'}
+$('bSat').onclick=()=>satArea(9.9098,9.9142,-84.0775,-84.0722,'Ciudad Vial y alrededores, Paso Ancho');
 // ---------- revisión automática ----------
 let ISSUES=[];
 function review(){const out=[],near=(p,tol)=>{for(const o of M.roads)if(polyDist({x:p[0],y:p[1]},rpts(o))<roadW(o)/2+tol)return true;for(const g of M.rings)if(Math.abs(Math.hypot(p[0]-g.x,p[1]-g.y)-g.r)<(g.lanes||1)*(g.laneW||REF.ringLaneW)/2+tol)return true;for(const a of M.areas)if(a.kind==='asfalto'&&inPoly({x:p[0],y:p[1]},a.pts))return true;return false};
