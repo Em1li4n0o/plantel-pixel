@@ -2235,7 +2235,7 @@ function streetTasks(){return[
 function circles(o){const L=o.L||14,r=(o.Wd||8)/2,c=Math.cos(o.h),s=Math.sin(o.h);const half=L/2-r;const n=Math.max(2,Math.ceil(2*half/r)+1);const out=[];
   for(let i=0;i<n;i++){const k=-half+2*half*i/(n-1);out.push({x:o.x+c*k,y:o.y+s*k,r})}return out}
 let SQG=null,SQO=null;
-function muG(){return 32.7*.8*(S.grip||1)*(S.arcade?1.25:1)}
+function muG(){return 32.7*.9*(S.grip||1)*(S.arcade?1.25:1)}
 function updatePlayer(W,P,dt){
   const sp=P.sp;const up=keys.w||keys.arrowup,dn=keys.s||keys.arrowdown,lf=keys.a||keys.arrowleft,rt=keys.d||keys.arrowright,hb=keys[' '];
   const pU=pressed.w||pressed.arrowup,pD=pressed.s||pressed.arrowdown;const stopped=Math.abs(P.v)<.6;
@@ -2264,8 +2264,8 @@ function updatePlayer(W,P,dt){
   if(S.arcade){const tb=(keys.shift)&&P.gear===1&&P.nitro>0;P.boost=tb;if(tb){P.v=Math.min(sp.vmax*1.4,P.v+sp.acc*1.6*dt);P.nitro=Math.max(0,P.nitro-dt*.35)}else P.nitro=Math.min(1,P.nitro+dt*.12);
     if(P.spin){P.h=nA(P.h+P.spin*dt);P.spin*=Math.pow(.08,dt);if(Math.abs(P.spin)<.05)P.spin=0}}
   // volante más duro (menos ángulo) a alta velocidad, como la dirección real
-  const maxS=sp.steer/(1+Math.abs(P.v)/60);const tgt=((rt?1:0)-(lf?1:0))*maxS;const rate=(tgt===0?4:2.8)*dt;P.steer+=clamp(tgt-P.steer,-rate,rate);
-  {let yaw=P.v/sp.wb*Math.tan(P.steer);const aMax=muG()*1.12,aL=Math.min(Math.abs(P.aLong||0),aMax*.95);
+  const maxS=sp.steer/(1+Math.abs(P.v)/80);const tgt=((rt?1:0)-(lf?1:0))*maxS;const rate=(tgt===0?4:3.4)*dt;P.steer+=clamp(tgt-P.steer,-rate,rate);
+  {let yaw=P.v/sp.wb*Math.tan(P.steer);const aMax=muG()*1.2,aL=Math.min(Math.abs(P.aLong||0),aMax*.95);
     // transferencia de peso: al frenar se carga el frente (gira un poco más), al acelerar se descarga (gira menos)
     const wt=P.aLong<0?1+.1*Math.min(1,-P.aLong/20):1-.12*Math.min(1,(P.aLong||0)/8);
     const latMax=Math.sqrt(aMax*aMax-aL*aL)*wt,lat=Math.abs(P.v*yaw);P.slip=0;
