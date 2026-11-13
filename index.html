@@ -996,7 +996,7 @@ function normCustom(D0){const D=JSON.parse(JSON.stringify(D0));const lim=(D.area
   if(lim)for(const q of lim.pts)add(q[0],q[1]);else{for(const k of['roads','areas','bldgs','fences'])for(const e of D[k]||[])for(const q of e.pts||[])add(q[0],q[1]);for(const g of D.rings||[]){add(g.x-g.r-5,g.y-g.r-5);add(g.x+g.r+5,g.y+g.r+5)}if(D.start)add(D.start.x,D.start.y)}
   if(!xs.length)return D;const m=4,ox=Math.min(...xs)-m,oy=Math.min(...ys)-m;D.w=Math.max(...xs)-ox+m;D.h=Math.max(...ys)-oy+m;const sh=q=>{q[0]-=ox;q[1]-=oy};
   for(const k of['roads','areas','bldgs','fences','slopes'])for(const e of D[k]||[])for(const q of e.pts||[])sh(q);
-  for(const k of['cones','signs','texts','slots','people','poles','trees','rings'])for(const e of D[k]||[]){e.x-=ox;e.y-=oy}if(D.start){D.start.x-=ox;D.start.y-=oy}D.lim=lim?lim.pts:null;return D}
+  for(const k of['cones','signs','texts','slots','people','poles','trees','rings'])for(const e of D[k]||[]){e.x-=ox;e.y-=oy}if(D.start){D.start.x-=ox;D.start.y-=oy}for(const e of D.exam||[]){if(e.x!=null){e.x-=ox;e.y-=oy}if(e.pts)for(const q of e.pts)sh(q)}D.lim=lim?lim.pts:null;return D}
 function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{pts:[[10,30],[70,30]],lanes:2,laneW:3.5}],start:{x:14,y:32,ang:0}};HW=7;
   const W=newWorld('custom',Math.max(120,Math.round((D.w||100)*K)),Math.max(90,Math.round((D.h||80)*K)));W.limit=D.limit||20;W.ppaved=[];W.planes=[];W.pblds=[];W.walkers=[];W.custom=D;
   const P=a=>a.map(([x,y])=>[x*K,y*K]),roadW=r=>r.wide?(r.wideW||5):(r.lanes||1)*(r.laneW||3.5);
@@ -1015,7 +1015,7 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
   for(const q of W.roofs)for(let i=0;i<q.length;i++){const A=q[i],B=q[(i+1)%q.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=24){const x=A[0]+(B[0]-A[0])*t/L,y=A[1]+(B[1]-A[1])*t/L;if(pavedW(W,x,y))continue;const b={x:x-1,y:y-1,w:2,h:2,ht:q.h,type:'bld',col:'#8d99ae',roof:'#5c677d',poste:true};W.blds.push(b);W.circObs.push({x,y,r:1.3,type:'poste'})}}
   // vallas: malla y verja (líneas que no se pueden atravesar), muro y barrera naranja (con volumen en 3D)
   for(const f of D.fences||[]){if(!f.pts||f.pts.length<2)continue;const q=P(f.pts);
-    for(let i=0;i<q.length-1;i++){const[a,b]=q[i],[c,d]=q[i+1],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=1.6)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:f.kind==='barrera'?1.2:.9,type:'valla'});
+    for(let i=0;i<q.length-1;i++){const[a,b]=q[i],[c,d]=q[i+1],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=2.4)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:f.kind==='barrera'?1.4:1.25,type:'valla'});
       if(f.kind==='muro'||f.kind==='barrera'){const th=(f.kind==='muro'?.25:.3)*K,nx=-(d-b)/L*th,ny=(c-a)/L*th,pp=[[a+nx,b+ny],[c+nx,d+ny],[c-nx,d-ny],[a-nx,b-ny]];W.pblds.push({p:pp,ht:(f.kind==='muro'?2.4:.9)*K*.5,col:f.kind==='muro'?'#a39d92':'#ff7b00',roof:f.kind==='muro'?'#8d877c':'#ffffff',cx:(a+c)/2,cy:(b+d)/2,rad:L/2+2})}
       else W.fences.push([a,b,c,d])}}
   // postes (de luz, con brillo de noche) y árboles
@@ -1023,7 +1023,7 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
   for(const t of D.trees||[]){const x=t.x*K,y=t.y*K;W.trees.push({x,y,r:Math.max(2,(t.r||2)*K*.75)});W.obst.push({x:x-1.5,y:y-1.5,w:3,h:3,type:'tree'})}
   // subidas: el juego empuja el carro cuesta abajo (hay que frenar o usar el freno de mano)
   W.slopes=(D.slopes||[]).filter(q=>q.pts&&q.pts.length>1).map(q=>({seg:[q.pts[0][0]*K,q.pts[0][1]*K,q.pts[1][0]*K,q.pts[1][1]*K],hw:(q.w||7)*K/2,grade:q.grade||.1,n:Math.round((q.grade||.1)*100)+'%'}));if(!W.slopes.length)W.slopes=null;
-  if(D.lim){const q=P(D.lim);W.limP=q;for(let i=0;i<q.length;i++){const[a,b]=q[i],[c,d]=q[(i+1)%q.length],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=1.5)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:1,type:'muro'})}}
+  if(D.lim){const q=P(D.lim);W.limP=q;for(let i=0;i<q.length;i++){const[a,b]=q[i],[c,d]=q[(i+1)%q.length],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=2.4)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:1.4,type:'muro'})}}
   W.pslots=[];for(const s of D.slots||[]){const o={cx:s.x*K,cy:s.y*K,ang:s.ang||0,hl:(s.l||5)*K/2,hw:(s.w||2.5)*K/2,target:!!s.target,num:s.num};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);if(s.ocupado&&!s.target)addParked(W,o.cx,o.cy,o.ang,pick(CARCOLS),pick(['sedan','hatch','suv']))}
   W.pslot=W.pslots.find(o=>o.target)||null;
   for(const p of D.people||[]){const x=p.x*K,y=p.y*K;W.walkers.push({r:{seg:[[x,y],[x,y]]},s:0,sp:0,an:Math.random()*9,x:0,y:0,staff:p.kind==='evaluador',col:p.kind==='evaluador'?'#1d3557':undefined})}
@@ -1053,7 +1053,41 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
       x.beginPath();x.moveTo(q[0][0],q[0][1]);for(const r of q)x.lineTo(r[0],r[1]);x.closePath();x.strokeStyle='#9a948a';x.lineWidth=2;x.stroke();x.restore()}
     ptext(x,(D.name||'MI PLANTEL').toUpperCase().slice(0,30),4,4,'#ffffff')};
   return W}
-function customTasks(){const W=S.W,o=W.pslot;const T=[];
+// ---- EXAMEN POR FASES de un plantel creado (D.exam): fase 1, fila, zigzag, rotonda, reversa, ALTO de 5 s, parqueo y salida
+function customExam(W,D){const K=4,E=D.exam;if(!E||!E.length)return null;const T=[],G=(x,y)=>({x:x*K,y:y*K}),near=(p,r)=>Math.hypot(S.P.x-p.x,S.P.y-p.y)<r*K;
+  for(const st of E){const p=st.x!=null?G(st.x,st.y):null;
+    if(st.tipo==='fase1'){T.push({txt:(st.txt||'FASE 1: póngase el cinturón [C], avance despacio y deténgase junto al EVALUADOR.'),tgt:p,check(){if(this.dl||still('f1',near(p,6),.8))return dlgRun(this,CV2_F1);return false},ok:'¡Documentos en orden!'});
+      for(const q of[['FASE 1 · Encienda las LUCES [L].',()=>!!S.P.lights,'Luces: bien'],['FASE 1 · Ponga la direccional IZQUIERDA [Q].',()=>!!S.P.blinkL,'Direccional izquierda: bien'],['FASE 1 · Ahora la direccional DERECHA [E].',()=>!!S.P.blinkR&&!S.P.blinkL,'Direccional derecha: bien'],
+        ['FASE 1 · Ponga las luces de emergencia (intermitentes) [H].',()=>!!S.P.haz,'Intermitentes: bien'],['FASE 1 · Apague las intermitentes [H] y pise el FRENO [S] dos segundos.',()=>!S.P.haz&&still('frn',!!S.P.brake||(keys.s||keys.arrowdown),2),'Freno: bien']])T.push({txt:q[0],tgt:p,check:q[1],ok:q[2]});
+      T.push({txt:'FASE 1 terminada. Escuche al evaluador.',tgt:p,check(){return dlgRun(this,CV2_F2)}})}
+    else if(st.tipo==='ir')T.push({txt:st.txt||'Siga hasta el punto marcado.',tgt:p,check(){return near(p,st.r||6)&&(!st.parar||Math.abs(S.P.v)<.5)}});
+    else if(st.tipo==='fila')T.push({txt:st.txt||'FILA: deténgase en la línea de ESPERE hasta que lo llamen.',tgt:p,check(){if(this.dl||still('fila',near(p,5),1.5))return dlgRun(this,CV2_Q);return false},ok:'¡Su turno!'});
+    else if(st.tipo==='zigzag')T.push({txt:st.txt||'ZIGZAG: pase entre los conos sin tocarlos (−12 por cono).',tgt:p,check(){return near(p,st.r||6)}});
+    else if(st.tipo==='rotonda'){const g=(D.rings||[])[st.ring||0];if(!g)continue;const R={x:g.x*K,y:g.y*K,r:g.r*K};
+      T.push({txt:st.txt||'ROTONDA: CEDA el paso al entrar, direccional IZQUIERDA [Q] adentro, VUELTA COMPLETA y salga con direccional DERECHA [E].',tgt:p||{x:R.x,y:R.y-R.r},start(){S.lap=0;S.la=null;S.inR=false;S.rsl=0},
+        check(){const P=S.P,d=Math.hypot(P.x-R.x,P.y-R.y),w=(g.lanes||1)*(g.laneW||4.5)*K/2;if(d<R.r+w+2){const a=Math.atan2(P.y-R.y,P.x-R.x);if(S.la!=null)S.lap+=nA(a-S.la);S.la=a;S.inR=true;
+          if(!(P.blinkL||P.blinkR)&&S.lap<-.8){S.rsl+=S.dt;if(S.rsl>1.5&&!this.f1){this.f1=1;fault('rsigL','No mantuvo la direccional IZQUIERDA dentro de la rotonda','III',3)}}return false}
+          if(S.inR&&d>R.r+w+8){S.inR=false;S.la=null;if(S.lap>1)fault('rwrong','Circuló la rotonda en sentido contrario','I',5);else if(S.lap>-5.2)fault('lap','No dio la vuelta completa a la rotonda','II',6);
+            if(!(P.blinkR||S.t-(P.lastR||-9)<2.5))fault('rsigR','No puso direccional DERECHA al salir de la rotonda','III',5);return true}return false}})}
+    else if(st.tipo==='reversa'){const c=st.pts.map(([x,y])=>[x*K,y*K]),seg=[];let L=0;for(let i=0;i<c.length-1;i++){const a=c[i],b=c[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]);seg.push({a,b,l,s0:L});L+=l}
+      const proj=(x,y)=>{let best=null;for(const q of seg){const ux=(q.b[0]-q.a[0])/q.l,uy=(q.b[1]-q.a[1])/q.l,t=clamp((x-q.a[0])*ux+(y-q.a[1])*uy,0,q.l),px=q.a[0]+ux*t,py=q.a[1]+uy*t,d=Math.hypot(x-px,y-py),lat=(x-q.a[0])*(-uy)+(y-q.a[1])*ux;if(!best||d<best.d)best={d,s:q.s0+t,lat}}return best};
+      const at=s=>{for(const q of seg)if(s<=q.s0+q.l){const t=s-q.s0;return{x:q.a[0]+(q.b[0]-q.a[0])*t/q.l,y:q.a[1]+(q.b[1]-q.a[1])*t/q.l}}return{x:c[c.length-1][0],y:c[c.length-1][1]}};
+      const off=(st.carril||1.9)*K,lane=Math.random()<.5?-1:1,name=lane<0?'IZQUIERDO':'DERECHO',sEnd=L-(st.fin||2.5)*K,sBack=(st.atras||5)*K;
+      T.push({txt:'Deténgase antes de los carriles de REVERSA: el evaluador le indica el carril.',tgt:at(1*K),check(){if(this.dl||still('rvq',Math.hypot(S.P.x-at(0).x,S.P.y-at(0).y)<10*K,1))return dlgRun(this,[['EVALUADOR','Le toca el carril '+name+'. Avance recto hasta el ALTO de los conos verdes y deténgase.'],['EVALUADOR','Luego retroceda en línea recta hasta pasar los conos verdes de atrás. Si toca un cono, pierde la prueba.']]);return false}});
+      T.push({txt:'REVERSA: por el carril '+name+', avance hasta el ALTO y deténgase. Después retroceda recto hasta pasar los conos VERDES de atrás.',tgt:at(sEnd),ok:'¡Reversa completada!',
+        check(){const P=S.P,q=proj(P.x,P.y),inL=q.d<off*2.2;if(!this.wl&&inL&&Math.sign(q.lat)!==lane&&Math.abs(q.lat)>off*.5&&q.s>sBack&&q.s<sEnd){this.wl=1;fault('rvlane','Usó el carril equivocado en la reversa','II',6)}
+          if(!this.ph){if(inL&&q.s>sEnd-4*K&&Math.abs(P.v)<.4){this.ph=1;this.tgt=at(sBack);toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto. Mire los espejos.','info');say('Ahora retroceda en línea recta.')}return false}
+          if(inL&&P.gear===-1){if(P.v<-1)this.mv=true;if(this.mv&&Math.abs(P.v)<.3&&q.s>sBack+P.L){this.st=(this.st||0)+S.dt;if(this.st>1.2&&!this.fl){this.fl=1;fault('rstop','Detenerse durante el retroceso','IV',2)}}else this.st=0}
+          if(q.s<sBack&&Math.abs(P.v)<.4){if(!this.mv)fault('rnoret','No realizó el retroceso en reversa','III',22);return true}return false}});
+      T.push({txt:'Avance otra vez hasta el ALTO y deténgase COMPLETAMENTE (cuente 5 segundos).',tgt:at(sEnd),check(){const P=S.P,q=proj(P.x,P.y);if(q.d<off*2.2&&q.s>sEnd-4*K&&Math.abs(P.v)<.3)this.w=(this.w||0)+S.dt;else if(this.w&&this.w<3&&q.s>sEnd){fault('alto5','Arrancó del ALTO sin detenerse lo suficiente','II',6);this.w=99}return this.w>=4.5},ok:'¡Buen ALTO!'})}
+    else if(st.tipo==='alto5')T.push({txt:st.txt||'Haga ALTO completo (5 segundos).',tgt:p,check(){if(near(p,4)&&Math.abs(S.P.v)<.3)this.w=(this.w||0)+S.dt;return this.w>=4.5},ok:'¡Buen ALTO!'});
+    else if(st.tipo==='parqueo'){const o=W.pslot;if(!o)continue;T.push({txt:'ESTACIONAMIENTO EN REVERSA: estaciónese de retroceso en el espacio '+(o.num||'')+' (el amarillo). Tiene 5 intentos. Si toca un cono pierde la prueba.',tgt:{x:o.cx,y:o.cy},ok:'¡Estacionamiento correcto!',
+      start(){this.tries=0;this.lg=1;S.dlg={lines:[['EVALUADOR','Vaya y estaciónese de retroceso en el espacio '+(o.num||'')+'. Tiene cinco intentos.']],i:0,t:0,auto:true}},
+      check(){const P=S.P,dx=P.x-o.cx,dy=P.y-o.cy,c=Math.cos(o.ang),s=Math.sin(o.ang),al=dx*c+dy*s,lt=-dx*s+dy*c;if(Math.hypot(dx,dy)<10*K&&P.gear===-1&&this.lg===1){this.tries++;if(this.tries>5)fatal('Más de cinco intentos para estacionar: prueba perdida');else if(this.tries>1)toast('INTENTO '+this.tries+' DE 5','','info')}this.lg=P.gear;
+        return still('cpx',Math.abs(al)<o.hl*.45&&Math.abs(lt)<o.hw*.5&&Math.cos(P.h-o.ang)>.93,1.2)}})}
+    else if(st.tipo==='salida')T.push({txt:st.txt||'¡Fase dos terminada! Siga hacia la SALIDA: el evaluador se sube para la fase tres en calle.',tgt:p,start(){S.dlg={lines:[['EVALUADOR','Perfecto, muy bien. Terminamos con la fase dos.'],['EVALUADOR','(se sube al carro) Ahora sí, vamos para la fase tres: el recorrido en carretera. Con calma.']],i:0,t:0,auto:true}},check(){return near(p,st.r||7)}})}
+  return T.length?T:null}
+function customTasks(){const W=S.W,o=W.pslot;{const X=customExam(W,W.custom);if(X)return X}const T=[];
   if(o)T.push({txt:'MI PLANTEL: estaciónese de RETROCESO en el espacio amarillo'+(o.num?' ('+o.num+')':'')+'. Respete ALTO y CEDA y no toque conos.',tgt:{x:o.cx,y:o.cy},ok:'¡Estacionamiento correcto!',
     check(){const P=S.P,dx=P.x-o.cx,dy=P.y-o.cy,c=Math.cos(o.ang),s=Math.sin(o.ang),al=dx*c+dy*s,lt=-dx*s+dy*c;return still('cst',Math.abs(al)<o.hl*.45&&Math.abs(lt)<o.hw*.45&&Math.cos(P.h-o.ang)>.93,1.2)}});
   T.push({txt:'MI PLANTEL: practique libremente. Respete los ALTO y CEDA, use direccionales y no toque conos. [ESC] para salir.',tgt:{x:W.spawn.x,y:W.spawn.y},check(){return false}});
