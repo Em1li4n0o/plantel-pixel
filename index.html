@@ -882,7 +882,7 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
   const rpts=r=>{const q=P(r.pts);return ext(r.curva===false||q.length<3?q:smoothLine(q,3))};
   for(const r of D.roads||[]){if(!r.pts||r.pts.length<2)continue;const q=addPath(W,rpts(r));q.hw=roadW(r)*K/2;q.noCenter=true;if(r.oneway||(r.lanes||1)<2)q.oneway=true;q.cust=r}
   for(const g of D.rings||[]){const pts=[];for(let i=0;i<=56;i++){const a=-i/56*Math.PI*2;pts.push([(g.x+Math.cos(a)*g.r)*K,(g.y+Math.sin(a)*g.r)*K])}const q=addPath(W,pts),w=(g.lanes||1)*(g.laneW||4.5);q.hw=w*K/2;q.oneway=true;q.noCenter=true;
-    W.circObs.push({x:g.x*K,y:g.y*K,r:Math.max(1,(g.r-w/2)*K-.6),type:'isla'})}
+    W.circObs.push({x:g.x*K,y:g.y*K,r:Math.max(1,(g.r-w/2)*K-.6),type:'isla'});(W.cRings=W.cRings||[]).push({x:g.x*K,y:g.y*K,R:(g.r+w/2)*K})}
   for(const a of D.areas||[])if(a.kind==='asfalto'&&a.pts&&a.pts.length>2){const q=P(a.pts);W.ppaved.push(q);W.planes.push(q)}
   W.roofs=[];for(const a of D.areas||[])if(a.kind==='techo'&&a.pts&&a.pts.length>2){const q=P(a.pts);q.h=(a.h||4.2)*K;W.roofs.push(q)}
   for(const b of D.bldgs||[]){if(!b.pts||b.pts.length<3)continue;const pp=P(b.pts),cx=pp.reduce((s,r)=>s+r[0],0)/pp.length,cy=pp.reduce((s,r)=>s+r[1],0)/pp.length;
@@ -892,7 +892,7 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
   W.pstops=[];W.cedas=[];(D.signs||[]).forEach((s,i)=>{const o={x:s.x*K,y:s.y*K,ux:Math.cos(s.ang||0),uy:Math.sin(s.ang||0),w:(s.w||7)*K/2};if(s.kind==='alto')W.pstops.push(Object.assign(o,{code:'alto'+i,txt:'No hizo ALTO total',minV:99}));else W.cedas.push(o)});
   for(const q of W.roofs)for(let i=0;i<q.length;i++){const A=q[i],B=q[(i+1)%q.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=24){const x=A[0]+(B[0]-A[0])*t/L,y=A[1]+(B[1]-A[1])*t/L;if(pavedW(W,x,y))continue;const b={x:x-1,y:y-1,w:2,h:2,ht:q.h,type:'bld',col:'#8d99ae',roof:'#5c677d',poste:true};W.blds.push(b);W.circObs.push({x,y,r:1.3,type:'poste'})}}
   // vallas: malla y verja (líneas que no se pueden atravesar), muro y barrera naranja (con volumen en 3D)
-  for(const f of D.fences||[]){if(!f.pts||f.pts.length<2)continue;const q=P(f.pts);
+  for(const f of D.fences||[]){if(!f.pts||f.pts.length<2||f.kind==='pintura')continue;const q=P(f.pts);
     for(let i=0;i<q.length-1;i++){const[a,b]=q[i],[c,d]=q[i+1],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=2.4)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:f.kind==='barrera'?1.4:1.25,type:'valla'});
       if(f.kind==='muro'||f.kind==='barrera'){const th=(f.kind==='muro'?.25:.3)*K,nx=-(d-b)/L*th,ny=(c-a)/L*th,pp=[[a+nx,b+ny],[c+nx,d+ny],[c-nx,d-ny],[a-nx,b-ny]];W.pblds.push({p:pp,ht:(f.kind==='muro'?2.4:.9)*K*.5,col:f.kind==='muro'?'#a39d92':'#ff7b00',roof:f.kind==='muro'?'#8d877c':'#ffffff',cx:(a+c)/2,cy:(b+d)/2,rad:L/2+2})}
       else W.fences.push([a,b,c,d])}}
@@ -924,6 +924,8 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
     const floor=(t,px,py,ux,uy)=>{const rot=Math.abs(uy)>=Math.abs(ux)?(uy<0?0:2):(ux>0?1:3),L=t.length*4-1;const w=rot%2?5:L,h=rot%2?L:5;ptext(x,t,Math.round(px-w/2),Math.round(py-h/2),'#ecece4',rot)};
     const sign=(px,py,kind)=>{x.fillStyle='#555';x.fillRect(Math.round(px),Math.round(py),1,3);if(kind==='alto'){fillCirc(x,px,py-2,3,'#c1121f');x.fillStyle='#fff';x.fillRect(Math.round(px)-2,Math.round(py)-2,5,1)}
       else{x.fillStyle='#c1121f';for(let k=0;k<5;k++)x.fillRect(Math.round(px)-3+(k*.5|0),Math.round(py)-5+k,7-k,1);x.fillStyle='#fff';x.fillRect(Math.round(px)-1,Math.round(py)-4,3,1)}};
+    for(const a of D.areas||[])if(a.kind==='amarillo'&&a.pts&&a.pts.length>2){const q=P(a.pts);x.fillStyle='#f2c230';x.beginPath();x.moveTo(q[0][0],q[0][1]);for(const t of q)x.lineTo(t[0],t[1]);x.closePath();x.fill()}
+    for(const f of D.fences||[])if(f.kind==='pintura'&&f.pts&&f.pts.length>1)lineP(P(f.pts),'#f2c230',null,Math.max(1,(f.w||.15)*K));
     for(const s of W.pstops){bar(s.x,s.y,-s.uy,s.ux,-s.w+1,s.w-1,'#ecece4');floor('ALTO',s.x-s.ux*7,s.y-s.uy*7,s.ux,s.uy);sign(s.x+(-s.uy)*(s.w+3),s.y+s.ux*(s.w+3),'alto')}
     for(const s of W.cedas){bar(s.x,s.y,-s.uy,s.ux,-s.w,s.w,'#ecece4',2,1);floor('CEDA',s.x-s.ux*7,s.y-s.uy*7,s.ux,s.uy);sign(s.x+(-s.uy)*(s.w+3),s.y+s.ux*(s.w+3),'ceda')}
     for(const t of D.texts||[]){const a=t.ang||0,rot=((Math.round(a/(Math.PI/2))%4)+4)%4,L=String(t.t).length*4-1,w=rot%2?5:L,h=rot%2?L:5;ptext(x,String(t.t),Math.round(t.x*K-w/2),Math.round(t.y*K-h/2),t.col||'#ecece4',rot)}
@@ -2295,8 +2297,11 @@ function updatePlayer(W,P,dt){
     if(pushed&&S.arcade){const rel=Math.abs(P.v)+o.v*.5;if(rel>3){const a=Math.atan2(o.y-P.y,o.x-P.x);o.knock={vx:Math.cos(a)*rel*1.1,vy:Math.sin(a)*rel*1.1,spin:(Math.random()-.5)*rel*.25,t:1};o.stun=2;P.v*=-.35;P.spin=(Math.random()-.5)*rel/12;S.crashes=(S.crashes||0)+1;S.shake=Math.min(.5,rel/100);boing(rel);if(rel>12)anger(o,true)}continue}
     if(pushed){const rel=Math.abs(P.v)+o.v*.5;P.v*=-.2;o.v=0;o.stun=1.2;if(rel>3)anger(o,true);if(o.emerg){P.v*=.5}else if(rel>40)fatal('Choque fuerte contra otro vehículo');else if(rel>2){fault('carhit','Colisión con otro vehículo','I',3);sfx.crash()}}}
   if(P.blinkL)P.lastL=S.t;if(P.blinkR)P.lastR=S.t;
-  const inRing=W.rounds.some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+4);if(inRing){P.bh0=P.h;P.armed=false}
-  if((P.blinkL||P.blinkR)&&!inRing){if(Math.abs(nA(P.h-P.bh0))>.75)P.armed=true;if(P.armed&&Math.abs(P.steer)<.06){P.blinkL=P.blinkR=false;P.armed=false}}
+  const inRing=W.rounds.some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+4)||(W.cRings||[]).some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+4);
+  const nearRing=inRing||W.rounds.some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+16)||(W.cRings||[]).some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+16);
+  if(inRing){P.bh0=P.h;P.armed=false}
+  if(nearRing&&P.blinkL&&P.steer>.3){P.rStrong=(P.rStrong||0)+S.dt;if(P.rStrong>.35){P.blinkL=false;P.rStrong=0;P.bh0=P.h;P.armed=false}}else P.rStrong=0
+  if((P.blinkL||P.blinkR)&&!inRing){if(Math.abs(nA(P.h-P.bh0))>1.05)P.armed=true;if(P.armed&&Math.abs(P.steer)<.06){P.blinkL=P.blinkR=false;P.armed=false}}
 }
 
 // ===================== REGLAS =====================
@@ -2392,6 +2397,7 @@ function horn(){const W=S.W,P=S.P;P.hornT=.5;beep(415,.32,'square',.09);beep(523
   const danger=(W.jay||[]).some(p=>near(p.x,p.y,60))||W.zebras.some(z=>z.occ&&near(z.x,z.y,50))||W.ai.some(c=>{const rx=c.x-P.x,ry=c.y-P.y,f=rx*hx+ry*hy;return near(c.x,c.y,45)&&(f>0||Math.cos(c.h-P.h)<-.3)&&c.v>3});
   const school=W.zones.some(z=>z.name==='ESCUELA'&&inR(P.x,P.y,z));
   if(school){if(S.exam)fault('horn','Pitar en zona escolar','IV',6);else toast('ZONA ESCOLAR','No se pita cerca de escuelas','bad')}
+  else if(S.exam&&S.tasks&&S.tasks[S.task]&&/PITO/.test(S.tasks[S.task].txt)){}
   else if(!danger){if(S.exam)fault('horn','Uso innecesario de la bocina (úsela solo para evitar un accidente)','IV',8);else toast('BOCINA','Úsela solo para evitar un accidente','info')}}
 function ovtTarget(W,P){const hx=Math.cos(P.h),hy=Math.sin(P.h);for(const o of W.ai.concat(W.roadObs||[])){const rx=o.x-P.x,ry=o.y-P.y,f=rx*hx+ry*hy,lat=-rx*hy+ry*hx;if(f>-25&&f<70&&lat>8&&lat<22&&Math.cos((o.h||0)-P.h)>.5)return o}return null}
 function spawnJay(W,P){if(!W.jay)W.jay=[];const rs=W.roads.filter(r=>inR(P.x,P.y,r.rect));if(rs.length!==1)return;const r=rs[0];const hx=Math.cos(P.h),hy=Math.sin(P.h);
