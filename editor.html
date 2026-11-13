@@ -46,6 +46,7 @@ main{grid-area:main;position:relative;overflow:hidden;background:#2f6b2a}
   <button id="bBg">Fondo: imagen…</button>
   <button id="bSat">Fondo: satélite Ciudad Vial</button>
   <button id="bCal">Calibrar fondo</button>
+  <button id="bHelp">? Ayuda</button>
   <button id="bPlay" class="go">▶ Probar en el juego</button>
   <a href="index.html" style="color:var(--mute);margin-left:auto">Volver al juego</a>
   <input type="file" id="fOpen" accept=".json,application/json" hidden>
@@ -75,6 +76,14 @@ main{grid-area:main;position:relative;overflow:hidden;background:#2f6b2a}
   <button data-tool="area" data-kind="zacate">Zacate / isla <kbd>Z</kbd></button>
   <button data-tool="area" data-kind="acera">Acera <kbd>D</kbd></button>
   <button data-tool="area" data-kind="techo">Techo / toldo solar <kbd>U</kbd></button>
+  <button data-tool="fence" data-kind="malla">Valla de malla <kbd>F</kbd></button>
+  <button data-tool="fence" data-kind="verja">Verja de hierro <kbd>J</kbd></button>
+  <button data-tool="fence" data-kind="muro">Muro / tapia <kbd>H</kbd></button>
+  <button data-tool="fence" data-kind="barrera">Barrera naranja <kbd>N</kbd></button>
+  <button data-tool="pole" data-kind="luz">Poste de luz <kbd>L</kbd></button>
+  <button data-tool="pole" data-kind="poste">Poste / columna <kbd>Q</kbd></button>
+  <button data-tool="tree">Árbol <kbd>3</kbd></button>
+  <button data-tool="slope">Subida / pendiente <kbd>4</kbd></button>
   <button data-tool="person" data-kind="evaluador">Evaluador <kbd>E</kbd></button>
   <button data-tool="person" data-kind="persona">Persona <kbd>O</kbd></button>
   <button data-tool="start">Inicio del carro <kbd>I</kbd></button>
@@ -95,7 +104,7 @@ const cv=$('cv'),cx=cv.getContext('2d');
 let M=blank(),tool='sel',opt={lanes:'2',kind:'',col:'n'},draft=null,sel=null,drag=null,hover=null,cal=null;
 let view={x:-5,y:-5,z:8};// z = píxeles por metro
 let BG={img:null};const HIST=[];
-function blank(){return{v:1,name:'Mi plantel',w:120,h:100,limit:20,roads:[],rings:[],areas:[],bldgs:[],cones:[],signs:[],texts:[],slots:[],people:[],start:{x:20,y:20,ang:0},bg:null}}
+function blank(){return{v:1,name:'Mi plantel',w:120,h:100,limit:20,roads:[],rings:[],areas:[],bldgs:[],cones:[],signs:[],texts:[],slots:[],people:[],fences:[],poles:[],trees:[],slopes:[],start:{x:20,y:20,ang:0},bg:null}}
 // ---------- guardar / historial ----------
 function save(push=true){if(push){HIST.push(JSON.stringify(M));if(HIST.length>80)HIST.shift()}try{localStorage.setItem('pp_custom',JSON.stringify(M))}catch(e){}draw();props()}
 function snapshot(){HIST.push(JSON.stringify(M));if(HIST.length>80)HIST.shift()}
@@ -124,6 +133,9 @@ function pick(p){const tol=6/view.z;let best=null,bd=1e9;const tryIt=(type,i,d)=
   M.cones.forEach((c,i)=>tryIt('cones',i,dist(p,c)-.4));M.people.forEach((c,i)=>tryIt('people',i,dist(p,c)-.5));
   M.signs.forEach((s,i)=>tryIt('signs',i,dist(p,s)-(s.w||REF.laneW)/2));M.texts.forEach((s,i)=>tryIt('texts',i,dist(p,s)-1));
   M.slots.forEach((s,i)=>tryIt('slots',i,dist(p,s)-1.2));
+  M.poles.forEach((s,i)=>tryIt('poles',i,dist(p,s)-.6));M.trees.forEach((s,i)=>tryIt('trees',i,dist(p,s)-1.5));
+  M.fences.forEach((f,i)=>tryIt('fences',i,polyDist(p,f.pts)-.4));
+  M.slopes.forEach((q,i)=>tryIt('slopes',i,polyDist(p,q.pts)-(q.w||7)/2));
   if(dist(p,M.start)<2.5)tryIt('start',0,dist(p,M.start)-2.5);
   M.roads.forEach((r,i)=>tryIt('roads',i,polyDist(p,r.pts)-roadW(r)/2));
   M.rings.forEach((g,i)=>tryIt('rings',i,Math.abs(Math.hypot(p.x-g.x,p.y-g.y)-g.r)-(g.lanes||1)*(g.laneW||REF.ringLaneW)/2));
@@ -152,6 +164,13 @@ function draw(){const g=cx,dpr=devicePixelRatio;g.setTransform(dpr,0,0,dpr,0,0);
     if(!r.oneway&&(r.lanes||1)>1&&!r.wide){const st=r.center||'dash';if(st==='dash')line(rp,.15,'#f2c230',[3,3]);else if(st==='solid')line(rp,.15,'#f2c230');else if(st==='double'){line(offLine(rp,.15),.12,'#f2c230');line(offLine(rp,-.15),.12,'#f2c230')}}
     if(r.oneway&&r.pts.length>1){const a=r.pts[0],b=r.pts[1],L=Math.hypot(b[0]-a[0],b[1]-a[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2],u=[(b[0]-a[0])/L,(b[1]-a[1])/L];line([[m[0]-u[0],m[1]-u[1]],[m[0]+u[0],m[1]+u[1]]],.25,'#ecece4');line([[m[0]+u[0]-u[0]*.7+u[1]*.6,m[1]+u[1]-u[1]*.7-u[0]*.6],[m[0]+u[0],m[1]+u[1]],[m[0]+u[0]-u[0]*.7-u[1]*.6,m[1]+u[1]-u[1]*.7+u[0]*.6]],.25,'#ecece4')}}
   for(const a of M.areas)if(a.kind==='techo'){g.globalAlpha=.6;poly(a.pts,'#1f3f8f','#8fb4ff');g.globalAlpha=1;const q=a.pts;if(q.length===4){g.strokeStyle='rgba(143,180,255,.6)';g.lineWidth=1;for(let k=1;k<10;k++){const t=k/10,[x1,y1]=W2S(q[0][0]+(q[3][0]-q[0][0])*t,q[0][1]+(q[3][1]-q[0][1])*t),[x2,y2]=W2S(q[1][0]+(q[2][0]-q[1][0])*t,q[1][1]+(q[2][1]-q[1][1])*t);g.beginPath();g.moveTo(x1,y1);g.lineTo(x2,y2);g.stroke()}}}
+  for(const q of M.slopes){const[a0,b0]=q.pts[0],[a1,b1]=q.pts[1];const L=Math.hypot(a1-a0,b1-b0)||1,ux=(a1-a0)/L,uy=(b1-b0)/L,hw=(q.w||7)/2;const pts=[[a0-uy*hw,b0+ux*hw],[a1-uy*hw,b1+ux*hw],[a1+uy*hw,b1-ux*hw],[a0+uy*hw,b0-ux*hw]];
+    g.globalAlpha=.35;poly(pts,'#c9a227','#f2c230');g.globalAlpha=1;for(let t=2;t<L-1;t+=3){const cxx=a0+ux*t,cyy=b0+uy*t;line([[cxx-uy*hw*.5-ux*.8,cyy+ux*hw*.5-uy*.8],[cxx,cyy],[cxx+uy*hw*.5-ux*.8,cyy-ux*hw*.5-uy*.8]],.18,'rgba(255,255,255,.8)')}
+    const[sx,sy]=W2S(a0+ux*L/2,b0+uy*L/2);g.fillStyle='#fff';g.font='700 12px system-ui';g.textAlign='center';g.fillText('BAJA '+Math.round((q.grade||.1)*100)+'%',sx,sy-6)}
+  for(const f of M.fences){const col={malla:'#aab4be',verja:'#3d3d46',muro:'#9a948a',barrera:'#ff7b00'}[f.kind]||'#aab4be';line(f.pts,f.kind==='muro'?.3:f.kind==='barrera'?.5:.12,col,f.kind==='malla'?[.4,.25]:null);
+    for(let i=0;i<f.pts.length-1;i++){const[a,b]=f.pts[i],[c,d]=f.pts[i+1],L=Math.hypot(c-a,d-b);const st=f.kind==='verja'?1.5:f.kind==='malla'?3:0;if(st)for(let t=0;t<=L;t+=st){const[x,y]=W2S(a+(c-a)*t/L,b+(d-b)*t/L);g.fillStyle=col;g.fillRect(x-1.5,y-1.5,3,3)}}}
+  for(const t of M.trees){const[a,b]=W2S(t.x,t.y),rr=Math.max(4,(t.r||2)*view.z);g.fillStyle='rgba(0,0,0,.3)';g.beginPath();g.arc(a+2,b+2,rr,0,7);g.fill();g.fillStyle='#2e6b2c';g.beginPath();g.arc(a,b,rr,0,7);g.fill();g.fillStyle='#4f9a45';g.beginPath();g.arc(a-rr*.25,b-rr*.25,rr*.55,0,7);g.fill()}
+  for(const q of M.poles){const[a,b]=W2S(q.x,q.y);g.fillStyle='#5c677d';g.beginPath();g.arc(a,b,Math.max(2.5,.18*view.z),0,7);g.fill();if(q.kind==='luz'){g.fillStyle='rgba(255,230,140,.35)';g.beginPath();g.arc(a,b,Math.max(6,3*view.z),0,7);g.fill();g.fillStyle='#ffd23f';g.beginPath();g.arc(a,b,2,0,7);g.fill()}}
   for(const b of M.bldgs){const sh=b.pts.map(q=>[q[0]+.8,q[1]+.8]);poly(sh,'rgba(0,0,0,.3)');poly(b.pts,b.col||'#ecebe4','#222');if(b.label){const c=b.pts.reduce((s,q)=>[s[0]+q[0]/b.pts.length,s[1]+q[1]/b.pts.length],[0,0]);const[a,bb]=W2S(c[0],c[1]);g.fillStyle='#3d405b';g.font='600 12px system-ui';g.textAlign='center';g.fillText(b.label,a,bb+4)}}
   for(const s of M.slots){const[a,b]=W2S(s.x,s.y);g.save();g.translate(a,b);g.rotate(s.ang||0);const w=(s.w||REF.slot.w)*view.z,l=(s.l||REF.slot.l)*view.z;g.strokeStyle=s.target?'#ffd23f':'#ecece4';g.lineWidth=Math.max(1,.12*view.z);g.beginPath();g.moveTo(l/2,-w/2);g.lineTo(-l/2,-w/2);g.lineTo(-l/2,w/2);g.lineTo(l/2,w/2);g.stroke();
     if(s.ocupado){g.fillStyle='#6c7a89';g.fillRect(-REF.car.L/2*view.z,-REF.car.W/2*view.z,REF.car.L*view.z,REF.car.W*view.z)}g.rotate(-(s.ang||0));g.fillStyle=s.target?'#ffd23f':'#ecece4';g.font='600 11px system-ui';g.textAlign='center';g.fillText(String(s.num||''),0,4);g.restore()}
@@ -176,7 +195,7 @@ function draw(){const g=cx,dpr=devicePixelRatio;g.setTransform(dpr,0,0,dpr,0,0);
 // ---------- herramientas ----------
 const HINTS={sel:'Clic para seleccionar. Arrastre para mover. Supr para borrar. Rueda: zoom. Clic derecho y arrastre: mover la vista.',del:'Clic sobre un elemento para borrarlo.',pan:'Arrastre para mover la vista. Rueda para acercar.',
   road:'Clic para poner puntos de la calle (la línea central). Doble clic o Enter para terminar. Esc cancela.',ring:'Clic en el centro y arrastre hasta el centro del carril de la rotonda.',area:'Clic para poner las esquinas. Doble clic o Enter para cerrar.',
-  cone:'Clic: un cono. Arrastre: una fila de conos (cada 1,5 m; se cambia a la derecha).',sign:'Clic donde va la línea y arrastre en el SENTIDO en que llega el carro.',text:'Clic donde va el texto (se escribe a la derecha).',
+  fence:'Clic para cada punto de la valla. Doble clic o Enter para terminar.',pole:'Clic para poner el poste.',tree:'Clic para poner el árbol.',slope:'Clic en lo ALTO de la subida y arrastre hacia ABAJO (el sentido en que baja).',cone:'Clic: un cono. Arrastre: una fila de conos (cada 1,5 m; se cambia a la derecha).',sign:'Clic donde va la línea y arrastre en el SENTIDO en que llega el carro.',text:'Clic donde va el texto (se escribe a la derecha).',
   slot:'Clic en el centro del espacio y arrastre hacia la SALIDA del espacio (por donde entra el carro).',bldg:'Clic para las esquinas del edificio. Doble clic o Enter para cerrar.',person:'Clic para poner la persona.',start:'Clic donde arranca el carro y arrastre hacia donde mira.',
   cal:'CALIBRAR: haga clic en dos puntos del fondo cuya distancia real conoce (por ejemplo el ancho de un carril).'};
 function setTool(t,btn){tool=t;draft=null;cal=null;if(btn){opt.lanes=btn.dataset.lanes||opt.lanes;opt.kind=btn.dataset.kind||'';opt.col=btn.dataset.col||'n'}
@@ -185,6 +204,7 @@ document.querySelectorAll('#tools button').forEach(b=>b.onclick=()=>setTool(b.da
 function finishDraft(){if(!draft)return;const d=draft;draft=null;
   if(d.kind==='road'&&d.pts.length>=2){const l=opt.lanes;M.roads.push({pts:d.pts,lanes:l==='2'?2:1,laneW:l==='2'?REF.laneW:REF.laneW,wide:l==='1w',wideW:REF.wideW,oneway:l!=='2',center:'dash'});sel={type:'roads',i:M.roads.length-1}}
   else if(d.kind==='area'&&d.pts.length>=3){M.areas.push({pts:d.pts,kind:opt.kind});sel={type:'areas',i:M.areas.length-1}}
+  else if(d.kind==='fence'&&d.pts.length>=2){M.fences.push({pts:d.pts,kind:opt.kind||'malla'});sel={type:'fences',i:M.fences.length-1}}
   else if(d.kind==='bldg'&&d.pts.length>=3){M.bldgs.push({pts:d.pts,h:6,col:'#ecebe4',label:''});sel={type:'bldgs',i:M.bldgs.length-1}}
   save()}
 cv.addEventListener('contextmenu',e=>e.preventDefault());
@@ -193,7 +213,9 @@ cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const r=
   if(cal){if(!cal.p0){cal.p0=p;draw()}else{const m=prompt('¿Cuántos METROS hay entre esos dos puntos?','3.5');const real=parseFloat(String(m||'').replace(',','.'));if(real>0&&M.bg){const dw=dist(cal.p0,p),k=real/dw;M.bg.mpp*=k;M.bg.x=cal.p0.x+(M.bg.x-cal.p0.x)*k;M.bg.y=cal.p0.y+(M.bg.y-cal.p0.y)*k;save()}cal=null;setTool('sel',document.querySelector('[data-tool=sel]'))}return}
   if(tool==='sel'){sel=pick(p);if(sel){snapshot();drag={mode:'move',last:p}}else drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y};props();draw();return}
   if(tool==='del'){const s=pick(p);if(s&&s.type!=='start'){M[s.type].splice(s.i,1);sel=null;save()}return}
-  if(tool==='road'||tool==='area'||tool==='bldg'){if(!draft)draft={kind:tool,pts:[],w:opt.lanes==='2'?2*REF.laneW:opt.lanes==='1w'?REF.wideW:REF.laneW};const last=draft.pts[draft.pts.length-1];if(!last||Math.hypot(last[0]-ps.x,last[1]-ps.y)>.3)draft.pts.push([ps.x,ps.y]);draw();return}
+  if(tool==='pole'){M.poles.push({x:ps.x,y:ps.y,kind:opt.kind||'luz'});save();return}
+  if(tool==='tree'){M.trees.push({x:ps.x,y:ps.y,r:2});save();return}
+  if(tool==='road'||tool==='area'||tool==='bldg'||tool==='fence'){if(!draft)draft={kind:tool,pts:[],w:opt.lanes==='2'?2*REF.laneW:opt.lanes==='1w'?REF.wideW:REF.laneW};const last=draft.pts[draft.pts.length-1];if(!last||Math.hypot(last[0]-ps.x,last[1]-ps.y)>.3)draft.pts.push([ps.x,ps.y]);draw();return}
   if(tool==='text'){const t=prompt('Texto que va pintado en el piso:','ALTO');if(t){M.texts.push({x:ps.x,y:ps.y,t:t.toUpperCase(),ang:0,size:1.2,col:'#ecece4'});sel={type:'texts',i:M.texts.length-1};save()}return}
   if(tool==='person'){M.people.push({x:ps.x,y:ps.y,kind:opt.kind});save();return}
   drag={mode:'vec',tool,p0:ps,p1:ps};draw()});
@@ -208,6 +230,7 @@ cv.addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;
   else if(d.tool==='sign'){M.signs.push({x:d.p0.x,y:d.p0.y,ang,kind:opt.kind,w:REF.laneW*2});sel={type:'signs',i:M.signs.length-1}}
   else if(d.tool==='slot'){const n=M.slots.length+1;M.slots.push({x:d.p0.x,y:d.p0.y,ang,w:REF.slot.w,l:REF.slot.l,num:n,target:false,ocupado:false});sel={type:'slots',i:M.slots.length-1}}
   else if(d.tool==='start'){M.start={x:d.p0.x,y:d.p0.y,ang}}
+  else if(d.tool==='slope'){if(L>2){M.slopes.push({pts:[[d.p0.x,d.p0.y],[d.p1.x,d.p1.y]],w:7,grade:.1});sel={type:'slopes',i:M.slopes.length-1}}}
   save()});
 cv.addEventListener('dblclick',()=>{if(draft){draft.pts.pop();finishDraft()}});
 cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,p=S2W(mx,my);view.z=Math.max(1.5,Math.min(80,view.z*(e.deltaY<0?1.15:1/1.15)));view.x=p.x-mx/view.z;view.y=p.y-my/view.z;draw()},{passive:false});
@@ -215,7 +238,7 @@ addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.ke
   if((e.ctrlKey||e.metaKey)&&k==='z'){undo();e.preventDefault();return}
   if(k==='enter'){finishDraft();return}if(k==='escape'){draft=null;cal=null;draw();return}
   if((k==='delete'||k==='backspace')&&sel&&sel.type!=='start'){M[sel.type].splice(sel.i,1);sel=null;save();return}
-  const map={v:'[data-tool=sel]',x:'[data-tool=del]',m:'[data-tool=pan]',c:'[data-tool=road][data-lanes="2"]','1':'[data-tool=road][data-lanes="1"]',w:'[data-tool=road][data-lanes="1w"]',r:'[data-tool=ring][data-lanes="1"]','2':'[data-tool=ring][data-lanes="2"]',a:'[data-kind=asfalto]',k:'[data-tool=cone][data-col=n]',g:'[data-tool=cone][data-col=v]',s:'[data-kind=alto]',y:'[data-kind=ceda]',t:'[data-tool=text]',p:'[data-tool=slot]',b:'[data-tool=bldg]',z:'[data-kind=zacate]',d:'[data-kind=acera]',u:'[data-kind=techo]',e:'[data-kind=evaluador]',o:'[data-kind=persona]',i:'[data-tool=start]'};
+  const map={v:'[data-tool=sel]',x:'[data-tool=del]',m:'[data-tool=pan]',c:'[data-tool=road][data-lanes="2"]','1':'[data-tool=road][data-lanes="1"]',w:'[data-tool=road][data-lanes="1w"]',r:'[data-tool=ring][data-lanes="1"]','2':'[data-tool=ring][data-lanes="2"]',a:'[data-kind=asfalto]',k:'[data-tool=cone][data-col=n]',g:'[data-tool=cone][data-col=v]',s:'[data-kind=alto]',y:'[data-kind=ceda]',t:'[data-tool=text]',p:'[data-tool=slot]',b:'[data-tool=bldg]',z:'[data-kind=zacate]',d:'[data-kind=acera]',u:'[data-kind=techo]',f:'[data-kind=malla]',j:'[data-kind=verja]',h:'[data-kind=muro]',n:'[data-kind=barrera]',l:'[data-kind=luz]',q:'[data-kind=poste]','3':'[data-tool=tree]','4':'[data-tool=slope]',e:'[data-kind=evaluador]',o:'[data-kind=persona]',i:'[data-tool=start]'};
   if(map[k]){const b=document.querySelector(map[k]);if(b)setTool(b.dataset.tool,b)}});
 // ---------- panel de propiedades ----------
 function field(lbl,val,on,type='number',step='0.1'){const id='f'+Math.random().toString(36).slice(2);return{html:`<label>${lbl}<input id="${id}" type="${type}" step="${step}" value="${val??''}"></label>`,id,on}}
@@ -236,6 +259,10 @@ function props(){const P=$('props');let f=[],title='Plantel',note='';
   else if(sel.type==='bldgs'){title='Edificio';f=[field('Nombre',e.label,v=>e.label=v,'text'),field('Altura (m)',e.h,v=>e.h=+v),choose('Color',e.col,[['#ecebe4','Blanco'],['#d9c7a3','Beige'],['#9fb7c9','Celeste'],['#c96e5a','Ladrillo'],['#7f8c8d','Gris'],['#2e8b57','Verde']],v=>e.col=v)]}
   else if(sel.type==='areas'){title='Área';f=[choose('Tipo',e.kind,[['asfalto','Asfalto (se puede manejar)'],['zacate','Zacate / isla'],['acera','Acera'],['techo','Techo / toldo solar']],v=>e.kind=v)].concat(e.kind==='techo'?[field('Altura del techo (m)',e.h||4.2,v=>e.h=+v)]:[])}
   else if(sel.type==='cones'){title='Cono';f=[choose('Color',e.col,[['n','Naranja'],['v','Verde']],v=>e.col=v),check('Si lo toca pierde la prueba',e.fatal,v=>e.fatal=v)]}
+  else if(sel.type==='fences'){title='Valla';f=[choose('Tipo',e.kind,[['malla','Valla de malla'],['verja','Verja de hierro'],['muro','Muro / tapia'],['barrera','Barrera naranja']],v=>e.kind=v)];note='El carro no puede atravesarla.'}
+  else if(sel.type==='poles'){title='Poste';f=[choose('Tipo',e.kind,[['luz','Poste de luz'],['poste','Poste / columna']],v=>e.kind=v)]}
+  else if(sel.type==='trees'){title='Árbol';f=[field('Radio de la copa (m)',e.r||2,v=>e.r=+v)]}
+  else if(sel.type==='slopes'){title='Subida / pendiente';f=[field('Pendiente (%)',Math.round((e.grade||.1)*100),v=>e.grade=Math.max(1,Math.min(25,+v))/100,'number','1'),field('Ancho (m)',e.w||7,v=>e.w=+v)];note='La flecha apunta hacia donde BAJA. En el juego el carro se va para atrás si no frena o no usa el freno de mano.<div class="row"><button id="bRev">Invertir</button></div>'}
   else if(sel.type==='people'){title='Persona';f=[choose('Tipo',e.kind,[['evaluador','Evaluador'],['persona','Persona']],v=>e.kind=v)]}
   else if(sel.type==='start'){title='Inicio del carro';f=[field('Ángulo (°)',Math.round((e.ang||0)*180/Math.PI),v=>e.ang=(+v)*Math.PI/180,'number','5')]}
   P.innerHTML=`<h2>${title}</h2>`+f.map(x=>x.html).join('')+`<div class="note">${note}</div>`;
@@ -263,6 +290,8 @@ function review(){const out=[],near=(p,tol)=>{for(const o of M.roads)if(polyDist
   M.slots.forEach(s=>{if(!near([s.x+Math.cos(s.ang||0)*(s.l||5)/2*1.1,s.y+Math.sin(s.ang||0)*(s.l||5)/2*1.1],.5))out.push({x:s.x,y:s.y,t:'Espacio '+s.num+': la salida no da a una calle'})});
   if(!M.slots.length)out.push({t:'No hay espacios de parqueo (la prueba incluye estacionar en reversa).'});else if(!M.slots.some(s=>s.target))out.push({t:'Ningún espacio está marcado como el de la prueba (amarillo).'});
   if(!M.people.some(p=>p.kind==='evaluador'))out.push({t:'No hay evaluadores.'});
+  if(!M.signs.some(s=>s.kind==='alto'))out.push({t:'No hay ningún ALTO.'});
+  if(M.rings.length&&!M.signs.some(s=>s.kind==='ceda'))out.push({t:'Hay rotonda pero ningún CEDA en sus entradas.'});
   ISSUES=out;draw();
   $('props').innerHTML='<h2>Revisión</h2>'+(out.length?'<div class="note">Los puntos marcados en rojo en el mapa:</div><ol style="padding-left:18px;font-size:13px;line-height:1.5">'+out.slice(0,60).map((q,i)=>`<li><a href="#" data-i="${i}" style="color:inherit">${q.t}</a></li>`).join('')+'</ol>'+(out.length>60?`<div class="note">…y ${out.length-60} más.</div>`:''):'<div class="note">No encontré problemas. ✔</div>')+'<div class="row"><button id="bCloseRev">Cerrar</button></div>';
   $('props').querySelectorAll('a[data-i]').forEach(a=>a.onclick=ev=>{ev.preventDefault();const q=out[+a.dataset.i];if(q.x!=null){const r=cv.getBoundingClientRect();view.x=q.x-r.width/2/view.z;view.y=q.y-r.height/2/view.z;draw()}});
@@ -274,6 +303,16 @@ $('bSave').onclick=()=>{const a=document.createElement('a');a.href=URL.createObj
 $('bOpen').onclick=()=>$('fOpen').click();
 $('fOpen').onchange=()=>{const f=$('fOpen').files[0];if(!f)return;f.text().then(t=>{try{M=Object.assign(blank(),JSON.parse(t));sel=null;save();fit()}catch(e){alert('Ese archivo no es un plantel válido.')}})};
 $('bUndo').onclick=undo;
+$('bHelp').onclick=()=>{$('props').innerHTML=`<h2>Cómo crear un plantel</h2><ol style="padding-left:18px;font-size:13px;line-height:1.55">
+<li>Ponga una foto de fondo: «Fondo: imagen…» (foto aérea o de Google Maps) y luego «Calibrar fondo»: toque dos puntos y escriba los metros reales entre ellos.</li>
+<li>Trace las calles por el CENTRO del carril. Doble clic para terminar cada calle. Use «1 carril», «2 carriles» o «1 carril ancho».</li>
+<li>Agregue rotondas, asfalto (patios e intersecciones), conos, ALTO y CEDA (arrastre en el sentido en que llega el carro).</li>
+<li>Ponga los espacios de parqueo (arrastre hacia la salida del espacio) y marque el de la prueba en amarillo.</li>
+<li>Agregue edificios, toldos, vallas, verjas, muros, barreras, postes, árboles, subidas, evaluadores y el INICIO del carro.</li>
+<li>Toque «Revisar» y corrija lo que salga en rojo.</li>
+<li>Toque «▶ Probar en el juego» para manejarlo.</li>
+<li>Al terminar toque «Guardar archivo» y envíe el archivo .json a Plantel Pixel (por correo o WhatsApp).</li></ol>
+<div class="note">Atajos: V seleccionar · X borrar · Supr borra lo seleccionado · Ctrl+Z deshacer · Esc cancela · rueda del mouse para acercar · clic derecho y arrastrar para moverse.</div><div class="row"><button onclick="props()">Cerrar</button></div>`};
 $('bPlay').onclick=()=>{if(!M.roads.length&&!M.rings.length&&!M.areas.some(a=>a.kind==='asfalto')){alert('Dibuje al menos una calle o un área de asfalto.');return}save(false);location.href='index.html#custom'};
 resize();if(M.roads.length||M.rings.length)fit();setTool('sel',document.querySelector('[data-tool=sel]'));
 </script>
