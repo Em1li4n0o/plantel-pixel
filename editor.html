@@ -44,7 +44,24 @@ main{grid-area:main;position:relative;overflow:hidden;background:#2f6b2a}
   <button id="bUndo" title="Ctrl+Z">Deshacer</button>
   <button id="bCheck">Revisar</button>
   <button id="bBg">Fondo: imagen…</button>
-  <button id="bSat">Fondo: satélite Ciudad Vial</button>
+  <select id="sSede" title="Foto satelital del plantel de cada sede de pruebas">
+    <option value="">Fondo satelital: elija la sede…</option>
+    <option value="sanjose">San José · Ciudad Vial (Paso Ancho)</option>
+    <option value="heredia">Heredia · San Pedro de Barva</option>
+    <option value="alajuela">Alajuela · Montecillos</option>
+    <option value="sanramon">San Ramón</option>
+    <option value="cartago">Cartago · El Carmen</option>
+    <option value="perez">Pérez Zeledón · Daniel Flores</option>
+    <option value="rioclaro">Río Claro</option>
+    <option value="sancarlos">San Carlos · Ciudad Quesada</option>
+    <option value="guapiles">Guápiles</option>
+    <option value="nicoya">Nicoya</option>
+    <option value="liberia">Liberia</option>
+    <option value="limon">Limón</option>
+    <option value="puntarenas">Puntarenas · Chacarita</option>
+  </select>
+  <input id="iBuscar" type="text" placeholder="Buscar otro lugar…" style="width:160px">
+  <button id="bBuscar">Buscar</button>
   <button id="bCal">Calibrar fondo</button>
   <label style="display:flex;gap:4px;align-items:center;font-size:13px"><input type="checkbox" id="showExam" checked> Pasos del examen</label>
   <button id="bAddExam">+ Paso del examen</button>
@@ -298,19 +315,42 @@ function props(){const P=$('props');let f=[],title='Plantel',note='';
 // ---------- fondo: imagen propia o satélite ----------
 $('bBg').onclick=()=>$('fBg').click();
 $('fBg').onchange=()=>{const f=$('fBg').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>setBg(rd.result,{x:0,y:0,mpp:.1,op:.75,src:'Imagen propia — calibre con «Calibrar fondo»'});rd.readAsDataURL(f)};
-function setBg(url,b){const i=new Image();i.onload=()=>{BG.img=i;M.bg=b;try{localStorage.setItem('pp_custom_bg',url)}catch(e){alert('La imagen es muy grande para guardarla en el navegador; se verá solo en esta sesión.')}save()};i.src=url}
+function setBg(url,b){return new Promise(res=>{const i=new Image();i.onload=()=>{BG.img=i;M.bg=b;try{localStorage.setItem('pp_custom_bg',url)}catch(e){alert('La imagen es muy grande para guardarla en el navegador; se verá solo en esta sesión.')}save();res()};i.src=url})}
 $('bCal').onclick=()=>{if(!M.bg){alert('Primero ponga una imagen de fondo.');return}setTool('sel',null);cal={};$('hint').textContent=HINTS.cal};
 const SATZ=19,SATN=2**SATZ,stx=l=>(l+180)/360*SATN*256,sty=l=>{const q=l*Math.PI/180;return(1-Math.log(Math.tan(q)+1/Math.cos(q))/Math.PI)/2*SATN*256};
 const SAT0={lat:9.9131,lon:-84.0756};// esquina de la primera foto de Ciudad Vial (para alinear dibujos viejos)
-async function satArea(la0,la1,lo0,lo1,label){const X0=stx(lo0),X1=stx(lo1),Y0=sty(la1),Y1=sty(la0),c=document.createElement('canvas');c.width=Math.round(X1-X0);c.height=Math.round(Y1-Y0);const g=c.getContext('2d');$('hint').textContent='Descargando la foto satelital…';
-  const load=src=>new Promise(r=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src});
-  for(let ty=Math.floor(Y0/256);ty<=Math.floor(Y1/256);ty++)for(let tx=Math.floor(X0/256);tx<=Math.floor(X1/256);tx++){const i=await load(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${SATZ}/${ty}/${tx}`);if(i)g.drawImage(i,tx*256-X0,ty*256-Y0)}
-  const mpp=156543.03*Math.cos(((la0+la1)/2)*Math.PI/180)/SATN;
+// Descarga la foto satelital del área. Prueba el acercamiento 19; si el proveedor no tiene foto ahí ("Map data not yet available", gris parejo), baja a 18 o 17.
+const satLoad=src=>new Promise(r=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=src});
+const satURL=(z,ty,tx)=>`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}`;
+async function satHasData(z,lat,lon){const n=2**z,tx=Math.floor((lon+180)/360*n),q=lat*Math.PI/180,ty=Math.floor((1-Math.log(Math.tan(q)+1/Math.cos(q))/Math.PI)/2*n);const i=await satLoad(satURL(z,ty,tx));if(!i)return false;
+  const c=document.createElement('canvas');c.width=c.height=64;const g=c.getContext('2d');g.drawImage(i,0,0,64,64);const d=g.getImageData(0,0,64,64).data;let m=0,v=0,sat=0;const N=d.length/4;for(let k=0;k<d.length;k+=4){const l=(d[k]+d[k+1]+d[k+2])/3;m+=l;v+=l*l;sat+=Math.max(d[k],d[k+1],d[k+2])-Math.min(d[k],d[k+1],d[k+2])}m/=N;v=v/N-m*m;sat/=N;return!(sat<6&&v<900)}
+async function satArea(la0,la1,lo0,lo1,label){let z=19;const cl=(la0+la1)/2,cn=(lo0+lo1)/2;$('hint').textContent='Descargando la foto satelital…';
+  while(z>16&&!(await satHasData(z,cl,cn)))z--;const n=2**z,k=2**(19-z),tX=l=>(l+180)/360*n*256,tY=l=>{const q=l*Math.PI/180;return(1-Math.log(Math.tan(q)+1/Math.cos(q))/Math.PI)/2*n*256};
+  const X0=tX(lo0),X1=tX(lo1),Y0=tY(la1),Y1=tY(la0),c=document.createElement('canvas');c.width=Math.round(X1-X0);c.height=Math.round(Y1-Y0);const g=c.getContext('2d');
+  for(let ty=Math.floor(Y0/256);ty<=Math.floor(Y1/256);ty++)for(let tx=Math.floor(X0/256);tx<=Math.floor(X1/256);tx++){const i=await satLoad(satURL(z,ty,tx));if(i)g.drawImage(i,tx*256-X0,ty*256-Y0)}
+  const mpp=156543.03*Math.cos(cl*Math.PI/180)/n;const geo={X0:X0*k,Y0:Y0*k};// la esquina se guarda en coordenadas del acercamiento 19 (para alinear siempre igual)
   // alinear: la foto vieja tenía su esquina en geo (o en SAT0 si no se guardó) y estaba puesta en (bg.x,bg.y)
-  let x=0,y=0;if(M.bg){const old=M.bg.geo||{X0:stx(SAT0.lon),Y0:sty(SAT0.lat)};x=M.bg.x+(X0-old.X0)*M.bg.mpp;y=M.bg.y+(Y0-old.Y0)*M.bg.mpp}
-  setBg(c.toDataURL('image/jpeg',.82),{x,y,mpp,op:M.bg?M.bg.op??.8:.8,src:'Imagen: Esri World Imagery · '+label,geo:{X0,Y0}});
-  const r=cv.getBoundingClientRect();view.z=Math.min(r.width/(c.width*mpp),r.height/(c.height*mpp));view.x=x;view.y=y;draw();$('hint').textContent='Foto lista (escala real). Ahora se ve la calle de afuera: trace la entrada y luego el «Límite del plantel».'}
-$('bSat').onclick=()=>satArea(9.9098,9.9142,-84.0775,-84.0722,'Ciudad Vial y alrededores, Paso Ancho');
+  let x=0,y=0;if(M.bg){const old=M.bg.geo||{X0:stx(SAT0.lon),Y0:sty(SAT0.lat)},m19=156543.03*Math.cos(cl*Math.PI/180)/SATN;x=M.bg.x+(geo.X0-old.X0)*m19;y=M.bg.y+(geo.Y0-old.Y0)*m19}
+  await setBg(c.toDataURL('image/jpeg',.82),{x,y,mpp,op:M.bg?M.bg.op??.8:.8,src:'Imagen: Esri World Imagery · '+label+(z<19?' (acercamiento '+z+')':''),geo});
+  const r=cv.getBoundingClientRect();view.z=Math.min(r.width/(c.width*mpp),r.height/(c.height*mpp));view.x=x;view.y=y;draw();$('hint').textContent='Foto lista (escala real). Trace las calles encima y luego el «Límite del plantel».'}
+// Sedes de pruebas prácticas (ubicación del plantel según OpenStreetMap). San José usa su foto amplia de siempre.
+const SEDES={sanjose:[9.9120,-84.07485,'Ciudad Vial y alrededores, Paso Ancho'],heredia:[10.04769,-84.13745,'Plantel de Heredia, San Pedro de Barva'],alajuela:[10.00457,-84.22660,'Plantel de Alajuela, Montecillos'],
+  sanramon:[10.09313,-84.46659,'Plantel de San Ramón'],cartago:[9.87694,-83.92017,'Plantel de Cartago, El Carmen'],perez:[9.34060,-83.66890,'Plantel de Pérez Zeledón, Daniel Flores'],rioclaro:[8.68133,-83.06519,'Plantel de Río Claro'],
+  sancarlos:[10.31968,-84.42304,'Plantel de San Carlos, Ciudad Quesada'],guapiles:[10.19721,-83.78520,'Plantel de Guápiles'],nicoya:[10.13677,-85.44723,'Plantel de Nicoya'],liberia:[10.61256,-85.49529,'Plantel de Liberia'],
+  limon:[9.99308,-83.10443,'Plantel de Limón'],puntarenas:[9.97972,-84.77122,'Plantel de Puntarenas, Chacarita']};
+// Foto alrededor de un punto (unos 420 × 420 m). Si el plantel actual está en otro lado o vacío, la foto se pone desde cero.
+async function satAround(lat,lon,label,half=.0019){const la0=lat-half,la1=lat+half,lo0=lon-half*1.02,lo1=lon+half*1.02;
+  const empty=!M.roads.length&&!M.areas.length&&!M.bldgs.length;const far=M.bg&&M.bg.geo&&Math.hypot(stx(lo0)-M.bg.geo.X0,sty(la1)-M.bg.geo.Y0)*.3>3000;
+  if(empty||far||(M.bg&&!M.bg.geo&&!/Ciudad Vial/.test(M.bg.src||''))){M.bg=null}
+  await satArea(la0,la1,lo0,lo1,label);if(!M.bg)return;const W=BG.img.width*M.bg.mpp,H=BG.img.height*M.bg.mpp;if(empty){M.w=Math.ceil(W);M.h=Math.ceil(H)}save(false)}
+$('sSede').onchange=()=>{const k=$('sSede').value;$('sSede').value='';if(!k)return;const s=SEDES[k];
+  if(M.roads.length&&!confirm('Va a cambiar la foto de fondo por la de '+s[2]+'. Lo que ya dibujó NO se borra. ¿Seguir?'))return;
+  if(k==='sanjose')satArea(9.9098,9.9142,-84.0775,-84.0722,s[2]);else satAround(s[0],s[1],s[2]);if(!M.roads.length&&(M.name==='Mi plantel'||!M.name)){M.name=s[2].replace(/^Plantel de /,'');save(false)}};
+// Buscar cualquier lugar (OpenStreetMap / Nominatim) y poner su foto satelital de fondo
+async function buscar(){const t=$('iBuscar').value.trim();if(!t)return;$('hint').textContent='Buscando «'+t+'»…';
+  try{const r=await fetch('https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cr&q='+encodeURIComponent(t));const j=await r.json();if(!j.length){$('hint').textContent='No encontré «'+t+'». Pruebe con otro nombre (por ejemplo «COSEVI Liberia» o el nombre del barrio).';return}
+    await satAround(+j[0].lat,+j[0].lon,j[0].display_name.split(',').slice(0,3).join(','))}catch(e){$('hint').textContent='No se pudo buscar (¿hay internet?).'}}
+$('bBuscar').onclick=buscar;$('iBuscar').addEventListener('keydown',e=>{if(e.key==='Enter')buscar()});
 // ---------- revisión automática ----------
 let ISSUES=[];
 function review(){const out=[],near=(p,tol)=>{for(const o of M.roads)if(polyDist({x:p[0],y:p[1]},rpts(o))<roadW(o)/2+tol)return true;for(const g of M.rings)if(Math.abs(Math.hypot(p[0]-g.x,p[1]-g.y)-g.r)<(g.lanes||1)*(g.laneW||REF.ringLaneW)/2+tol)return true;for(const a of M.areas)if(a.kind==='asfalto'&&inPoly({x:p[0],y:p[1]},a.pts))return true;return false};
@@ -338,7 +378,7 @@ $('bUndo').onclick=undo;
 $('showExam').onchange=draw;
 $('bAddExam').onclick=()=>{const r=cv.getBoundingClientRect(),c=S2W(r.width/2,r.height/2);M.exam=M.exam||[];M.exam.push({tipo:'ir',x:snap(c.x),y:snap(c.y),txt:'Siga hasta este punto.'});sel={type:'exam',i:M.exam.length-1};save()};
 $('bHelp').onclick=()=>{$('props').innerHTML=`<h2>Cómo crear un plantel</h2><ol style="padding-left:18px;font-size:13px;line-height:1.55">
-<li>Ponga una foto de fondo: «Fondo: imagen…» (foto aérea o de Google Maps) y luego «Calibrar fondo»: toque dos puntos y escriba los metros reales entre ellos.</li>
+<li>Elija su sede en «Fondo satelital» (las 13 sedes de pruebas) o busque el lugar en «Buscar otro lugar». La foto sale con escala real. También puede usar una foto propia con «Fondo: imagen…» y «Calibrar fondo».</li>
 <li>Trace las calles por el CENTRO del carril. Doble clic para terminar cada calle. Use «1 carril», «2 carriles» o «1 carril ancho».</li>
 <li>Agregue rotondas, asfalto (patios e intersecciones), conos, ALTO y CEDA (arrastre en el sentido en que llega el carro).</li>
 <li>Ponga los espacios de parqueo (arrastre hacia la salida del espacio) y marque el de la prueba en amarillo.</li>
