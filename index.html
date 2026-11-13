@@ -356,6 +356,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <h2>PAUSA</h2>
     <button id="bResume">CONTINUAR</button>
     <button id="bRestart">REINICIAR</button>
+    <button id="bGfx">GRÁFICOS: 32-BIT</button>
     <button id="bMenu">MENÚ</button>
   </div>
 
@@ -379,6 +380,16 @@ const CAT={I:32,II:12,III:8,IV:4};
 const $=id=>document.getElementById(id);
 const game=$('game'),g=game.getContext('2d');g.imageSmoothingEnabled=false;
 const mini=$('mini'),mg=mini.getContext('2d');
+// ESTILO 32-BIT: misma resolución (como las consolas de 32 bits), pero con luz suave (brillo/bloom), viñeta, carros con volumen, sombras difusas y cielo sin franjas.
+let GFX=(()=>{let v=null;try{v=JSON.parse(localStorage.getItem('pp_gfx'))}catch(e){}if(v!==16&&v!==32)v=matchMedia('(pointer:coarse)').matches&&!matchMedia('(pointer:fine)').matches?16:32;return v})();
+const BLM=document.createElement('canvas');BLM.width=96;BLM.height=54;const blx=BLM.getContext('2d');let VIG=null;
+function post32(){if(GFX!==32)return;const X=S&&S.wx,n=X&&X.on?X.n||0:0;
+  blx.globalCompositeOperation='copy';blx.imageSmoothingEnabled=true;blx.drawImage(game,0,0,96,54);
+  blx.globalCompositeOperation='multiply';for(let i=n>.3?5:3;i>0;i--)blx.drawImage(BLM,0,0);
+  g.save();g.imageSmoothingEnabled=true;g.globalCompositeOperation='screen';g.globalAlpha=.2+.45*n;g.drawImage(BLM,0,0,VW,VH);g.restore();
+  if(!VIG){VIG=document.createElement('canvas');VIG.width=VW;VIG.height=VH;const v=VIG.getContext('2d'),gr=v.createRadialGradient(VW/2,VH/2,VH*.4,VW/2,VH/2,VW*.62);gr.addColorStop(0,'rgba(0,0,0,0)');gr.addColorStop(1,'rgba(12,8,28,.34)');v.fillStyle=gr;v.fillRect(0,0,VW,VH)}
+  g.drawImage(VIG,0,0)}
+function setGfx(v){GFX=v;store.set('pp_gfx',v);CARCACHE.clear();if(S&&S.W){S.W.bg=renderBG(S.W);S.W.bg32=null}if(A&&A.W)A.W.bg=renderBG(A.W);const b=$('bGfx');if(b)b.textContent='GRÁFICOS: '+v+'-BIT';toast('GRÁFICOS '+v+'-BIT',v===32?'luz suave y más detalle':'más liviano','info')}
 const clamp=(v,a,b)=>v<a?a:v>b?b:v;
 const nA=a=>{while(a>Math.PI)a-=2*Math.PI;while(a<-Math.PI)a+=2*Math.PI;return a};
 const inR=(x,y,r)=>x>=r.x&&x<=r.x+r.w&&y>=r.y&&y<=r.y+r.h;
@@ -450,13 +461,14 @@ const spr=document.createElement('canvas');spr.width=32;spr.height=16;const sg=s
 // ESTILO 16-BIT: cada sprite de carro se dibuja una vez, se le agrega contorno oscuro y sombra suave, y se guarda.
 const CARCACHE=new Map(),NOCTX={save(){},restore(){},translate(){},rotate(){},drawImage(){}};
 function drawCar(ctx,x,y,h,col,o={},ox=0,oy=0,type='sedan'){col=col||'#e63946';o=o||{};const v=VEH[type]||VEH.sedan;const sir=type==='police'||type==='ambulance';
-  const key=type+'|'+(v.fixed||col)+'|'+(o.brake?1:0)+(o.rev?1:0)+(o.on&&o.bl?1:0)+(o.on&&o.br?1:0)+(o.boost?1:0)+(sir&&o.on?1:0)+'|'+(o.helm||'')+(o.rider||'');
+  const key=GFX+type+'|'+(v.fixed||col)+'|'+(o.brake?1:0)+(o.rev?1:0)+(o.on&&o.bl?1:0)+(o.on&&o.br?1:0)+(o.boost?1:0)+(sir&&o.on?1:0)+'|'+(o.helm||'')+(o.rider||'');
   let cv=CARCACHE.get(key);if(!cv){if(CARCACHE.size>700)CARCACHE.clear();drawCarRaw(NOCTX,0,0,0,col,o,0,0,type);cv=document.createElement('canvas');cv.width=32;cv.height=16;const cx=cv.getContext('2d');
     const id=sg.getImageData(0,0,32,16),d=id.data,A=i=>d[i*4+3],out=new Uint8ClampedArray(d);
     for(let yy=0;yy<16;yy++)for(let xx=0;xx<32;xx++){const i=yy*32+xx;if(A(i)>=200)continue;let n=false;for(const[dx,dy]of[[1,0],[-1,0],[0,1],[0,-1]]){const X=xx+dx,Y=yy+dy;if(X>=0&&Y>=0&&X<32&&Y<16&&A(Y*32+X)>=200){n=true;break}}
       if(n){out[i*4]=18;out[i*4+1]=16;out[i*4+2]=28;out[i*4+3]=235}}
     for(let yy=15;yy>=0;yy--)for(let xx=31;xx>=0;xx--){const i=yy*32+xx;if(out[i*4+3]>=200)continue;const sx=xx-1,sy=yy-1,sx2=xx-2,sy2=yy-2;const op=(X,Y)=>X>=0&&Y>=0&&out[(Y*32+X)*4+3]>=200;
       if(op(sx,sy)||op(sx2,sy2)){out[i*4]=0;out[i*4+1]=0;out[i*4+2]=0;out[i*4+3]=op(sx,sy)?80:45}}
+    if(GFX===32)for(let yy=0;yy<16;yy++){const k=1.1-.26*Math.min(1,Math.abs(yy-7.5)/4.5);for(let xx=0;xx<32;xx++){const i=(yy*32+xx)*4;if(d[i+3]<200)continue;const m=d[i]+d[i+1]+d[i+2];if(m<90)continue;const kk=k+(xx>14&&xx<19&&yy===6?.18:0);out[i]=Math.min(255,d[i]*kk);out[i+1]=Math.min(255,d[i+1]*kk);out[i+2]=Math.min(255,d[i+2]*kk)}}
     id.data.set(out);cx.putImageData(id,0,0);CARCACHE.set(key,cv)}
   ctx.save();ctx.translate(Math.round(x-ox),Math.round(y-oy));ctx.rotate(h);ctx.drawImage(cv,-16,-8);ctx.restore()}
 function drawCarRaw(ctx,x,y,h,col,o={},ox=0,oy=0,type='sedan'){
@@ -1732,7 +1744,7 @@ function roof2D(x,p){const top=p.top||shade(p.col,-.15),X=Math.round(p.x),Y=Math
   x.fillStyle=shade(top,.28);x.fillRect(X,Y,w,1);x.fillRect(X,Y,1,h);x.fillStyle=shade(top,-.35);x.fillRect(X,Y+h-1,w,1);x.fillRect(X+w-1,Y,1,h);
   if(p.z1>36&&w>14&&h>14){x.fillStyle=shade(top,-.12);x.fillRect(X+2,Y+2,w-4,1);x.fillRect(X+2,Y+2,1,h-4);x.fillStyle='#8d9399';x.fillRect(X+w-9,Y+5,5,4);x.fillStyle='#5f656b';x.fillRect(X+w-8,Y+6,3,2);x.fillRect(X+4,Y+h-8,4,3)
     if(p.z1>95&&w>30&&h>30){const cx=X+w/2|0,cy=Y+h/2|0;fillCirc(x,cx,cy,8,'#4a4f55');fillCirc(x,cx,cy,7,'#5f656b');x.fillStyle='#ffd23f';x.fillRect(cx-3,cy-3,1,7);x.fillRect(cx+3,cy-3,1,7);x.fillRect(cx-3,cy,7,1)}}}
-function parts2D(x,b){x.fillStyle='rgba(0,0,0,.34)';x.beginPath();for(const p of b.parts)if(p.s!=='stat')shadowPath(x,p);x.fill();
+function parts2D(x,b){x.fillStyle='rgba(0,0,0,.34)';x.beginPath();for(const p of b.parts)if(p.s!=='stat')shadowPath(x,p);if(GFX===32)x.filter='blur(1.4px)';x.fill();x.filter='none';
   const ps=b.parts.slice().sort((a,c)=>a.z1-c.z1);for(const p of ps){if(p.s==='stat'){x.fillStyle=p.col;x.fillRect(Math.round(p.x),Math.round(p.y),1,2);x.fillStyle='#3d3d3d';x.fillRect(Math.round(p.x)+1,Math.round(p.y)+1,1,1)}else roof2D(x,p)}
   if(b.label){const tw=b.label.length*4-1,lx=b.x+(b.w-tw)/2|0,ly=(b.ly!=null?b.ly:b.y+b.h/2-2)|0;ptext(x,b.label,lx+1,ly+1,'#000');ptext(x,b.label,lx,ly,'#fff')}}
 // ESTILO 16-BIT: franja de fachada en el borde sur (con ventanas, algunas encendidas, y puerta) y contorno oscuro del edificio
@@ -1742,7 +1754,7 @@ function facade16(x,b,win){const X=Math.round(b.x),Y=Math.round(b.y),w=Math.roun
   if(w>14){x.fillStyle='#5c4033';x.fillRect(X+(w>>1)-1,Y+h-Math.min(3,fh-1),3,Math.min(3,fh-1))}
   x.strokeStyle='rgba(18,16,28,.75)';x.lineWidth=1;x.strokeRect(X-.5,Y-.5,w+1,h+1)}
 // edificio común del centro: sombra según altura, techo de zinc o de concreto con tanques negros, toldos de tiendas en la acera
-function bld2D(x,b){const s=Math.min(18,2+b.ht/7);x.fillStyle='rgba(0,0,0,.34)';x.beginPath();shadowPath(x,{x:b.x,y:b.y,w:b.w,h:b.h,z1:b.ht});x.fill();
+function bld2D(x,b){const s=Math.min(18,2+b.ht/7);x.fillStyle='rgba(0,0,0,.34)';x.beginPath();shadowPath(x,{x:b.x,y:b.y,w:b.w,h:b.h,z1:b.ht});if(GFX===32)x.filter='blur(1.4px)';x.fill();x.filter='none';
   if(b.shop&&b.blk){const[a1,c1,a2,c2]=b.blk;const aw=(X,Y,w,h,hz)=>{for(let k=0;k<(hz?w:h);k++){x.fillStyle=(k>>1)%2?'#f4f1e8':b.shop;hz?x.fillRect(X+k,Y,1,h):x.fillRect(X,Y+k,w,1)}};
     const m=Math.max(2,b.w*.15|0),mv=Math.max(2,b.h*.15|0);if(b.y<=c1+1)aw(b.x+m,b.y-3,b.w-2*m,3,1);if(b.y+b.h>=c2-4)aw(b.x+m,b.y+b.h,b.w-2*m,3,1);if(b.x<=a1+1)aw(b.x-3,b.y+mv,3,b.h-2*mv,0);if(b.x+b.w>=a2-4)aw(b.x+b.w,b.y+mv,3,b.h-2*mv,0)}
   roof2D(x,{s:'box',x:b.x,y:b.y,w:b.w,h:b.h,z1:b.ht,col:b.col,top:b.roof,roofT:b.roofT});facade16(x,b,b.win==='glass'?'#7fd1d8':'#9fd3ff');
@@ -2551,7 +2563,7 @@ const SKY32=SKYK.map(k=>[k[0],...k.slice(1).map(u32)]);
 function skyAt(hr){let i=0;while(i<SKY32.length-2&&SKY32[i+1][0]<=hr)i++;const a=SKY32[i],b=SKY32[i+1],t=clamp((hr-a[0])/(b[0]-a[0]),0,1);return[1,2,3,4,5].map(j=>mix32(a[j],b[j],t))}
 // cielo del cuadro: degradado de tres tonos, nubes que se tiñen con el atardecer, sol que baja por el oeste (y sale por el este)
 function skyPrep(V,C){const hr=S&&S.wx&&S.wx.on?S.wx.clock:12.5,rain=S&&S.wx?S.wx.rain:0,key=(hr*20|0)+'|'+(rain*10|0);
-  if(V.skyKey!==key){V.skyKey=key;const[top,mid,hor,cl,sun]=skyAt(hr);const g=u32('#8a96a3');const col=t=>{let c=t<.55?mix32(top,mid,t/.55):mix32(mid,hor,(t-.55)/.45);if(rain>.05)c=mix32(c,g,Math.min(.75,rain));return c};const NB=16;V.sky=[];V.sky2=[];for(let y=0;y<=V.h;y++){const t=Math.min(1,y/V.hz),q=t*NB;V.sky.push(col(Math.floor(q)/NB));V.sky2.push(col(Math.min(NB,(q%1>.5?Math.ceil(q):Math.floor(q)))/NB))}
+  if(V.skyKey!==key+'|'+GFX){V.skyKey=key+'|'+GFX;const[top,mid,hor,cl,sun]=skyAt(hr);const g=u32('#8a96a3');const col=t=>{let c=t<.55?mix32(top,mid,t/.55):mix32(mid,hor,(t-.55)/.45);if(rain>.05)c=mix32(c,g,Math.min(.75,rain));return c};const NB=GFX===32?96:16;V.sky=[];V.sky2=[];for(let y=0;y<=V.h;y++){const t=Math.min(1,y/V.hz),q=t*NB;V.sky.push(col(Math.floor(q)/NB));V.sky2.push(col(Math.min(NB,(q%1>.5?Math.ceil(q):Math.floor(q)))/NB))}
     V.cl=rain>.05?mix32(cl,u32('#9aa3ad'),Math.min(.8,rain)):cl;V.sunC=sun;V.hor=hor;V.mount=mix32(MOUNT32,hor,.28);V.hill=mix32(HILL32,hor,.12);
     const el=Math.sin(clamp((hr-5.8)/12.6,0,1)*Math.PI);V.sunEl=el;V.sunA=hr<12.2?0:Math.PI;V.sunOn=hr>5.6&&hr<18.9&&rain<.5}
   // posición del sol en la pantalla
@@ -3145,7 +3157,7 @@ function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!
 $('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};for(const b of document.querySelectorAll('#plScr [data-sede]'))b.onclick=()=>{audioInit();start('pl_'+b.dataset.sede)};for(const b of document.querySelectorAll('#plScr [data-of]'))b.onclick=()=>{audioInit();start('of_'+b.dataset.of)};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtM').onclick=()=>{audioInit();start('manuel')};$('rtD').onclick=()=>{audioInit();start('cerro')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
 $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
-$('bResume').onclick=togglePause;$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
+$('bResume').onclick=togglePause;$('bGfx').textContent='GRÁFICOS: '+GFX+'-BIT';$('bGfx').onclick=()=>setGfx(GFX===32?16:32);$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
 
 // ===================== BUCLE =====================
 function step(dt){
@@ -3218,12 +3230,13 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
       if(S.look>.25){const a=P.h+Math.PI-.22;render3D(VSR,{x:P.x+c*1.5-s*5,y:P.y+s*1.5+c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
       g.drawImage(VMAIN.c,0,0);evOver(true);wipers(S.t);cockpit(P,S.t);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}
     else{g.fillStyle='#2f6b2a';g.fillRect(0,0,VW,VH);g.save();g.setTransform(zm,0,0,zm,0,0);drawWorld(W,P,ix,iy,S.t);g.restore();atmo2D(W,P,ix,iy,zm,S.t);evOver(false);const tg=updateHUD();if(tg&&!S.over)drawTarget(tg,ix,iy,S.t,zm);drawMini(W,P,tg)}
+    if(!S.mapOpen)post32();
     if(engG&&AC){engG.gain.value=(muted||S.paused||S.over)?0:.035;eng.frequency.value=38+Math.abs(P.v)*1.7+(keys.w||keys.s?8:0)}
   }else{
     for(const k in pressed)delete pressed[k];
     if(!A){const W=buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;A={W,t:0,cx:300,cy:380}}
     A.t+=dt;updateWorld(A.W,null,dt,A.t);A.cx=330+Math.sin(A.t*.05)*300;A.cy=380+Math.cos(A.t*.07)*230;
-    drawWorld(A.W,null,Math.round(clamp(A.cx,0,A.W.w-VW)),Math.round(clamp(A.cy,0,A.W.h-VH)),A.t);
+    drawWorld(A.W,null,Math.round(clamp(A.cx,0,A.W.w-VW)),Math.round(clamp(A.cy,0,A.W.h-VH)),A.t);post32();
   }}
 function fit(){{const vv=window.visualViewport,iw=vv?vv.width:innerWidth,ih=vv?vv.height:innerHeight,wr=$('wrap'),ww=Math.min(iw,ih*VW/VH);wr.style.width=ww+'px';wr.style.height=(ww*VH/VW)+'px';wr.style.left=((vv?vv.offsetLeft:0)+iw/2)+'px';wr.style.top=((vv?vv.offsetTop:0)+ih/2)+'px'}
   const w=$('wrap').getBoundingClientRect().width;$('wrap').style.setProperty('--u',(w/VW)+'px');const u=w/VW;
