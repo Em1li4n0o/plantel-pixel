@@ -154,23 +154,23 @@
   {
    "pts": [
     [
-     19.75,
-     93.5
+     69.5,
+     99.25
     ],
     [
      56,
      98
     ],
     [
-     69.5,
-     99.25
+     19.75,
+     93.5
     ]
    ],
    "lanes": 2,
    "laneW": 3.5,
    "wide": false,
    "wideW": 5,
-   "oneway": false,
+   "oneway": true,
    "center": "dash"
   },
   {
