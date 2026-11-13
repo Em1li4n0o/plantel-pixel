@@ -2576,7 +2576,10 @@ function hillshade(x,W,r=8){if(!W.hm)return;const B=[];for(let k=0;k<10;k++)B.pu
 function proj(C,V,pts){const N=.7;const cam=pts.map(p=>{const q=camXform(C,p[0],p[1]);return{f:q.f,r:q.r,z:p[2]+gh(p[0],p[1])}});const out=[];
   for(let i=0;i<cam.length;i++){const a=cam[i],b=cam[(i+1)%cam.length];if(a.f>=N)out.push(a);if((a.f>=N)!==(b.f>=N)){const tt=(N-a.f)/(b.f-a.f);out.push({f:N,r:a.r+(b.r-a.r)*tt,z:a.z+(b.z-a.z)*tt})}}
   if(out.length<3)return null;return out.map(p=>[V.cx+p.r*V.foc/p.f,V.hz+(C.z-p.z)*V.foc/p.f])}
-function poly(ctx,pp,col){if(!pp)return;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(pp[0][0],pp[0][1]);for(let i=1;i<pp.length;i++)ctx.lineTo(pp[i][0],pp[i][1]);ctx.closePath();ctx.fill()}
+// ESTILO 16-BIT en 3D: mientras OUTL3D está activo, cada cara de carros y edificios lleva un contorno oscuro (solo si se ve de buen tamaño)
+let OUTL3D=0;
+function poly(ctx,pp,col){if(!pp)return;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(pp[0][0],pp[0][1]);for(let i=1;i<pp.length;i++)ctx.lineTo(pp[i][0],pp[i][1]);ctx.closePath();ctx.fill();
+  if(OUTL3D&&col.charCodeAt(0)===35){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const q of pp){if(q[0]<x0)x0=q[0];if(q[0]>x1)x1=q[0];if(q[1]<y0)y0=q[1];if(q[1]>y1)y1=q[1]}const m=OUTL3D===2?14:4;if(x1-x0>m&&y1-y0>(OUTL3D===2?10:2)){ctx.strokeStyle=OUTL3D===2?'rgba(14,12,24,.45)':'rgba(14,12,24,.7)';ctx.lineWidth=1;ctx.stroke()}}}
 const LDIR=[-.6,-.8];
 function box(ctx,C,V,cs,z0,z1,col,o={}){let mx=0,my=0;for(const p of cs){mx+=p[0];my+=p[1]}mx/=cs.length;my/=cs.length;
   for(let i=0;i<cs.length;i++){const a=cs[i],b=cs[(i+1)%cs.length];const fx=(a[0]+b[0])/2,fy=(a[1]+b[1])/2;let nx=fx-mx,ny=fy-my;const nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
@@ -2611,7 +2614,8 @@ function frustum(ctx,C,V,bot,zb,top,zt,side,roof){let mx=0,my=0;for(const p of b
   for(let i=0;i<4;i++){const a=bot[i],b=bot[(i+1)%4],c=top[(i+1)%4],d=top[i];const fx=(a[0]+b[0]+c[0]+d[0])/4,fy=(a[1]+b[1]+c[1]+d[1])/4;const nx=(a[0]+b[0])/2-mx,ny=(a[1]+b[1])/2-my;
     if((C.x-fx)*nx+(C.y-fy)*ny<=0)continue;const nl=Math.hypot(nx,ny)||1,lit=(nx*LDIR[0]+ny*LDIR[1])/nl;poly(ctx,proj(C,V,[[a[0],a[1],zb],[b[0],b[1],zb],[c[0],c[1],zt],[d[0],d[1],zt]]),shade(side,lit>0?lit*.25:lit*.2))}
   if(C.z>zt+gh(mx,my))poly(ctx,proj(C,V,top.map(p=>[p[0],p[1],zt])),roof)}
-function car3D(ctx,C,V,o,blinkOn){const c=Math.cos(o.h),s=Math.sin(o.h),L2=o.L/2,W2=o.Wd/2;const pt=(a,b)=>[o.x+c*a-s*b,o.y+s*a+c*b];
+function car3D(ctx,C,V,o,blinkOn){if(V!==VMAIN||TOUCH)return car3Dr(ctx,C,V,o,blinkOn);OUTL3D=1;try{car3Dr(ctx,C,V,o,blinkOn)}finally{OUTL3D=0}}
+function car3Dr(ctx,C,V,o,blinkOn){const c=Math.cos(o.h),s=Math.sin(o.h),L2=o.L/2,W2=o.Wd/2;const pt=(a,b)=>[o.x+c*a-s*b,o.y+s*a+c*b];
   poly(ctx,proj(C,V,[pt(L2+.6,-W2-.6),pt(L2+.6,W2+.6),pt(-L2-.6,W2+.6),pt(-L2-.6,-W2-.6)].map(p=>[p[0],p[1],.03])),'rgba(0,0,0,.35)');
   const col=(VEH[o.type]&&VEH[o.type].fixed)||o.col;const body=[pt(L2,-W2),pt(L2,W2),pt(-L2,W2),pt(-L2,-W2)];
   const lamp=(a,b,z,cl,ww=.7)=>poly(ctx,proj(C,V,[[...pt(a,b-ww),z],[...pt(a,b+ww),z],[...pt(a,b+ww),z+.8],[...pt(a,b-ww),z+.8]]),cl);
@@ -2661,9 +2665,10 @@ function tree3D(ctx,C,V,x,y,r,h){const kind=(((x*7.3+y*3.1)|0)%5+5)%5,cs=TREECOL
 function bush3D(ctx,C,V,b){const B=bill(C,V,b.x,b.y,0),T=bill(C,V,b.x,b.y,b.h);if(!B||!T||B.f>200)return;ctx.fillStyle=b.c;ctx.beginPath();ctx.ellipse(B.x,(B.y+T.y)/2,b.r*B.k,(B.y-T.y)/2+.5,0,0,7);ctx.fill();ctx.fillStyle=shade(b.c,.18);ctx.beginPath();ctx.ellipse(B.x-b.r*.3*B.k,(B.y+T.y)/2-(B.y-T.y)*.15,b.r*.5*B.k,(B.y-T.y)*.3+.5,0,0,7);ctx.fill()}
 function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];const blinkOn=Math.floor(t*2.6)%2===0;
   const add=(x,y,rad,fn)=>{const q=camXform(C,x,y);if(q.f<-rad||q.f>maxD)return;if(Math.abs(q.r)>Math.max(0,q.f)*(V.cx/V.foc)+rad+6)return;items.push({d:q.f,fn})};
+  const addO=(x,y,rad,fn)=>add(x,y,rad,mirror||TOUCH?fn:()=>{OUTL3D=2;try{fn()}finally{OUTL3D=0}});
   if(S&&S.exam&&!mirror){const tk=S.tasks[S.task];if(tk&&tk.zone){poly(ctx,proj(C,V,zonePts(tk.zone).map(p=>[p[0],p[1],.05])),Math.floor(t*2.6)%2?'rgba(255,210,63,.45)':'rgba(255,210,63,.2)')}}
   if(W.pblds)for(const b of W.pblds)add(b.cx,b.cy,b.rad,()=>box(ctx,C,V,b.p,0,b.ht,b.col,{win:true,top:b.roof}));
-  for(const b of W.blds)add(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<85+Math.max(b.w,b.h)/2;
+  for(const b of W.blds)addO(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<85+Math.max(b.w,b.h)/2;
     if(b.parts){parts3D(ctx,C,V,b,near);if(!b.tower)return}
     else box(ctx,C,V,[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]],0,b.ht,b.tower?'#1f4f8a':b.col,{win:b.win||true,top:b.roof,near:b.H?near:false,shop:b.shop});
     if(b.tower){const cx=b.x+b.w/2,cy=b.y+b.h/2,on=Math.sin(t*3)>0;if(b.parts){for(const[a,c]of[[[cx+15.5,cy-26.1],[cx-15.5,cy-26.1]],[[cx-15.5,cy+26.1],[cx+15.5,cy+26.1]],[[cx-26.1,cy-13.5],[cx-26.1,cy+13.5]],[[cx+26.1,cy+13.5],[cx+26.1,cy-13.5]]])logoFace(ctx,C,V,a,c,151,171,on)}
