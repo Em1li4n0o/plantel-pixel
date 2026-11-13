@@ -994,7 +994,9 @@ function loadCustom(){try{return JSON.parse(localStorage.getItem('pp_custom'))}c
 function buildCustom(D){const K=4;D=D||{w:80,h:60,roads:[{pts:[[10,30],[70,30]],lanes:2,laneW:3.5}],start:{x:14,y:32,ang:0}};HW=7;
   const W=newWorld('custom',Math.max(200,Math.round((D.w||100)*K)),Math.max(150,Math.round((D.h||80)*K)));W.limit=D.limit||20;W.ppaved=[];W.planes=[];W.pblds=[];W.walkers=[];W.custom=D;
   const P=a=>a.map(([x,y])=>[x*K,y*K]),roadW=r=>r.wide?(r.wideW||5):(r.lanes||1)*(r.laneW||3.5);
-  for(const r of D.roads||[]){if(!r.pts||r.pts.length<2)continue;const q=addPath(W,P(r.pts));q.hw=roadW(r)*K/2;q.noCenter=true;if(r.oneway||(r.lanes||1)<2)q.oneway=true;q.cust=r}
+  const ext=pts=>{const q=pts.map(v=>v.slice()),n=q.length,e=.8*K;const a=q[0],b=q[1],L1=Math.hypot(a[0]-b[0],a[1]-b[1])||1;q[0]=[a[0]+(a[0]-b[0])/L1*e,a[1]+(a[1]-b[1])/L1*e];const c=q[n-1],d=q[n-2],L2=Math.hypot(c[0]-d[0],c[1]-d[1])||1;q[n-1]=[c[0]+(c[0]-d[0])/L2*e,c[1]+(c[1]-d[1])/L2*e];return q};
+  const rpts=r=>{const q=P(r.pts);return ext(r.curva===false||q.length<3?q:smoothLine(q,3))};
+  for(const r of D.roads||[]){if(!r.pts||r.pts.length<2)continue;const q=addPath(W,rpts(r));q.hw=roadW(r)*K/2;q.noCenter=true;if(r.oneway||(r.lanes||1)<2)q.oneway=true;q.cust=r}
   for(const g of D.rings||[]){const pts=[];for(let i=0;i<=56;i++){const a=-i/56*Math.PI*2;pts.push([(g.x+Math.cos(a)*g.r)*K,(g.y+Math.sin(a)*g.r)*K])}const q=addPath(W,pts),w=(g.lanes||1)*(g.laneW||4.5);q.hw=w*K/2;q.oneway=true;q.noCenter=true;
     W.circObs.push({x:g.x*K,y:g.y*K,r:Math.max(1,(g.r-w/2)*K-.6),type:'isla'})}
   for(const a of D.areas||[])if(a.kind==='asfalto'&&a.pts&&a.pts.length>2){const q=P(a.pts);W.ppaved.push(q);W.planes.push(q)}
@@ -1013,7 +1015,7 @@ function buildCustom(D){const K=4;D=D||{w:80,h:60,roads:[{pts:[[10,30],[70,30]],
     for(const b of D.bldgs||[])if(b.pts&&b.pts.length>2){fillP(b.pts.map(q=>[q[0]+.8,q[1]+.8]),'rgba(0,0,0,.3)');fillP(b.pts,b.col||'#ecebe4','rgba(18,16,28,.6)')}
     for(const g of D.rings||[]){const w=(g.lanes||1)*(g.laneW||4.5);fillCirc(x,g.x*K,g.y*K,(g.r-w/2)*K,'#f2c230');fillCirc(x,g.x*K,g.y*K,Math.max(0,(g.r-w/2)*K-1),'#4c9a45')}};
   W.drawExtra=x=>{const lineP=(pts,col,dash,w=1)=>{if(pts.length<2)return;x.strokeStyle=col;x.lineWidth=w;x.setLineDash(dash||[]);x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(const r of pts)x.lineTo(r[0],r[1]);x.stroke();x.setLineDash([])};
-    for(const r of D.roads||[]){if(!r.pts||r.pts.length<2)continue;const pp=smoothLine(P(r.pts),4),hw=roadW(r)*K/2;lineP(offLine(pp,hw-1),'#ecece4');lineP(offLine(pp,-(hw-1)),'#ecece4');
+    for(const r of D.roads||[]){if(!r.pts||r.pts.length<2)continue;const pp=rpts(r),hw=roadW(r)*K/2;lineP(offLine(pp,hw-1),'#ecece4');lineP(offLine(pp,-(hw-1)),'#ecece4');
       if(!r.oneway&&(r.lanes||1)>1&&!r.wide){const c=r.center||'dash';if(c==='dash')lineP(pp,'#f2c230',[5,5],1.5);else if(c==='solid')lineP(pp,'#f2c230',null,1.5);else if(c==='double'){lineP(offLine(pp,1),'#f2c230');lineP(offLine(pp,-1),'#f2c230')}}
       if(r.oneway){const q=P(r.pts);for(let i=0;i<q.length-1;i++){const A=q[i],B=q[i+1],L=Math.hypot(B[0]-A[0],B[1]-A[1]);if(L<30)continue;const ux=(B[0]-A[0])/L,uy=(B[1]-A[1])/L;arrowPx(x,(A[0]+B[0])/2,(A[1]+B[1])/2,Math.round(ux),Math.round(uy),'#ecece4')}}}
     for(const g of D.rings||[])if((g.lanes||1)>1){x.strokeStyle='#ecece4';x.setLineDash([4,4]);x.beginPath();x.arc(g.x*K,g.y*K,g.r*K,0,7);x.stroke();x.setLineDash([])}
