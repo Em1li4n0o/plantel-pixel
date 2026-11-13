@@ -222,6 +222,8 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
       <button data-of="liberia">LIBERIA<small>RECORRIDO OFICIAL · RUTA 21 Y ROTONDA</small></button>
       <button data-sede="limon">LIMÓN<small>VERSIÓN PRELIMINAR</small></button>
       <button data-sede="puntarenas">PUNTARENAS<small>VERSIÓN PRELIMINAR</small></button>
+      <button id="plMine" style="background:#2d4a22">MI PLANTEL<small>EL QUE USTED CREÓ</small></button>
+      <a href="editor.html" style="display:flex;align-items:center;justify-content:center;color:var(--acc);pointer-events:auto;text-decoration:none;border:calc(var(--u)*1) dashed var(--acc);padding:calc(var(--u)*2)">CREADOR DE PLANTELES ›</a>
     </div>
     <button id="plBack" style="min-width:0">ESC · VOLVER</button>
   </div>
@@ -985,6 +987,51 @@ function cv2Tasks(){const W=S.W,G=(x,y)=>{const[a,b]=D2(x,y);return{x:a,y:b}},ne
      return still('cp2',Math.abs(dx)<1.8&&Math.abs(dy)<4&&Math.cos(P.h-Math.PI/2)>.93,1.2)}},
   {txt:'¡Fase dos terminada! Salga del espacio y siga por la calle hacia la SALIDA (el evaluador se sube para la fase tres en calle).',tgt:G(1060,1052),
    start(){S.dlg={lines:[['EVALUADOR','Perfecto, muy bien. Terminamos con la fase dos.'],['EVALUADOR','(se sube al carro) Ahora sí, vamos para la fase tres: el recorrido en carretera. Con calma.']],i:0,t:0,auto:true}},check(){return near(1060,1052,18)}}]}
+
+// ===================== MI PLANTEL (hecho en el Creador de planteles, editor.html) =====================
+// El creador guarda en METROS; aquí se pasa a unidades del juego con 4 u/m (el ancho del carro del juego queda cerca de 1,8-2 m reales).
+function loadCustom(){try{return JSON.parse(localStorage.getItem('pp_custom'))}catch(e){return null}}
+function buildCustom(D){const K=4;D=D||{w:80,h:60,roads:[{pts:[[10,30],[70,30]],lanes:2,laneW:3.5}],start:{x:14,y:32,ang:0}};HW=7;
+  const W=newWorld('custom',Math.max(200,Math.round((D.w||100)*K)),Math.max(150,Math.round((D.h||80)*K)));W.limit=D.limit||20;W.ppaved=[];W.planes=[];W.pblds=[];W.walkers=[];W.custom=D;
+  const P=a=>a.map(([x,y])=>[x*K,y*K]),roadW=r=>r.wide?(r.wideW||5):(r.lanes||1)*(r.laneW||3.5);
+  for(const r of D.roads||[]){if(!r.pts||r.pts.length<2)continue;const q=addPath(W,P(r.pts));q.hw=roadW(r)*K/2;q.noCenter=true;if(r.oneway||(r.lanes||1)<2)q.oneway=true;q.cust=r}
+  for(const g of D.rings||[]){const pts=[];for(let i=0;i<=56;i++){const a=-i/56*Math.PI*2;pts.push([(g.x+Math.cos(a)*g.r)*K,(g.y+Math.sin(a)*g.r)*K])}const q=addPath(W,pts),w=(g.lanes||1)*(g.laneW||4.5);q.hw=w*K/2;q.oneway=true;q.noCenter=true;
+    W.circObs.push({x:g.x*K,y:g.y*K,r:Math.max(1,(g.r-w/2)*K-.6),type:'isla'})}
+  for(const a of D.areas||[])if(a.kind==='asfalto'&&a.pts&&a.pts.length>2){const q=P(a.pts);W.ppaved.push(q);W.planes.push(q)}
+  for(const b of D.bldgs||[]){if(!b.pts||b.pts.length<3)continue;const pp=P(b.pts),cx=pp.reduce((s,r)=>s+r[0],0)/pp.length,cy=pp.reduce((s,r)=>s+r[1],0)/pp.length;
+    W.pblds.push({p:pp,ht:(b.h||6)*K*.5,col:b.col||'#ecebe4',roof:shade(b.col||'#ecebe4',-.12),cx,cy,rad:Math.max(...pp.map(r=>Math.hypot(r[0]-cx,r[1]-cy)))});
+    for(let i=0;i<pp.length;i++){const A=pp[i],B=pp[(i+1)%pp.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=2.5)W.circObs.push({x:A[0]+(B[0]-A[0])*t/L,y:A[1]+(B[1]-A[1])*t/L,r:1.5,type:'muro'})}}
+  for(const c of D.cones||[])W.cones.push({x:c.x*K,y:c.y*K,vx:0,vy:0,hit:false,green:c.col==='v',fatal:c.fatal?'Tocó un cono marcado: prueba perdida':undefined});
+  W.pstops=[];W.cedas=[];(D.signs||[]).forEach((s,i)=>{const o={x:s.x*K,y:s.y*K,ux:Math.cos(s.ang||0),uy:Math.sin(s.ang||0),w:(s.w||7)*K/2};if(s.kind==='alto')W.pstops.push(Object.assign(o,{code:'alto'+i,txt:'No hizo ALTO total',minV:99}));else W.cedas.push(o)});
+  W.pslots=[];for(const s of D.slots||[]){const o={cx:s.x*K,cy:s.y*K,ang:s.ang||0,hl:(s.l||5)*K/2,hw:(s.w||2.5)*K/2,target:!!s.target,num:s.num};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);if(s.ocupado&&!s.target)addParked(W,o.cx,o.cy,o.ang,pick(CARCOLS),pick(['sedan','hatch','suv']))}
+  W.pslot=W.pslots.find(o=>o.target)||null;
+  for(const p of D.people||[]){const x=p.x*K,y=p.y*K;W.walkers.push({r:{seg:[[x,y],[x,y]]},s:0,sp:0,an:Math.random()*9,x:0,y:0,staff:p.kind==='evaluador',col:p.kind==='evaluador'?'#1d3557':undefined})}
+  const st=D.start||{x:(D.w||100)/2,y:(D.h||80)/2,ang:0};W.spawn={x:st.x*K,y:st.y*K,h:st.ang||0};W.dests=[{n:'INICIO',x:W.spawn.x,y:W.spawn.y}];W.jay=null;
+  W.drawUnder=x=>{x.fillStyle='#4f8a3c';x.fillRect(0,0,W.w,W.h);const R=rng(77);for(let i=0;i<W.w*W.h/40;i++){x.fillStyle=R()<.5?'#5a9844':'#447a34';x.fillRect(R()*W.w|0,R()*W.h|0,2,1)}
+    const fillP=(pts,c,st)=>{const pp=P(pts);x.fillStyle=c;x.beginPath();x.moveTo(pp[0][0],pp[0][1]);for(const r of pp)x.lineTo(r[0],r[1]);x.closePath();x.fill();if(st){x.strokeStyle=st;x.lineWidth=1;x.stroke()}};
+    for(const a of D.areas||[])if(a.kind!=='asfalto'&&a.pts&&a.pts.length>2)fillP(a.pts,a.kind==='zacate'?'#4c9a45':'#b9b6ac',a.kind==='zacate'?'#f2c230':'#8d8a80');
+    for(const b of D.bldgs||[])if(b.pts&&b.pts.length>2){fillP(b.pts.map(q=>[q[0]+.8,q[1]+.8]),'rgba(0,0,0,.3)');fillP(b.pts,b.col||'#ecebe4','rgba(18,16,28,.6)')}
+    for(const g of D.rings||[]){const w=(g.lanes||1)*(g.laneW||4.5);fillCirc(x,g.x*K,g.y*K,(g.r-w/2)*K,'#f2c230');fillCirc(x,g.x*K,g.y*K,Math.max(0,(g.r-w/2)*K-1),'#4c9a45')}};
+  W.drawExtra=x=>{const lineP=(pts,col,dash,w=1)=>{if(pts.length<2)return;x.strokeStyle=col;x.lineWidth=w;x.setLineDash(dash||[]);x.beginPath();x.moveTo(pts[0][0],pts[0][1]);for(const r of pts)x.lineTo(r[0],r[1]);x.stroke();x.setLineDash([])};
+    for(const r of D.roads||[]){if(!r.pts||r.pts.length<2)continue;const pp=smoothLine(P(r.pts),4),hw=roadW(r)*K/2;lineP(offLine(pp,hw-1),'#ecece4');lineP(offLine(pp,-(hw-1)),'#ecece4');
+      if(!r.oneway&&(r.lanes||1)>1&&!r.wide){const c=r.center||'dash';if(c==='dash')lineP(pp,'#f2c230',[5,5],1.5);else if(c==='solid')lineP(pp,'#f2c230',null,1.5);else if(c==='double'){lineP(offLine(pp,1),'#f2c230');lineP(offLine(pp,-1),'#f2c230')}}
+      if(r.oneway){const q=P(r.pts);for(let i=0;i<q.length-1;i++){const A=q[i],B=q[i+1],L=Math.hypot(B[0]-A[0],B[1]-A[1]);if(L<30)continue;const ux=(B[0]-A[0])/L,uy=(B[1]-A[1])/L;arrowPx(x,(A[0]+B[0])/2,(A[1]+B[1])/2,Math.round(ux),Math.round(uy),'#ecece4')}}}
+    for(const g of D.rings||[])if((g.lanes||1)>1){x.strokeStyle='#ecece4';x.setLineDash([4,4]);x.beginPath();x.arc(g.x*K,g.y*K,g.r*K,0,7);x.stroke();x.setLineDash([])}
+    const bar=(cx,cy,nx,ny,a,b,col,w=2,dash=0)=>{x.fillStyle=col;for(let k=a;k<=b;k+=.5)if(!dash||((k-a)%3)<2)x.fillRect(Math.round(cx+nx*k),Math.round(cy+ny*k),w,w)};
+    const floor=(t,px,py,ux,uy)=>{const rot=Math.abs(uy)>=Math.abs(ux)?(uy<0?0:2):(ux>0?1:3),L=t.length*4-1;const w=rot%2?5:L,h=rot%2?L:5;ptext(x,t,Math.round(px-w/2),Math.round(py-h/2),'#ecece4',rot)};
+    const sign=(px,py,kind)=>{x.fillStyle='#555';x.fillRect(Math.round(px),Math.round(py),1,3);if(kind==='alto'){fillCirc(x,px,py-2,3,'#c1121f');x.fillStyle='#fff';x.fillRect(Math.round(px)-2,Math.round(py)-2,5,1)}
+      else{x.fillStyle='#c1121f';for(let k=0;k<5;k++)x.fillRect(Math.round(px)-3+(k*.5|0),Math.round(py)-5+k,7-k,1);x.fillStyle='#fff';x.fillRect(Math.round(px)-1,Math.round(py)-4,3,1)}};
+    for(const s of W.pstops){bar(s.x,s.y,-s.uy,s.ux,-s.w+1,s.w-1,'#ecece4');floor('ALTO',s.x-s.ux*7,s.y-s.uy*7,s.ux,s.uy);sign(s.x+(-s.uy)*(s.w+3),s.y+s.ux*(s.w+3),'alto')}
+    for(const s of W.cedas){bar(s.x,s.y,-s.uy,s.ux,-s.w,s.w,'#ecece4',2,1);floor('CEDA',s.x-s.ux*7,s.y-s.uy*7,s.ux,s.uy);sign(s.x+(-s.uy)*(s.w+3),s.y+s.ux*(s.w+3),'ceda')}
+    for(const t of D.texts||[]){const a=t.ang||0,rot=((Math.round(a/(Math.PI/2))%4)+4)%4,L=String(t.t).length*4-1,w=rot%2?5:L,h=rot%2?L:5;ptext(x,String(t.t),Math.round(t.x*K-w/2),Math.round(t.y*K-h/2),t.col||'#ecece4',rot)}
+    for(const o of W.pslots)if(o.num!=null){ptext(x,String(o.num),Math.round(o.cx)-2,Math.round(o.cy)-2,o.target?'#ffd23f':'#ecece4')}
+    ptext(x,(D.name||'MI PLANTEL').toUpperCase().slice(0,30),4,4,'#ffffff')};
+  return W}
+function customTasks(){const W=S.W,o=W.pslot;const T=[];
+  if(o)T.push({txt:'MI PLANTEL: estaciónese de RETROCESO en el espacio amarillo'+(o.num?' ('+o.num+')':'')+'. Respete ALTO y CEDA y no toque conos.',tgt:{x:o.cx,y:o.cy},ok:'¡Estacionamiento correcto!',
+    check(){const P=S.P,dx=P.x-o.cx,dy=P.y-o.cy,c=Math.cos(o.ang),s=Math.sin(o.ang),al=dx*c+dy*s,lt=-dx*s+dy*c;return still('cst',Math.abs(al)<o.hl*.45&&Math.abs(lt)<o.hw*.45&&Math.cos(P.h-o.ang)>.93,1.2)}});
+  T.push({txt:'MI PLANTEL: practique libremente. Respete los ALTO y CEDA, use direccionales y no toque conos. [ESC] para salir.',tgt:{x:W.spawn.x,y:W.spawn.y},check(){return false}});
+  return T}
 
 // ===================== RUTAS EMBLEMÁTICAS =====================
 function arrowPx(x,cx,cy,dx,dy,col){x.fillStyle=col;for(let k=-5;k<=3;k++)x.fillRect(Math.round(cx+dx*k),Math.round(cy+dy*k),1,1);
@@ -1930,16 +1977,16 @@ $('prgBack').onclick=()=>back();
 let S=null,A=null,ui='menu';
 function spawnState(W){const ty=isArc(CAR.type)&&!ARCOK?'sedan':(MODE_NOW==='alajuela'&&!isArc(CAR.type)?'taxi':CAR.type),v=VEH[ty];return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,thr:0,bp:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:carCol(),type:ty,sp:v,nitro:1,L:v.L,Wd:v.Wd,player:true}}
 const ROUTES={centro:1,r27:1,r32:1,tilaran:1,sjlibre:1,alajuela:1,manuel:1,cerro:1};
-const MODES={manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERTE · RUTA 2',alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};for(const k in OFICIALES){MODES['of_'+k]='RECORRIDO OFICIAL · '+OFICIALES[k].n;MNAME['of_'+k]='RECORRIDO '+OFICIALES[k].n}
+const MODES={custom:'MI PLANTEL',manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERTE · RUTA 2',alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};for(const k in OFICIALES){MODES['of_'+k]='RECORRIDO OFICIAL · '+OFICIALES[k].n;MNAME['of_'+k]='RECORRIDO '+OFICIALES[k].n}
 for(const k in SEDES){MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';MNAME['pl_'+k]='PLANTEL '+SEDES[k].n}
 // Arranque: primero se muestra CARGANDO (para que no parezca congelado) y luego se arma el mapa
 function start(mode){if(window.__syncStart)return startNow(mode);const L=$('loadMsg');if(L)L.classList.remove('hidden');setTimeout(()=>{try{startNow(mode)}finally{if(L)L.classList.add('hidden')}},40)}
 function startNow(mode){
   logDrive();ARCOK=mode==='city'||mode==='sjlibre'||mode==='alajuela';MODE_NOW=mode;
-  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCV2():(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();if(mode==='city')addEvents(W,SCENALL);if(mode==='sjlibre')addEvents(W,['llanta','varado','nino','hidro','ambulancia','bus','moto','accidente','frenos','encandilado','neblina']);if(mode==='alajuela')addEvents(W,['llanta','varado','hidro','nino','animal','motor','acelerador','bus','encandilado','derrape']);W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
+  const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCV2():mode==='custom'?buildCustom(loadCustom()):(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();if(mode==='city')addEvents(W,SCENALL);if(mode==='sjlibre')addEvents(W,['llanta','varado','nino','hidro','ambulancia','bus','moto','accidente','frenos','encandilado','neblina']);if(mode==='alajuela')addEvents(W,['llanta','varado','hidro','nino','animal','motor','acelerador','bus','encandilado','derrape']);W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
   S={mode,exam:mode!=='city'&&mode!=='sjlibre'&&mode!=='alajuela',W,P:spawnState(W),t:0,dt:0,faults:[],score:100,cd:{},task:0,hold:{},over:false,paused:false,failed:false,rnd:{in:false},lastExit:null,infr:0,deliv:0,pts:0,streak:0,best:0,destT:0,destPar:30,angered:0,speedT:0,offT:0,wrongT:0,respawn:0,cx:0,cy:0,blinkPh:0,horned:-1,bellT:0};
   S.cx=S.P.x-VW/2;S.cy=S.P.y-VH/2;S.fp=store.get('pp_fp',false);S.chase=S.fp&&store.get('pp_chase',false);S.camH=S.P.h;S.zoom=store.get('pp_zoom',1.5);S.mapOpen=false;
-  S.tasks=mode==='tuto'?tutoTasks():(mode==='plantel'||mode.startsWith('pl_'))?plantelTasks():mode.startsWith('of_')?oficialTasks():mode==='sanjose'?cv2Tasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
+  S.tasks=mode==='tuto'?tutoTasks():(mode==='plantel'||mode.startsWith('pl_'))?plantelTasks():mode.startsWith('of_')?oficialTasks():mode==='sanjose'?cv2Tasks():mode==='custom'?customTasks():mode==='centro'?centroTasks():mode==='r27'?r27Tasks():mode==='r32'?r32Tasks():ROUTEDEF[mode]?routeTasks():mode==='street'?streetTasks():[];if(!S.exam)newDest();
   const mw=W.w>1200?170:130,mh=Math.round(mw*W.h/W.w);mini.width=mw;mini.height=mh;mini.style.height=`calc(var(--u)*${(90*mh/mw).toFixed(1)})`;
   show(null);$('hud').classList.remove('hidden');ui=null;
   $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio',false);shush();
@@ -3295,7 +3342,7 @@ function back(){show('menu');ui='menu';refreshMenu()}
 function openPlanteles(){show('plScr');ui='pl'}
 function openRutas(){show('rtScr');ui='rt'}
 function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);if(engG&&S.paused)engG.gain.value=0}
-$('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};for(const b of document.querySelectorAll('#plScr [data-sede]'))b.onclick=()=>{audioInit();start('pl_'+b.dataset.sede)};for(const b of document.querySelectorAll('#plScr [data-of]'))b.onclick=()=>{audioInit();start('of_'+b.dataset.of)};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtM').onclick=()=>{audioInit();start('manuel')};$('rtD').onclick=()=>{audioInit();start('cerro')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
+$('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};$('plMine').onclick=()=>{if(!loadCustom()){if(confirm('Todavía no ha creado un plantel. ¿Abrir el Creador de planteles?'))location.href='editor.html';return}audioInit();start('custom')};for(const b of document.querySelectorAll('#plScr [data-sede]'))b.onclick=()=>{audioInit();start('pl_'+b.dataset.sede)};for(const b of document.querySelectorAll('#plScr [data-of]'))b.onclick=()=>{audioInit();start('of_'+b.dataset.of)};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtM').onclick=()=>{audioInit();start('manuel')};$('rtD').onclick=()=>{audioInit();start('cerro')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
 $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
 $('bResume').onclick=togglePause;$('bGfx').textContent='GRÁFICOS: '+GFX+'-BIT';$('bGfx').onclick=()=>setGfx(GFX===32?16:32);$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
@@ -3409,6 +3456,7 @@ for(const b of document.querySelectorAll('#touch [data-k]')){const k=b.dataset.k
   b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault())}
 addEventListener('resize',()=>{fit();fsPaint()});if(window.visualViewport){visualViewport.addEventListener('resize',fit);visualViewport.addEventListener('scroll',fit)}addEventListener('orientationchange',()=>setTimeout(fit,300));applyProf();fit();fsPaint();refreshMenu();if(!PROF)openWelcome();
 requestAnimationFrame(frame);
+if(location.hash==='#custom'&&loadCustom())setTimeout(()=>{try{history.replaceState(null,'',location.pathname)}catch(e){}const w=$('welScr');if(w)w.classList.add('hidden');start('custom')},400);
 </script>
 </body>
 </html>

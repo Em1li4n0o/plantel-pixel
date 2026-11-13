@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creador de Planteles</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0d0d16;--panel:#16162a;--panel2:#1e1e38;--fg:#f4f4e8;--mute:#9a9ab8;--acc:#ffd23f;--line:#34345a;--good:#3ddc84;--bad:#ff4d4d}
+:root[data-theme="light"]{--bg:#e9e9f2;--panel:#ffffff;--panel2:#f0f0f7;--fg:#1a1a2a;--mute:#5a5a78;--line:#c8c8dc}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;font-size:14px}
+body{display:grid;grid-template-rows:auto 1fr;grid-template-columns:200px 1fr 250px;grid-template-areas:"top top top" "tools main props";height:100vh;overflow:hidden}
+header{grid-area:top;display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid var(--line)}
+header h1{font-family:'Press Start 2P',monospace;font-size:12px;margin:0 12px 0 0;color:var(--acc)}
+button,select,input{font:inherit;color:var(--fg);background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:6px 9px}
+button{cursor:pointer}button:hover{border-color:var(--acc)}button.on{background:var(--acc);color:#111;border-color:var(--acc)}
+button.go{background:var(--good);color:#06240f;border-color:var(--good);font-weight:600}
+#tools{grid-area:tools;background:var(--panel);border-right:1px solid var(--line);padding:10px;overflow:auto;display:flex;flex-direction:column;gap:5px}
+#tools .grp{font-size:11px;color:var(--mute);text-transform:uppercase;letter-spacing:.06em;margin:8px 0 2px}
+#tools button{text-align:left;display:flex;justify-content:space-between;gap:6px}
+#tools kbd{font-size:11px;color:var(--mute)}
+main{grid-area:main;position:relative;overflow:hidden;background:#2f6b2a}
+#cv{position:absolute;inset:0;width:100%;height:100%;cursor:crosshair;touch-action:none}
+#hint{position:absolute;left:10px;bottom:10px;right:10px;background:rgba(10,10,20,.82);color:#f4f4e8;padding:7px 10px;border-radius:6px;font-size:13px;pointer-events:none}
+#coords{position:absolute;right:10px;top:10px;background:rgba(10,10,20,.75);color:#f4f4e8;padding:4px 8px;border-radius:6px;font-size:12px;pointer-events:none}
+#props{grid-area:props;background:var(--panel);border-left:1px solid var(--line);padding:12px;overflow:auto}
+#props h2{font-size:13px;margin:0 0 8px;color:var(--acc)}
+#props label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:6px 0;font-size:13px}
+#props input[type=number]{width:80px}#props input[type=text]{width:120px}
+#props .note{font-size:12px;color:var(--mute);line-height:1.45;margin-top:10px}
+#props .row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+@media (max-width:900px){body{grid-template-columns:1fr;grid-template-rows:auto auto 1fr auto;grid-template-areas:"top" "tools" "main" "props"}
+  #tools{flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line);max-height:120px}#tools .grp{display:none}#props{border-left:0;border-top:1px solid var(--line);max-height:30vh}}
+</style>
+</head>
+<body>
+<header>
+  <h1>CREADOR DE PLANTELES</h1>
+  <button id="bNew">Nuevo</button>
+  <button id="bOpen">Abrir archivo</button>
+  <button id="bSave">Guardar archivo</button>
+  <button id="bUndo" title="Ctrl+Z">Deshacer</button>
+  <button id="bBg">Fondo: imagen…</button>
+  <button id="bSat">Fondo: satélite Ciudad Vial</button>
+  <button id="bCal">Calibrar fondo</button>
+  <button id="bPlay" class="go">▶ Probar en el juego</button>
+  <a href="index.html" style="color:var(--mute);margin-left:auto">Volver al juego</a>
+  <input type="file" id="fOpen" accept=".json,application/json" hidden>
+  <input type="file" id="fBg" accept="image/*" hidden>
+</header>
+<aside id="tools">
+  <div class="grp">Editar</div>
+  <button data-tool="sel">Seleccionar / mover <kbd>V</kbd></button>
+  <button data-tool="del">Borrar <kbd>X</kbd></button>
+  <button data-tool="pan">Mover vista <kbd>M</kbd></button>
+  <div class="grp">Calles</div>
+  <button data-tool="road" data-lanes="2">Calle 2 carriles <kbd>C</kbd></button>
+  <button data-tool="road" data-lanes="1">Calle 1 carril <kbd>1</kbd></button>
+  <button data-tool="road" data-lanes="1w">1 carril ancho <kbd>W</kbd></button>
+  <button data-tool="ring" data-lanes="1">Rotonda 1 carril <kbd>R</kbd></button>
+  <button data-tool="ring" data-lanes="2">Rotonda 2 carriles <kbd>2</kbd></button>
+  <button data-tool="area" data-kind="asfalto">Asfalto / intersección <kbd>A</kbd></button>
+  <div class="grp">Señales y conos</div>
+  <button data-tool="cone" data-col="n">Cono naranja <kbd>K</kbd></button>
+  <button data-tool="cone" data-col="v">Cono verde <kbd>G</kbd></button>
+  <button data-tool="sign" data-kind="alto">ALTO <kbd>S</kbd></button>
+  <button data-tool="sign" data-kind="ceda">CEDA <kbd>Y</kbd></button>
+  <button data-tool="text">Texto en el piso <kbd>T</kbd></button>
+  <button data-tool="slot">Espacio de parqueo <kbd>P</kbd></button>
+  <div class="grp">Entorno</div>
+  <button data-tool="bldg">Edificio <kbd>B</kbd></button>
+  <button data-tool="area" data-kind="zacate">Zacate / isla <kbd>Z</kbd></button>
+  <button data-tool="area" data-kind="acera">Acera <kbd>D</kbd></button>
+  <button data-tool="person" data-kind="evaluador">Evaluador <kbd>E</kbd></button>
+  <button data-tool="person" data-kind="persona">Persona <kbd>O</kbd></button>
+  <button data-tool="start">Inicio del carro <kbd>I</kbd></button>
+</aside>
+<main>
+  <canvas id="cv"></canvas>
+  <div id="coords"></div>
+  <div id="hint"></div>
+</main>
+<aside id="props"></aside>
+<script>
+// ======================= CREADOR DE PLANTELES =======================
+// Todo se guarda en METROS (x hacia la derecha, y hacia abajo). El juego lo convierte con 4 unidades por metro.
+// Medidas de referencia (MOPT / promedios):
+const REF={laneW:3.5,laneUrb:3.3,wideW:5.0,ringLaneW:4.5,car:{L:4.5,W:1.8},slot:{w:2.5,l:5.0},cone:.35,stopW:.4};
+const $=id=>document.getElementById(id);
+const cv=$('cv'),cx=cv.getContext('2d');
+let M=blank(),tool='sel',opt={lanes:'2',kind:'',col:'n'},draft=null,sel=null,drag=null,hover=null,cal=null;
+let view={x:-5,y:-5,z:8};// z = píxeles por metro
+let BG={img:null};const HIST=[];
+function blank(){return{v:1,name:'Mi plantel',w:120,h:100,limit:20,roads:[],rings:[],areas:[],bldgs:[],cones:[],signs:[],texts:[],slots:[],people:[],start:{x:20,y:20,ang:0},bg:null}}
+// ---------- guardar / historial ----------
+function save(push=true){if(push){HIST.push(JSON.stringify(M));if(HIST.length>80)HIST.shift()}try{localStorage.setItem('pp_custom',JSON.stringify(M))}catch(e){}draw();props()}
+function snapshot(){HIST.push(JSON.stringify(M));if(HIST.length>80)HIST.shift()}
+function undo(){if(HIST.length<2)return;HIST.pop();M=JSON.parse(HIST[HIST.length-1]);sel=null;try{localStorage.setItem('pp_custom',JSON.stringify(M))}catch(e){}draw();props()}
+try{const s=localStorage.getItem('pp_custom');if(s)M=Object.assign(blank(),JSON.parse(s))}catch(e){}
+HIST.push(JSON.stringify(M));
+try{const b=localStorage.getItem('pp_custom_bg');if(b&&M.bg){const i=new Image();i.onload=()=>{BG.img=i;draw()};i.src=b}}catch(e){}
+// ---------- vista ----------
+function resize(){const r=cv.getBoundingClientRect();cv.width=Math.round(r.width*devicePixelRatio);cv.height=Math.round(r.height*devicePixelRatio);draw()}
+addEventListener('resize',resize);
+const S2W=(px,py)=>({x:view.x+px/view.z,y:view.y+py/view.z}),W2S=(x,y)=>[(x-view.x)*view.z,(y-view.y)*view.z];
+function fit(){const r=cv.getBoundingClientRect();view.z=Math.min(r.width/(M.w+10),r.height/(M.h+10));view.x=-5;view.y=-5;draw()}
+// ---------- utilidades geométricas ----------
+const dist=(a,b)=>Math.hypot(a.x-b.x,a.y-b.y);
+function segDist(p,a,b){const dx=b[0]-a[0],dy=b[1]-a[1],L=dx*dx+dy*dy||1,t=Math.max(0,Math.min(1,((p.x-a[0])*dx+(p.y-a[1])*dy)/L));return Math.hypot(a[0]+dx*t-p.x,a[1]+dy*t-p.y)}
+function polyDist(p,pts){let d=1e9;for(let i=0;i<pts.length-1;i++)d=Math.min(d,segDist(p,pts[i],pts[i+1]));return d}
+function inPoly(p,pts){let c=false;for(let i=0,j=pts.length-1;i<pts.length;j=i++){const[xi,yi]=pts[i],[xj,yj]=pts[j];if((yi>p.y)!==(yj>p.y)&&p.x<(xj-xi)*(p.y-yi)/(yj-yi)+xi)c=!c}return c}
+const roadW=r=>r.wide?(r.wideW||REF.wideW):(r.lanes||1)*(r.laneW||REF.laneW);
+const snap=v=>Math.round(v*4)/4;
+function offLine(pts,d){return pts.map((q,i)=>{const a=pts[Math.max(0,i-1)],b=pts[Math.min(pts.length-1,i+1)];const dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return[q[0]-dy/l*d,q[1]+dx/l*d]})}
+// ---------- búsqueda de elementos bajo el cursor ----------
+function pick(p){const tol=6/view.z;let best=null,bd=1e9;const tryIt=(type,i,d)=>{if(d<bd){bd=d;best={type,i}}};
+  M.cones.forEach((c,i)=>tryIt('cones',i,dist(p,c)-.4));M.people.forEach((c,i)=>tryIt('people',i,dist(p,c)-.5));
+  M.signs.forEach((s,i)=>tryIt('signs',i,dist(p,s)-(s.w||REF.laneW)/2));M.texts.forEach((s,i)=>tryIt('texts',i,dist(p,s)-1));
+  M.slots.forEach((s,i)=>tryIt('slots',i,dist(p,s)-1.2));
+  if(dist(p,M.start)<2.5)tryIt('start',0,dist(p,M.start)-2.5);
+  M.roads.forEach((r,i)=>tryIt('roads',i,polyDist(p,r.pts)-roadW(r)/2));
+  M.rings.forEach((g,i)=>tryIt('rings',i,Math.abs(Math.hypot(p.x-g.x,p.y-g.y)-g.r)-(g.lanes||1)*(g.laneW||REF.ringLaneW)/2));
+  M.bldgs.forEach((b,i)=>tryIt('bldgs',i,inPoly(p,b.pts)?0:polyDist(p,b.pts.concat([b.pts[0]]))));
+  M.areas.forEach((a,i)=>tryIt('areas',i,inPoly(p,a.pts)?.5:polyDist(p,a.pts.concat([a.pts[0]]))));
+  return bd<=tol?best:null}
+function elem(s){return s.type==='start'?M.start:M[s.type][s.i]}
+function moveElem(s,dx,dy){const e=elem(s);if(e.pts)for(const q of e.pts){q[0]+=dx;q[1]+=dy}else{e.x+=dx;e.y+=dy}}
+// ---------- dibujo ----------
+function draw(){const g=cx,dpr=devicePixelRatio;g.setTransform(dpr,0,0,dpr,0,0);const W=cv.width/dpr,H=cv.height/dpr;g.fillStyle='#2f6b2a';g.fillRect(0,0,W,H);
+  // fondo (imagen calibrada)
+  if(BG.img&&M.bg){const b=M.bg;const[a0,b0]=W2S(b.x,b.y);g.globalAlpha=b.op??.75;g.imageSmoothingEnabled=true;g.drawImage(BG.img,a0,b0,BG.img.width*b.mpp*view.z,BG.img.height*b.mpp*view.z);g.globalAlpha=1}
+  // límites del plantel y cuadrícula
+  {const[a,b]=W2S(0,0);g.strokeStyle='rgba(255,255,255,.55)';g.setLineDash([6,4]);g.strokeRect(a,b,M.w*view.z,M.h*view.z);g.setLineDash([]);
+    const step=view.z>14?1:view.z>5?5:10;g.strokeStyle='rgba(255,255,255,.08)';g.lineWidth=1;g.beginPath();for(let x=0;x<=M.w;x+=step){const[p]=W2S(x,0);g.moveTo(p,b);g.lineTo(p,b+M.h*view.z)}for(let y=0;y<=M.h;y+=step){const[,q]=W2S(0,y);g.moveTo(a,q);g.lineTo(a+M.w*view.z,q)}g.stroke()}
+  const poly=(pts,fill,stroke)=>{if(pts.length<2)return;g.beginPath();pts.forEach((q,i)=>{const[a,b]=W2S(q[0],q[1]);i?g.lineTo(a,b):g.moveTo(a,b)});g.closePath();if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=1;g.stroke()}};
+  const line=(pts,w,col,dash)=>{if(pts.length<2)return;g.beginPath();pts.forEach((q,i)=>{const[a,b]=W2S(q[0],q[1]);i?g.lineTo(a,b):g.moveTo(a,b)});g.lineWidth=Math.max(1,w*view.z);g.strokeStyle=col;g.lineJoin='round';g.lineCap='round';g.setLineDash(dash?dash.map(v=>v*view.z):[]);g.stroke();g.setLineDash([])};
+  for(const a of M.areas)if(a.kind!=='asfalto')poly(a.pts,a.kind==='zacate'?'#4c9a45':'#b9b6ac',a.kind==='zacate'?'#f2c230':'#8d8a80');
+  for(const a of M.areas)if(a.kind==='asfalto')poly(a.pts,'#3a3a43');
+  for(const r of M.roads)line(r.pts,roadW(r),'#3a3a43');
+  for(const gr of M.rings){const w=(gr.lanes||1)*(gr.laneW||REF.ringLaneW);const[a,b]=W2S(gr.x,gr.y);g.lineWidth=w*view.z;g.strokeStyle='#3a3a43';g.beginPath();g.arc(a,b,gr.r*view.z,0,7);g.stroke();
+    g.fillStyle='#f2c230';g.beginPath();g.arc(a,b,(gr.r-w/2)*view.z,0,7);g.fill();g.fillStyle='#4c9a45';g.beginPath();g.arc(a,b,Math.max(0,(gr.r-w/2-.3)*view.z),0,7);g.fill();
+    if((gr.lanes||1)>1){g.setLineDash([3*view.z,3*view.z]);g.lineWidth=Math.max(1,.12*view.z);g.strokeStyle='#ecece4';g.beginPath();g.arc(a,b,gr.r*view.z,0,7);g.stroke();g.setLineDash([])}}
+  // marcas de las calles
+  for(const r of M.roads){const w=roadW(r);line(offLine(r.pts,w/2-.25),.12,'#ecece4');line(offLine(r.pts,-(w/2-.25)),.12,'#ecece4');
+    if(!r.oneway&&(r.lanes||1)>1&&!r.wide){const st=r.center||'dash';if(st==='dash')line(r.pts,.15,'#f2c230',[3,3]);else if(st==='solid')line(r.pts,.15,'#f2c230');else if(st==='double'){line(offLine(r.pts,.15),.12,'#f2c230');line(offLine(r.pts,-.15),.12,'#f2c230')}}
+    if(r.oneway&&r.pts.length>1){const a=r.pts[0],b=r.pts[1],L=Math.hypot(b[0]-a[0],b[1]-a[1])||1,m=[(a[0]+b[0])/2,(a[1]+b[1])/2],u=[(b[0]-a[0])/L,(b[1]-a[1])/L];line([[m[0]-u[0],m[1]-u[1]],[m[0]+u[0],m[1]+u[1]]],.25,'#ecece4');line([[m[0]+u[0]-u[0]*.7+u[1]*.6,m[1]+u[1]-u[1]*.7-u[0]*.6],[m[0]+u[0],m[1]+u[1]],[m[0]+u[0]-u[0]*.7-u[1]*.6,m[1]+u[1]-u[1]*.7+u[0]*.6]],.25,'#ecece4')}}
+  for(const b of M.bldgs){const sh=b.pts.map(q=>[q[0]+.8,q[1]+.8]);poly(sh,'rgba(0,0,0,.3)');poly(b.pts,b.col||'#ecebe4','#222');if(b.label){const c=b.pts.reduce((s,q)=>[s[0]+q[0]/b.pts.length,s[1]+q[1]/b.pts.length],[0,0]);const[a,bb]=W2S(c[0],c[1]);g.fillStyle='#3d405b';g.font='600 12px system-ui';g.textAlign='center';g.fillText(b.label,a,bb+4)}}
+  for(const s of M.slots){const[a,b]=W2S(s.x,s.y);g.save();g.translate(a,b);g.rotate(s.ang||0);const w=(s.w||REF.slot.w)*view.z,l=(s.l||REF.slot.l)*view.z;g.strokeStyle=s.target?'#ffd23f':'#ecece4';g.lineWidth=Math.max(1,.12*view.z);g.beginPath();g.moveTo(l/2,-w/2);g.lineTo(-l/2,-w/2);g.lineTo(-l/2,w/2);g.lineTo(l/2,w/2);g.stroke();
+    if(s.ocupado){g.fillStyle='#6c7a89';g.fillRect(-REF.car.L/2*view.z,-REF.car.W/2*view.z,REF.car.L*view.z,REF.car.W*view.z)}g.rotate(-(s.ang||0));g.fillStyle=s.target?'#ffd23f':'#ecece4';g.font='600 11px system-ui';g.textAlign='center';g.fillText(String(s.num||''),0,4);g.restore()}
+  for(const s of M.signs){const[a,b]=W2S(s.x,s.y),ang=s.ang||0,w=(s.w||REF.laneW)*view.z,nx=-Math.sin(ang),ny=Math.cos(ang);g.strokeStyle='#ecece4';g.lineWidth=Math.max(2,REF.stopW*view.z);g.setLineDash(s.kind==='ceda'?[.6*view.z,.4*view.z]:[]);g.beginPath();g.moveTo(a-nx*w/2,b-ny*w/2);g.lineTo(a+nx*w/2,b+ny*w/2);g.stroke();g.setLineDash([]);
+    const sx=a+nx*(w/2+.9*view.z),sy=b+ny*(w/2+.9*view.z);g.fillStyle='#c1121f';if(s.kind==='alto'){g.beginPath();for(let k=0;k<8;k++){const t=k/8*Math.PI*2+Math.PI/8;g.lineTo(sx+Math.cos(t)*7,sy+Math.sin(t)*7)}g.fill();g.fillStyle='#fff';g.font='700 6px system-ui';g.textAlign='center';g.fillText('ALTO',sx,sy+2)}else{g.beginPath();g.moveTo(sx-7,sy-5);g.lineTo(sx+7,sy-5);g.lineTo(sx,sy+7);g.fill();g.fillStyle='#fff';g.beginPath();g.moveTo(sx-4,sy-3);g.lineTo(sx+4,sy-3);g.lineTo(sx,sy+3);g.fill()}
+    g.strokeStyle='rgba(255,210,63,.8)';g.lineWidth=1.5;g.beginPath();g.moveTo(a,b);g.lineTo(a-Math.cos(ang)*14,b-Math.sin(ang)*14);g.stroke()}
+  for(const t of M.texts){const[a,b]=W2S(t.x,t.y);g.save();g.translate(a,b);g.rotate(t.ang||0);g.fillStyle=t.col||'#ecece4';g.font=`700 ${Math.max(8,(t.size||1.2)*view.z)}px system-ui`;g.textAlign='center';g.fillText(t.t,0,0);g.restore()}
+  for(const c of M.cones){const[a,b]=W2S(c.x,c.y),r=Math.max(2.5,REF.cone*view.z/1.4);g.fillStyle=c.col==='v'?'#3ddc84':'#ff7b00';g.beginPath();g.arc(a,b,r,0,7);g.fill();g.fillStyle='#fff';g.fillRect(a-1,b-1,2,2)}
+  for(const p of M.people){const[a,b]=W2S(p.x,p.y);g.fillStyle=p.kind==='evaluador'?'#1d4ed8':'#e76f51';g.beginPath();g.arc(a,b,Math.max(3,.35*view.z),0,7);g.fill();g.fillStyle='#ffdbac';g.beginPath();g.arc(a,b,Math.max(1.5,.18*view.z),0,7);g.fill()}
+  {const s=M.start,[a,b]=W2S(s.x,s.y);g.save();g.translate(a,b);g.rotate(s.ang||0);g.fillStyle='#e63946';g.fillRect(-REF.car.L/2*view.z,-REF.car.W/2*view.z,REF.car.L*view.z,REF.car.W*view.z);g.fillStyle='#9fd3ff';g.fillRect(REF.car.L*.1*view.z,-REF.car.W*.4*view.z,REF.car.L*.15*view.z,REF.car.W*.8*view.z);g.restore();g.fillStyle='#fff';g.font='600 11px system-ui';g.textAlign='center';g.fillText('INICIO',a,b-REF.car.L*view.z*.6-4)}
+  // selección y borrador
+  if(sel&&(sel.type==='start'||M[sel.type]&&M[sel.type][sel.i])){const e=elem(sel);g.strokeStyle='#ffd23f';g.lineWidth=2;g.setLineDash([5,3]);if(e.pts){g.beginPath();e.pts.forEach((q,i)=>{const[a,b]=W2S(q[0],q[1]);i?g.lineTo(a,b):g.moveTo(a,b)});if(sel.type!=='roads')g.closePath();g.stroke();g.setLineDash([]);for(const q of e.pts){const[a,b]=W2S(q[0],q[1]);g.fillStyle='#ffd23f';g.fillRect(a-3,b-3,6,6)}}
+    else{const[a,b]=W2S(e.x,e.y),r=sel.type==='rings'?e.r*view.z:12;g.beginPath();g.arc(a,b,r,0,7);g.stroke()}g.setLineDash([])}
+  if(draft){g.strokeStyle='#ffd23f';g.lineWidth=2;g.setLineDash([4,3]);const pts=draft.pts.concat(hover?[[hover.x,hover.y]]:[]);if(draft.kind==='road'){line(pts,draft.w,'rgba(58,58,67,.6)');}g.beginPath();pts.forEach((q,i)=>{const[a,b]=W2S(q[0],q[1]);i?g.lineTo(a,b):g.moveTo(a,b)});g.stroke();g.setLineDash([])}
+  if(drag&&drag.mode==='vec'){const[a,b]=W2S(drag.p0.x,drag.p0.y),[c2,d2]=W2S(drag.p1.x,drag.p1.y);g.strokeStyle='#ffd23f';g.lineWidth=2;g.beginPath();g.moveTo(a,b);g.lineTo(c2,d2);g.stroke();if(drag.tool==='ring'){g.beginPath();g.arc(a,b,Math.hypot(c2-a,d2-b),0,7);g.stroke()}}
+  if(cal&&cal.p0){const[a,b]=W2S(cal.p0.x,cal.p0.y);g.fillStyle='#ff4d4d';g.beginPath();g.arc(a,b,5,0,7);g.fill()}
+  // barra de escala y carro de referencia
+  {const bar=view.z>12?5:view.z>4?10:20;g.fillStyle='rgba(10,10,20,.75)';g.fillRect(10,10,bar*view.z+90,40);g.fillStyle='#fff';g.fillRect(16,20,bar*view.z,4);g.font='600 12px system-ui';g.textAlign='left';g.fillText(bar+' m',bar*view.z+22,27);
+    g.fillStyle='#e63946';g.fillRect(16,32,REF.car.L*view.z,REF.car.W*view.z);g.fillStyle='#ddd';g.fillText('carro 4,5×1,8 m',REF.car.L*view.z+22,42)}
+  if(M.bg&&BG.img)g.fillStyle='rgba(255,255,255,.8)',g.font='11px system-ui',g.textAlign='right',g.fillText(M.bg.src||'',W-10,H-50)}
+// ---------- herramientas ----------
+const HINTS={sel:'Clic para seleccionar. Arrastre para mover. Supr para borrar. Rueda: zoom. Clic derecho y arrastre: mover la vista.',del:'Clic sobre un elemento para borrarlo.',pan:'Arrastre para mover la vista. Rueda para acercar.',
+  road:'Clic para poner puntos de la calle (la línea central). Doble clic o Enter para terminar. Esc cancela.',ring:'Clic en el centro y arrastre hasta el centro del carril de la rotonda.',area:'Clic para poner las esquinas. Doble clic o Enter para cerrar.',
+  cone:'Clic: un cono. Arrastre: una fila de conos (cada 1,5 m; se cambia a la derecha).',sign:'Clic donde va la línea y arrastre en el SENTIDO en que llega el carro.',text:'Clic donde va el texto (se escribe a la derecha).',
+  slot:'Clic en el centro del espacio y arrastre hacia la SALIDA del espacio (por donde entra el carro).',bldg:'Clic para las esquinas del edificio. Doble clic o Enter para cerrar.',person:'Clic para poner la persona.',start:'Clic donde arranca el carro y arrastre hacia donde mira.',
+  cal:'CALIBRAR: haga clic en dos puntos del fondo cuya distancia real conoce (por ejemplo el ancho de un carril).'};
+function setTool(t,btn){tool=t;draft=null;cal=null;if(btn){opt.lanes=btn.dataset.lanes||opt.lanes;opt.kind=btn.dataset.kind||'';opt.col=btn.dataset.col||'n'}
+  document.querySelectorAll('#tools button').forEach(b=>b.classList.toggle('on',b===btn));$('hint').textContent=HINTS[t]||'';cv.style.cursor=t==='pan'?'grab':t==='sel'?'default':'crosshair';props();draw()}
+document.querySelectorAll('#tools button').forEach(b=>b.onclick=()=>setTool(b.dataset.tool,b));
+function finishDraft(){if(!draft)return;const d=draft;draft=null;
+  if(d.kind==='road'&&d.pts.length>=2){const l=opt.lanes;M.roads.push({pts:d.pts,lanes:l==='2'?2:1,laneW:l==='2'?REF.laneW:REF.laneW,wide:l==='1w',wideW:REF.wideW,oneway:l!=='2',center:'dash'});sel={type:'roads',i:M.roads.length-1}}
+  else if(d.kind==='area'&&d.pts.length>=3){M.areas.push({pts:d.pts,kind:opt.kind});sel={type:'areas',i:M.areas.length-1}}
+  else if(d.kind==='bldg'&&d.pts.length>=3){M.bldgs.push({pts:d.pts,h:6,col:'#ecebe4',label:''});sel={type:'bldgs',i:M.bldgs.length-1}}
+  save()}
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+cv.addEventListener('pointerdown',e=>{cv.setPointerCapture(e.pointerId);const r=cv.getBoundingClientRect(),p=S2W(e.clientX-r.left,e.clientY-r.top),ps={x:snap(p.x),y:snap(p.y)};
+  if(e.button===2||tool==='pan'||e.button===1){drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y};return}
+  if(cal){if(!cal.p0){cal.p0=p;draw()}else{const m=prompt('¿Cuántos METROS hay entre esos dos puntos?','3.5');const real=parseFloat(String(m||'').replace(',','.'));if(real>0&&M.bg){const dw=dist(cal.p0,p),k=real/dw;M.bg.mpp*=k;M.bg.x=cal.p0.x+(M.bg.x-cal.p0.x)*k;M.bg.y=cal.p0.y+(M.bg.y-cal.p0.y)*k;save()}cal=null;setTool('sel',document.querySelector('[data-tool=sel]'))}return}
+  if(tool==='sel'){sel=pick(p);if(sel){snapshot();drag={mode:'move',last:p}}else drag={mode:'pan',sx:e.clientX,sy:e.clientY,vx:view.x,vy:view.y};props();draw();return}
+  if(tool==='del'){const s=pick(p);if(s&&s.type!=='start'){M[s.type].splice(s.i,1);sel=null;save()}return}
+  if(tool==='road'||tool==='area'||tool==='bldg'){if(!draft)draft={kind:tool,pts:[],w:opt.lanes==='2'?2*REF.laneW:opt.lanes==='1w'?REF.wideW:REF.laneW};const last=draft.pts[draft.pts.length-1];if(!last||Math.hypot(last[0]-ps.x,last[1]-ps.y)>.3)draft.pts.push([ps.x,ps.y]);draw();return}
+  if(tool==='text'){const t=prompt('Texto que va pintado en el piso:','ALTO');if(t){M.texts.push({x:ps.x,y:ps.y,t:t.toUpperCase(),ang:0,size:1.2,col:'#ecece4'});sel={type:'texts',i:M.texts.length-1};save()}return}
+  if(tool==='person'){M.people.push({x:ps.x,y:ps.y,kind:opt.kind});save();return}
+  drag={mode:'vec',tool,p0:ps,p1:ps};draw()});
+cv.addEventListener('pointermove',e=>{const r=cv.getBoundingClientRect(),p=S2W(e.clientX-r.left,e.clientY-r.top);hover={x:snap(p.x),y:snap(p.y)};$('coords').textContent=`x ${p.x.toFixed(1)} m · y ${p.y.toFixed(1)} m`;
+  if(drag){if(drag.mode==='pan'){view.x=drag.vx-(e.clientX-drag.sx)/view.z;view.y=drag.vy-(e.clientY-drag.sy)/view.z}else if(drag.mode==='move'){moveElem(sel,p.x-drag.last.x,p.y-drag.last.y);drag.last=p}else if(drag.mode==='vec')drag.p1=hover;draw()}else if(draft)draw()});
+cv.addEventListener('pointerup',e=>{if(!drag)return;const d=drag;drag=null;
+  if(d.mode==='move'){save(false);HIST.push(JSON.stringify(M));return}
+  if(d.mode!=='vec'){draw();return}
+  const dx=d.p1.x-d.p0.x,dy=d.p1.y-d.p0.y,L=Math.hypot(dx,dy),ang=L>.2?Math.atan2(dy,dx):0;
+  if(d.tool==='cone'){if(L<.5)M.cones.push({x:d.p0.x,y:d.p0.y,col:opt.col});else{const sp=+(opt.coneSep||1.5),n=Math.max(1,Math.round(L/sp));for(let k=0;k<=n;k++)M.cones.push({x:d.p0.x+dx*k/n,y:d.p0.y+dy*k/n,col:opt.col})}}
+  else if(d.tool==='ring'){if(L>2){M.rings.push({x:d.p0.x,y:d.p0.y,r:L,lanes:+opt.lanes||1,laneW:REF.ringLaneW});sel={type:'rings',i:M.rings.length-1}}}
+  else if(d.tool==='sign'){M.signs.push({x:d.p0.x,y:d.p0.y,ang,kind:opt.kind,w:REF.laneW*2});sel={type:'signs',i:M.signs.length-1}}
+  else if(d.tool==='slot'){const n=M.slots.length+1;M.slots.push({x:d.p0.x,y:d.p0.y,ang,w:REF.slot.w,l:REF.slot.l,num:n,target:false,ocupado:false});sel={type:'slots',i:M.slots.length-1}}
+  else if(d.tool==='start'){M.start={x:d.p0.x,y:d.p0.y,ang}}
+  save()});
+cv.addEventListener('dblclick',()=>{if(draft){draft.pts.pop();finishDraft()}});
+cv.addEventListener('wheel',e=>{e.preventDefault();const r=cv.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top,p=S2W(mx,my);view.z=Math.max(1.5,Math.min(80,view.z*(e.deltaY<0?1.15:1/1.15)));view.x=p.x-mx/view.z;view.y=p.y-my/view.z;draw()},{passive:false});
+addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;const k=e.key.toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&k==='z'){undo();e.preventDefault();return}
+  if(k==='enter'){finishDraft();return}if(k==='escape'){draft=null;cal=null;draw();return}
+  if((k==='delete'||k==='backspace')&&sel&&sel.type!=='start'){M[sel.type].splice(sel.i,1);sel=null;save();return}
+  const map={v:'[data-tool=sel]',x:'[data-tool=del]',m:'[data-tool=pan]',c:'[data-tool=road][data-lanes="2"]','1':'[data-tool=road][data-lanes="1"]',w:'[data-tool=road][data-lanes="1w"]',r:'[data-tool=ring][data-lanes="1"]','2':'[data-tool=ring][data-lanes="2"]',a:'[data-kind=asfalto]',k:'[data-tool=cone][data-col=n]',g:'[data-tool=cone][data-col=v]',s:'[data-kind=alto]',y:'[data-kind=ceda]',t:'[data-tool=text]',p:'[data-tool=slot]',b:'[data-tool=bldg]',z:'[data-kind=zacate]',d:'[data-kind=acera]',e:'[data-kind=evaluador]',o:'[data-kind=persona]',i:'[data-tool=start]'};
+  if(map[k]){const b=document.querySelector(map[k]);if(b)setTool(b.dataset.tool,b)}});
+// ---------- panel de propiedades ----------
+function field(lbl,val,on,type='number',step='0.1'){const id='f'+Math.random().toString(36).slice(2);return{html:`<label>${lbl}<input id="${id}" type="${type}" step="${step}" value="${val??''}"></label>`,id,on}}
+function check(lbl,val,on){const id='c'+Math.random().toString(36).slice(2);return{html:`<label>${lbl}<input id="${id}" type="checkbox" ${val?'checked':''}></label>`,id,on,chk:true}}
+function choose(lbl,val,opts,on){const id='s'+Math.random().toString(36).slice(2);return{html:`<label>${lbl}<select id="${id}">${opts.map(([v,t])=>`<option value="${v}" ${String(v)===String(val)?'selected':''}>${t}</option>`).join('')}</select></label>`,id,on}}
+function props(){const P=$('props');let f=[],title='Plantel',note='';
+  const e=sel&&(sel.type==='start'?M.start:(M[sel.type]||[])[sel.i]);
+  if(!e){title='Plantel';f=[field('Nombre',M.name,v=>M.name=v,'text'),field('Ancho (m)',M.w,v=>M.w=+v||M.w,'number','1'),field('Largo (m)',M.h,v=>M.h=+v||M.h,'number','1'),field('Velocidad máx. (km/h)',M.limit,v=>M.limit=+v||20,'number','5')];
+    if(tool==='cone')f.push(field('Separación de la fila de conos (m)',opt.coneSep||1.5,v=>opt.coneSep=+v));
+    if(M.bg)f.push(field('Opacidad del fondo',M.bg.op??.75,v=>M.bg.op=Math.max(0,Math.min(1,+v)),'number','0.05'),field('Fondo x (m)',M.bg.x,v=>M.bg.x=+v),field('Fondo y (m)',M.bg.y,v=>M.bg.y=+v),field('Fondo m/píxel',M.bg.mpp,v=>M.bg.mpp=+v,'number','0.001'));
+    note=`Medidas de referencia: carril ${REF.laneW} m (urbano ${REF.laneUrb} m), carril ancho de una vía ${REF.wideW} m, carril de rotonda ${REF.ringLaneW} m, carro promedio ${REF.car.L}×${REF.car.W} m, espacio de parqueo ${REF.slot.w}×${REF.slot.l} m.<br><br>Elementos: ${M.roads.length} calles, ${M.rings.length} rotondas, ${M.cones.length} conos, ${M.signs.length} señales, ${M.slots.length} espacios, ${M.bldgs.length} edificios.<br><br>Se guarda solo en este navegador. Use «Guardar archivo» para pasárselo a otra persona.`}
+  else if(sel.type==='roads'){title='Calle';f=[choose('Tipo',e.wide?'1w':String(e.lanes||1),[['2','2 carriles'],['1','1 carril'],['1w','1 carril ancho']],v=>{e.wide=v==='1w';e.lanes=v==='2'?2:1;if(v!=='2')e.oneway=true}),field('Ancho de carril (m)',e.laneW||REF.laneW,v=>e.laneW=+v),field('Ancho carril ancho (m)',e.wideW||REF.wideW,v=>e.wideW=+v),check('Una sola vía',e.oneway,v=>e.oneway=v),choose('Línea central',e.center||'dash',[['dash','Discontinua'],['solid','Continua'],['double','Doble continua'],['none','Ninguna']],v=>e.center=v)];
+    note=`Ancho total: ${roadW(e).toFixed(2)} m. El sentido de una vía va del primer punto al último.<div class="row"><button id="bRev">Invertir sentido</button></div>`}
+  else if(sel.type==='rings'){title='Rotonda';f=[choose('Carriles',e.lanes||1,[[1,'1 carril'],[2,'2 carriles']],v=>e.lanes=+v),field('Radio al centro del carril (m)',e.r.toFixed(1),v=>e.r=+v),field('Ancho de carril (m)',e.laneW||REF.ringLaneW,v=>e.laneW=+v)];note='Se circula en sentido antihorario visto desde arriba. La isla es el zacate del centro.'}
+  else if(sel.type==='signs'){title=e.kind==='alto'?'ALTO':'CEDA';f=[choose('Tipo',e.kind,[['alto','ALTO'],['ceda','CEDA']],v=>e.kind=v),field('Ancho de la línea (m)',e.w,v=>e.w=+v),field('Ángulo (°)',Math.round((e.ang||0)*180/Math.PI),v=>e.ang=(+v)*Math.PI/180,'number','5')];note='La raya amarilla del dibujo apunta hacia donde viene el carro.'}
+  else if(sel.type==='slots'){title='Espacio de parqueo';f=[field('Número',e.num,v=>e.num=v,'text'),field('Ancho (m)',e.w,v=>e.w=+v),field('Largo (m)',e.l,v=>e.l=+v),field('Ángulo (°)',Math.round((e.ang||0)*180/Math.PI),v=>e.ang=(+v)*Math.PI/180,'number','5'),check('Espacio de la prueba (amarillo)',e.target,v=>{M.slots.forEach(s=>s.target=false);e.target=v}),check('Ocupado por un carro',e.ocupado,v=>e.ocupado=v)];note='El carro debe quedar estacionado de RETROCESO: con el frente hacia la salida del espacio.'}
+  else if(sel.type==='texts'){title='Texto';f=[field('Texto',e.t,v=>e.t=String(v).toUpperCase(),'text'),field('Tamaño (m)',e.size||1.2,v=>e.size=+v),field('Ángulo (°)',Math.round((e.ang||0)*180/Math.PI),v=>e.ang=(+v)*Math.PI/180,'number','5'),choose('Color',e.col||'#ecece4',[['#ecece4','Blanco'],['#f2c230','Amarillo']],v=>e.col=v)]}
+  else if(sel.type==='bldgs'){title='Edificio';f=[field('Nombre',e.label,v=>e.label=v,'text'),field('Altura (m)',e.h,v=>e.h=+v),choose('Color',e.col,[['#ecebe4','Blanco'],['#d9c7a3','Beige'],['#9fb7c9','Celeste'],['#c96e5a','Ladrillo'],['#7f8c8d','Gris'],['#2e8b57','Verde']],v=>e.col=v)]}
+  else if(sel.type==='areas'){title='Área';f=[choose('Tipo',e.kind,[['asfalto','Asfalto (se puede manejar)'],['zacate','Zacate / isla'],['acera','Acera']],v=>e.kind=v)]}
+  else if(sel.type==='cones'){title='Cono';f=[choose('Color',e.col,[['n','Naranja'],['v','Verde']],v=>e.col=v),check('Si lo toca pierde la prueba',e.fatal,v=>e.fatal=v)]}
+  else if(sel.type==='people'){title='Persona';f=[choose('Tipo',e.kind,[['evaluador','Evaluador'],['persona','Persona']],v=>e.kind=v)]}
+  else if(sel.type==='start'){title='Inicio del carro';f=[field('Ángulo (°)',Math.round((e.ang||0)*180/Math.PI),v=>e.ang=(+v)*Math.PI/180,'number','5')]}
+  P.innerHTML=`<h2>${title}</h2>`+f.map(x=>x.html).join('')+`<div class="note">${note}</div>`;
+  for(const x of f){const el=$(x.id);el.onchange=()=>{x.on(x.chk?el.checked:el.value);save()}}
+  if($('bRev'))$('bRev').onclick=()=>{e.pts.reverse();save()}}
+// ---------- fondo: imagen propia o satélite ----------
+$('bBg').onclick=()=>$('fBg').click();
+$('fBg').onchange=()=>{const f=$('fBg').files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>setBg(rd.result,{x:0,y:0,mpp:.1,op:.75,src:'Imagen propia — calibre con «Calibrar fondo»'});rd.readAsDataURL(f)};
+function setBg(url,b){const i=new Image();i.onload=()=>{BG.img=i;M.bg=b;try{localStorage.setItem('pp_custom_bg',url)}catch(e){alert('La imagen es muy grande para guardarla en el navegador; se verá solo en esta sesión.')}save()};i.src=url}
+$('bCal').onclick=()=>{if(!M.bg){alert('Primero ponga una imagen de fondo.');return}setTool('sel',null);cal={};$('hint').textContent=HINTS.cal};
+$('bSat').onclick=async()=>{const z=19,la0=9.9113,la1=9.9131,lo0=-84.0756,lo1=-84.0739,n=2**z,tx=l=>(l+180)/360*n,ty=l=>{const r=l*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*n};
+  const x0=tx(lo0),x1=tx(lo1),y0=ty(la1),y1=ty(la0),c=document.createElement('canvas');c.width=Math.round((x1-x0)*256);c.height=Math.round((y1-y0)*256);const g=c.getContext('2d');$('hint').textContent='Descargando la foto satelital…';
+  const load=s=>new Promise(r=>{const i=new Image();i.crossOrigin='anonymous';i.onload=()=>r(i);i.onerror=()=>r(null);i.src=s});
+  for(let y=Math.floor(y0);y<=Math.floor(y1);y++)for(let x=Math.floor(x0);x<=Math.floor(x1);x++){const i=await load(`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`);if(i)g.drawImage(i,(x-x0)*256,(y-y0)*256)}
+  const mpp=156543.03*Math.cos(9.912*Math.PI/180)/n;if(M.w<c.width*mpp)M.w=Math.ceil(c.width*mpp);if(M.h<c.height*mpp)M.h=Math.ceil(c.height*mpp);
+  setBg(c.toDataURL('image/jpeg',.85),{x:0,y:0,mpp,op:.8,src:'Imagen: Esri World Imagery · Ciudad Vial, Paso Ancho'});fit();$('hint').textContent='Fondo listo (escala real). Trace las calles encima.'};
+// ---------- archivo ----------
+$('bNew').onclick=()=>{if(!confirm('¿Empezar un plantel nuevo? Se borra el actual de este navegador (guarde el archivo antes si lo quiere).'))return;M=blank();BG.img=null;try{localStorage.removeItem('pp_custom_bg')}catch(e){}sel=null;save();fit()};
+$('bSave').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([JSON.stringify(M,null,1)],{type:'application/json'}));a.download=(M.name||'plantel').replace(/[^\w\- ]+/g,'').trim()+'.json';a.click()};
+$('bOpen').onclick=()=>$('fOpen').click();
+$('fOpen').onchange=()=>{const f=$('fOpen').files[0];if(!f)return;f.text().then(t=>{try{M=Object.assign(blank(),JSON.parse(t));sel=null;save();fit()}catch(e){alert('Ese archivo no es un plantel válido.')}})};
+$('bUndo').onclick=undo;
+$('bPlay').onclick=()=>{if(!M.roads.length&&!M.rings.length&&!M.areas.some(a=>a.kind==='asfalto')){alert('Dibuje al menos una calle o un área de asfalto.');return}save(false);location.href='index.html#custom'};
+resize();if(M.roads.length||M.rings.length)fit();setTool('sel',document.querySelector('[data-tool=sel]'));
+</script>
+</body>
+</html>
