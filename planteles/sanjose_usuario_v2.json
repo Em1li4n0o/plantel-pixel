@@ -4459,9 +4459,10 @@
  "ground": "concreto",
  "exam": [
   {
-   "tipo": "fase1",
-   "x": 96,
-   "y": 210
+   "tipo": "ingreso",
+   "x": 127.4,
+   "y": 184.2,
+   "txt": "INGRESO: siga por la entrada hasta el primer ALTO y deténgase. El instructor le revisa los documentos."
   },
   {
    "tipo": "ir",
@@ -4479,7 +4480,7 @@
    "tipo": "fila",
    "x": 31,
    "y": 94.8,
-   "txt": "FILA: avance bajo el techo solar y deténgase en ESPERE hasta que lo llamen."
+   "txt": "FILA: avance bajo el techo solar y deténgase en ESPERE. El evaluador le revisa el vehículo."
   },
   {
    "tipo": "ir",
@@ -4540,6 +4541,18 @@
    "txt": "Siga al sur: haga ALTO antes de la calle y doble a la IZQUIERDA hacia el estacionamiento."
   },
   {
+   "tipo": "parar",
+   "x": 90,
+   "y": 110.4,
+   "r": 6,
+   "txt": "Deténgase antes del estacionamiento: el evaluador le explica la prueba.",
+   "dlg": [
+    "Deténgase aquí. Esta es la prueba de ESTACIONAMIENTO EN REVERSA.",
+    "Estaciónese de retroceso en el espacio amarillo. Tiene cinco intentos y no puede tocar los conos ni la valla de atrás.",
+    "Prepárese. Cuando esté listo, ya puede empezar."
+   ]
+  },
+  {
    "tipo": "parqueo"
   },
   {
@@ -4547,7 +4560,7 @@
    "x": 106,
    "y": 216,
    "r": 7,
-   "txt": "¡Fase dos terminada! Salga del espacio, pase por la plaza (ALTO) y baje por el camino de SALIDA hasta el portón."
+   "txt": "¡Ya casi! Salga del espacio, pase por la plaza (ALTO) y baje por el camino de SALIDA hasta el portón."
   }
  ]
 }
