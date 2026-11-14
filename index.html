@@ -2023,7 +2023,7 @@ function startNow(mode){
   if(document.body.classList.contains('touch')){const k=Math.min(80/mw,47/mh);mini.style.width=`calc(var(--u)*${(mw*k).toFixed(1)})`;mini.style.height=`calc(var(--u)*${(mh*k).toFixed(1)})`;mini.style.top='calc(var(--u)*31)';mini.style.bottom='auto'}
   else{const k=Math.min(90/mw,80/mh);mini.style.width=`calc(var(--u)*${(mw*k).toFixed(1)})`;mini.style.top='';mini.style.bottom='';mini.style.height=`calc(var(--u)*${(mh*k).toFixed(1)})`}
   show(null);$('hud').classList.remove('hidden');ui=null;
-  $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio',false);shush();
+  $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio2',true);shush();
   S.arcade=isArc(S.P.type);if(isArc(CAR.type)&&!ARCOK)toast('VEHÍCULO DE LICENCIA','Los vehículos arcade son solo para manejo libre; aquí usa un sedán','info');
   if(S.arcade)setTimeout(()=>toast('MODO ARCADE','Sin multas · los choques rebotan · TURBO con '+(TOUCH?'el botón TURBO':'SHIFT'),'good'),900);
   toast(MODES[mode],mode==='tuto'?'Siga las instrucciones de arriba, paso a paso.':S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
@@ -3391,7 +3391,7 @@ function musInit(){if(!AC||MUS.bus)return;MUS.bus=AC.createGain();MUS.bus.gain.v
 function mn(f,t,dur,type,vol,att=.01){const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+att);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.connect(g);g.connect(MUS.bus);o.start(t);o.stop(t+dur+.05)}
 function mnz(t,dur,vol,hp){const s=AC.createBufferSource(),f=AC.createBiquadFilter(),g=AC.createGain();s.buffer=MUS.noise;f.type=hp?'highpass':'bandpass';f.frequency.value=hp||1800;g.gain.setValueAtTime(vol,t);g.gain.exponentialRampToValueAtTime(.0008,t+dur);s.connect(f);f.connect(g);g.connect(MUS.bus);s.start(t);s.stop(t+dur+.02)}
 function mkick(t,v=.5){const o=AC.createOscillator(),g=AC.createGain();o.frequency.setValueAtTime(140,t);o.frequency.exponentialRampToValueAtTime(42,t+.14);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+.22);o.connect(g);g.connect(MUS.bus);o.start(t);o.stop(t+.25)}
-function musTrack(){if(!S||S.exam||S.over||S.paused&&!S.radio)return null;if(S.ev&&!S.ev.over)return'tension';if(S.cop)return'chase';return S.radio?'st'+CFG.station:null}
+function musTrack(){if(!S)return CFG.menuMus===false?null:'st2';if(S.exam||S.over||S.paused&&!S.radio)return null;if(S.ev&&!S.ev.over)return'tension';if(S.cop)return'chase';return S.radio?'st'+CFG.station:null}
 function musStep(tr,i,t,sp){const bar=i>>4,q=i&15;
   if(tr==='tension'){const R=MOODS.tension.root;if(q===0){mn(NT(R),t,sp*16,'sawtooth',.05,.4);mn(NT(R+1),t,sp*16,'sawtooth',.03,.6)}if(q===0||q===3)mkick(t,.35);if(q===8)mn(NT(R+24+(bar%2?6:1)),t,sp*6,'triangle',.05,.05);if(q%4===2)mnz(t,.05,.02,6000);return}
   if(tr==='chase'){const R=MOODS.chase.root,riff=[0,0,12,0,3,0,10,0,0,0,12,0,7,5,3,2];mn(NT(R+riff[q]-12),t,sp*.9,'sawtooth',.07);if(q%4===0)mkick(t,.5);if(q%8===4)mnz(t,.12,.18);mnz(t,.03,.03,7000);
@@ -3414,6 +3414,7 @@ function musTick(){if(!AC||AC.state!=='running')return;musInit();const tr=musTra
   if(!tr)return;const bpm=tr.startsWith('st')?(STATIONS[+tr.slice(2)]||STATIONS[0]).bpm:MOODS[tr].bpm,sp=60/bpm/4;
   if(MUS.next<AC.currentTime-.2)MUS.next=AC.currentTime+.05;while(MUS.next<AC.currentTime+.3){musStep(tr,MUS.step,MUS.next,sp);MUS.next+=sp;MUS.step++}}
 setInterval(()=>{try{musTick()}catch(e){}},90);
+for(const ev of['pointerdown','keydown','touchstart'])addEventListener(ev,()=>{try{audioInit();if(AC&&AC.state!=='running')AC.resume()}catch(e){}},{passive:true});
 const RADIO_SONG=[[392,523,659,523],[440,523,698,523],[349,440,587,440],[392,494,587,494]];
 function radioLine(){const X=S.wx,d=S.W.dests||[],dn=d.length?pick(d).n.toLowerCase():'el centro';const hr=X&&X.on?clockTxt().slice(0,5):'';
   return pick([`Radio Pixel, ciento uno punto cinco. ${hr?'Son las '+hr+'.':''} Tránsito pesado cerca de ${dn}; tome previsiones.`,
@@ -3527,7 +3528,7 @@ function onKey(k){
   if(k==='t'){toggleFoot();return}
   if(k==='l'&&!S.foot){P.lights=!P.lights;sfx.gear();toast(P.lights?'LUCES ENCENDIDAS':'LUCES APAGADAS','',P.lights?'good':'info');return}
   if(k==='i'){VOZ=!VOZ;store.set('pp_voz',VOZ);if(!VOZ)shush();toast(VOZ?'VOZ DEL INSTRUCTOR ACTIVADA':'VOZ DEL INSTRUCTOR APAGADA','','info');return}
-  if(k==='o'){if(S.exam){toast('RADIO','En el examen no hay radio: concéntrese','info');return}if(!S.radio){S.radio=true}else if(CFG.station<STATIONS.length-1){CFG.station++}else{S.radio=false;CFG.station=0}cfgSave();store.set('pp_radio',S.radio);S.radioT=8;if(!S.radio)shush();toast(S.radio?STATIONS[CFG.station].n:'RADIO APAGADA',S.radio?STATIONS[CFG.station].d+' · [O] cambia de emisora':'','info');return}
+  if(k==='o'){if(S.exam){toast('RADIO','En el examen no hay radio: concéntrese','info');return}if(!S.radio){S.radio=true}else if(CFG.station<STATIONS.length-1){CFG.station++}else{S.radio=false;CFG.station=0}cfgSave();store.set('pp_radio2',S.radio);S.radioT=8;if(!S.radio)shush();toast(S.radio?STATIONS[CFG.station].n:'RADIO APAGADA',S.radio?STATIONS[CFG.station].d+' · [O] cambia de emisora':'','info');return}
   if(S.foot&&'qehgcb'.includes(k))return;
   if(k==='q'){P.blinkL=!P.blinkL;P.blinkR=false;P.haz=false;P.bh0=P.h;P.armed=false}
   if(k==='e'){P.blinkR=!P.blinkR;P.blinkL=false;P.haz=false;P.bh0=P.h;P.armed=false}
