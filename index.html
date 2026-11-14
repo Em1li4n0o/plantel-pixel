@@ -473,10 +473,11 @@ const VEH={
   kart:{n:'KART',L:9,Wd:6,acc:15,vmax:115,brk:24,wb:5.5,steer:.85,arcade:1,d:'Bajito, liviano y muy nervioso.'},
   monster:{n:'MONSTER TRUCK',L:18,Wd:12,acc:11,vmax:115,brk:18,wb:11,steer:.6,arcade:1,d:'Llantas gigantes. Rebota en todo.'},
   tuner:{n:'TUNER DRIFT',L:13,Wd:8,acc:13,vmax:145,brk:21,wb:8,steer:.72,arcade:1,d:'Ligero y con alerón. Para derrapar.'},
-  superbike:{n:'MOTO DEPORTIVA 600 cc',L:9,Wd:4,acc:13,vmax:140,brk:22,wb:5.6,steer:.7,moto:1,d:'Potentísima. Solo para licencia A3.'}};
+  superbike:{n:'MOTO DEPORTIVA 600 cc',L:9,Wd:4,acc:13,vmax:140,brk:22,wb:5.6,steer:.7,moto:1,d:'Potentísima. Solo para licencia A3.'},
+  neon:{n:'MOTO NEÓN',L:11,Wd:4,acc:14,vmax:150,brk:24,wb:6.2,steer:.75,moto:1,arcade:1,d:'Moto de luz del futuro: neón celeste y una estela que la sigue.'}};
 // Tipos de licencia de Costa Rica y qué vehículos cubren
 const LICS=[{id:'BICI',n:'BICICLETA',d:'No requiere licencia',t:['bici']},{id:'A1',n:'A1 · BICIMOTO',d:'Hasta 50 cc',t:['scooter']},{id:'A2',n:'A2 · MOTO',d:'Hasta 500 cc',t:['moto','trail']},
-  {id:'A3',n:'A3 · MOTO GRANDE',d:'Más de 500 cc',t:['superbike']},{id:'B1',n:'B1 · AUTOMÓVIL',d:'Carros, pickups y SUV',t:['sedan','hatch','sport','pickup','suv']},{id:'C1',n:'C1 · TAXI',d:'Servicio de taxi',t:['taxi']},{id:'C2',n:'C2 · AUTOBÚS',d:'Transporte público',t:['bus']},{id:'ARCADE',n:'MODO ARCADE',d:'Sin licencia · manejo libre',t:['hyper','muscle','rally','kart','monster','tuner']}];
+  {id:'A3',n:'A3 · MOTO GRANDE',d:'Más de 500 cc',t:['superbike']},{id:'B1',n:'B1 · AUTOMÓVIL',d:'Carros, pickups y SUV',t:['sedan','hatch','sport','pickup','suv']},{id:'C1',n:'C1 · TAXI',d:'Servicio de taxi',t:['taxi']},{id:'C2',n:'C2 · AUTOBÚS',d:'Transporte público',t:['bus']},{id:'ARCADE',n:'MODO ARCADE',d:'Sin licencia · manejo libre',t:['hyper','muscle','rally','kart','monster','tuner','neon']}];
 const licOf=t=>LICS.find(l=>l.t.includes(t))||LICS[4];
 const PTYPES=LICS.flatMap(l=>l.t);
 const isMoto=t=>!!(VEH[t]&&VEH[t].moto);const isArc=t=>!!(VEH[t]&&VEH[t].arcade);let ARCOK=false;
@@ -2382,6 +2383,7 @@ function updatePlayer(W,P,dt){
     if(pushed&&S.arcade&&P.type==='monster'&&Math.abs(P.v)>2){const rel=Math.abs(P.v)+o.v*.5;o.crushed=S.t+12;o.stun=12;o.v=0;o.knock=null;P.v*=.9;S.shake=.35;S.crushes=(S.crushes||0)+1;boing(rel);toast('¡APLASTADO!','Monster truck: '+S.crushes+(S.crushes>1?' carros':' carro'),'good');continue}
     if(pushed&&S.arcade){const rel=Math.abs(P.v)+o.v*.5;if(rel>3){const a=Math.atan2(o.y-P.y,o.x-P.x);o.knock={vx:Math.cos(a)*rel*1.1,vy:Math.sin(a)*rel*1.1,spin:(Math.random()-.5)*rel*.25,t:1};o.stun=2;P.v*=-.35;P.spin=(Math.random()-.5)*rel/12;S.crashes=(S.crashes||0)+1;S.shake=Math.min(.5,rel/100);boing(rel);if(rel>12)anger(o,true)}continue}
     if(pushed){const rel=Math.abs(P.v)+o.v*.5;P.v*=-.2;o.v=0;o.stun=1.2;if(rel>3)anger(o,true);if(o.emerg){P.v*=.5}else if(rel>40)fatal('Choque fuerte contra otro vehículo');else if(rel>2){fault('carhit','Colisión con otro vehículo','I',3);sfx.crash()}}}
+  if(P.type==='neon'){P.trT=(P.trT||0)+dt;if(P.trT>.035&&Math.abs(P.v)>1.5){P.trT=0;(P.trail=P.trail||[]).push([P.x-Math.cos(P.h)*4.5,P.y-Math.sin(P.h)*4.5]);if(P.trail.length>48)P.trail.shift()}else if(Math.abs(P.v)<=1.5&&P.trail&&P.trail.length&&P.trT>.03){P.trT=0;P.trail.shift()}}else if(P.trail)P.trail=null;
   if(P.blinkL)P.lastL=S.t;if(P.blinkR)P.lastR=S.t;
   const inRing=W.rounds.some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+4)||(W.cRings||[]).some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+4);
   const nearRing=inRing||W.rounds.some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+16)||(W.cRings||[]).some(R=>Math.hypot(P.x-R.x,P.y-R.y)<R.R+16);
@@ -2807,6 +2809,15 @@ function car3Dr(ctx,C,V,o,blinkOn){const c=Math.cos(o.h),s=Math.sin(o.h),L2=o.L/
   const lamp=(a,b,z,cl,ww=.7)=>poly(ctx,proj(C,V,[[...pt(a,b-ww),z],[...pt(a,b+ww),z],[...pt(a,b+ww),z+.8],[...pt(a,b-ww),z+.8]]),cl);
   const rearVis=(C.x-(o.x-c*L2))*(-c)+(C.y-(o.y-s*L2))*(-s)>0,frontVis=(C.x-(o.x+c*L2))*c+(C.y-(o.y+s*L2))*s>0;
   const tl=o.brake?'#ff2a2a':'#a01010';
+  if(o.type==='neon'){const q=(a0,a1,w)=>[pt(a0,-w),pt(a0,w),pt(a1,w),pt(a1,-w)],NC='#00f0ff',NG='0,240,255',fine=GFX===32&&(V===VMAIN||V.show);
+    if(o.trail&&o.trail.length>1){ctx.save();ctx.globalCompositeOperation='lighter';const T=o.trail,n=T.length;for(let i=0;i<n-1;i++){const a=T[i],b=T[i+1];if(Math.hypot(b[0]-a[0],b[1]-a[1])>12)continue;const al=(i/n)*.55;poly(ctx,proj(C,V,[[a[0],a[1],.15],[b[0],b[1],.15],[b[0],b[1],1.9],[a[0],a[1],1.9]]),`rgba(${NG},${al})`)}ctx.restore()}
+    if(fine){ctx.save();ctx.globalCompositeOperation='lighter';poly(ctx,proj(C,V,q(L2+1,-L2-1,1.6).map(v=>[v[0],v[1],.05])),`rgba(${NG},.28)`);ctx.restore()}
+    box(ctx,C,V,q(L2,L2-2.4,.4),0,2.4,'#05070a');box(ctx,C,V,q(-L2+2.4,-L2,.45),0,2.4,'#05070a');
+    for(const a of[L2-1.2,-L2+1.2]){const w=pt(a,0);LIGHTQ.push({x:w[0],y:w[1],z:1.2,r:1.9,col:`rgba(${NG},.75)`})}
+    box(ctx,C,V,q(L2-.6,-L2+.6,.7),1,2.1,'#0b0e14',{top:'#161d2a'});box(ctx,C,V,q(L2-.8,L2-2.6,.55),2.1,2.6,'#0b0e14',{top:'#1d2636'});
+    for(const sd of[-1,1]){const b=sd*.72,ok=(C.x-pt(0,b)[0])*(-s*sd)+(C.y-pt(0,b)[1])*(c*sd)>0;if(ok){poly(ctx,proj(C,V,[[...pt(L2-.6,b),1.45],[...pt(-L2+.6,b),1.45],[...pt(-L2+.6,b),1.65],[...pt(L2-.6,b),1.65]]),NC);poly(ctx,proj(C,V,[[...pt(L2-.4,b),.35],[...pt(L2-2.2,b),.35],[...pt(L2-2.2,b),2.05],[...pt(L2-.4,b),2.05]]),'rgba(0,240,255,.35)')}}
+    box(ctx,C,V,q(-.6,-2.4,.75),2.1,3.7,'#0b0e14',{top:'#1d2636'});const H=bill(C,V,o.x-c*.4,o.y-s*.4,4.4);if(H){ctx.fillStyle='#05070a';ctx.beginPath();ctx.arc(H.x,H.y,Math.max(1,.8*H.k),0,7);ctx.fill();ctx.fillStyle=NC;ctx.fillRect(H.x-.7*H.k,H.y-.15*H.k,1.4*H.k,Math.max(1,.25*H.k))}
+    if(rearVis)lamp(-L2-.02,0,1.6,o.brake?'#ff2a2a':'#ff3b6b',.5);if(frontVis)lamp(L2+.02,0,1.8,'#e8ffff',.5);if(blinkOn&&o.bl)lamp(rearVis?-L2-.02:L2+.02,-.6,2,'#ffb000',.25);if(blinkOn&&o.br)lamp(rearVis?-L2-.02:L2+.02,.6,2,'#ffb000',.25);return}
   if(VEH[o.type]&&VEH[o.type].moto){const bk=VEH[o.type].bike,q=(a0,a1,w)=>[pt(a0,-w),pt(a0,w),pt(a1,w),pt(a1,-w)];
     box(ctx,C,V,q(L2,L2-1.6,.3),0,1.8,'#151515');box(ctx,C,V,q(-L2+1.6,-L2,.3),0,1.8,'#151515');
     box(ctx,C,V,q(L2-1.2,-L2+1.2,bk?.15:.55),bk?1.3:.7,bk?1.6:2.2,bk?'#9aa0a6':col);
