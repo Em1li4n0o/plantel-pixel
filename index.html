@@ -2774,18 +2774,25 @@ let OUTL3D=0;
 function poly(ctx,pp,col){if(!pp)return;ctx.fillStyle=col;ctx.beginPath();ctx.moveTo(pp[0][0],pp[0][1]);for(let i=1;i<pp.length;i++)ctx.lineTo(pp[i][0],pp[i][1]);ctx.closePath();ctx.fill();
   if(OUTL3D&&col.charCodeAt(0)===35){let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;for(const q of pp){if(q[0]<x0)x0=q[0];if(q[0]>x1)x1=q[0];if(q[1]<y0)y0=q[1];if(q[1]>y1)y1=q[1]}const m=OUTL3D===2?14:4;if(x1-x0>m&&y1-y0>(OUTL3D===2?10:2)){ctx.strokeStyle=OUTL3D===2?'rgba(14,12,24,.45)':'rgba(14,12,24,.7)';ctx.lineWidth=1;ctx.stroke()}}}
 const LDIR=[-.6,-.8];
+// SPLIT: mientras está activo, los edificios y muros no se dibujan enteros: cada pared se parte en tramos (de ~3.5 m) que entran
+// solos al orden de dibujo. Así un carro o un árbol junto a un edificio se compara con el tramo de pared que tiene al lado y no se ve "a través".
+let SPLIT=null;
 function box(ctx,C,V,cs,z0,z1,col,o={}){let mx=0,my=0;for(const p of cs){mx+=p[0];my+=p[1]}mx/=cs.length;my/=cs.length;
   for(let i=0;i<cs.length;i++){const a=cs[i],b=cs[(i+1)%cs.length];const fx=(a[0]+b[0])/2,fy=(a[1]+b[1])/2;let nx=fx-mx,ny=fy-my;const nl=Math.hypot(nx,ny)||1;nx/=nl;ny/=nl;
-    if((C.x-fx)*nx+(C.y-fy)*ny<=0)continue;const lit=nx*LDIR[0]+ny*LDIR[1];
-    poly(ctx,proj(C,V,[[a[0],a[1],z0],[b[0],b[1],z0],[b[0],b[1],z1],[a[0],a[1],z1]]),shade(col,lit>0?lit*.15:lit*.3));
-    const L=Math.hypot(b[0]-a[0],b[1]-a[1]),at=u=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u],quad=(u0,u1,za,zb,c)=>{const p0=at(u0),p1=at(u1);poly(ctx,proj(C,V,[[p0[0],p0[1],za],[p1[0],p1[1],za],[p1[0],p1[1],zb],[p0[0],p0[1],zb]]),c)};
+    if((C.x-fx)*nx+(C.y-fy)*ny<=0)continue;const lit=nx*LDIR[0]+ny*LDIR[1],fc=shade(col,lit>0?lit*.15:lit*.3);
+    const L=Math.hypot(b[0]-a[0],b[1]-a[1]),at=u=>[a[0]+(b[0]-a[0])*u,a[1]+(b[1]-a[1])*u];
+    const face=(s0,s1)=>{const A=at(s0),B=at(s1);poly(ctx,proj(C,V,[[A[0],A[1],z0],[B[0],B[1],z0],[B[0],B[1],z1],[A[0],A[1],z1]]),fc);
+    const quad=(u0,u1,za,zb,c)=>{if(u0<s0)u0=s0;if(u1>s1)u1=s1;if(u1<=u0)return;const p0=at(u0),p1=at(u1);poly(ctx,proj(C,V,[[p0[0],p0[1],za],[p1[0],p1[1],za],[p1[0],p1[1],zb],[p0[0],p0[1],zb]]),c)};
     if(o.shop&&z1>6&&L>5){quad(.06,.94,.3,3.2,'#2b3a55');quad(.04,.96,3.2,4.1,o.shop)}
     if(o.win&&z1>8&&L>2.5){const glass=o.win==='glass',cl=o.win==='classic',wc=glass?shade(col,.3):shade(col,-.5);const fl=cl?9:5,wh=glass?.45:cl?4.5:2,zs=glass?5:o.shop?6.5:cl?3:3.5;
       const n=o.near&&!glass?Math.max(1,Math.min(12,Math.round(L/(cl?9:6)))):0;
       const ww=cl?.2:.28;for(let z=z0+zs;z+wh<z1-1.2;z+=fl){if(n&&z<z0+zs+40){for(let i=0;i<n;i++)quad((i+.5-ww)/n,(i+.5+ww)/n,z,z+wh,wc)}else quad(.1,.9,z,z+wh,wc)}
       if(glass&&o.near&&L<70){const m=Math.max(1,Math.min(6,Math.round(L/10)));for(let i=1;i<m;i++)quad(i/m-.008,i/m+.008,0,z1,wc)}}
-    if(o.bus)poly(ctx,proj(C,V,[[a[0],a[1],4.2],[b[0],b[1],4.2],[b[0],b[1],6.6],[a[0],a[1],6.6]]),'#2b3a55')}
-  if(C.z>z1+gh(mx,my))poly(ctx,proj(C,V,cs.map(p=>[p[0],p[1],z1])),o.top||shade(col,.12))}
+    if(o.bus)poly(ctx,proj(C,V,[[A[0],A[1],4.2],[B[0],B[1],4.2],[B[0],B[1],6.6],[A[0],A[1],6.6]]),'#2b3a55')};
+    if(SPLIT&&L>3){const n=Math.max(1,Math.ceil(L/14)),ol=OUTL3D;for(let k=0;k<n;k++){const s0=k/n,s1=(k+1)/n,cp=at((s0+s1)/2),q=camXform(C,cp[0],cp[1]);
+        SPLIT.push({d:q.f,r:q.r,x:cp[0],y:cp[1],rad:L/n/2+1,fn:()=>{const k0=OUTL3D;OUTL3D=ol;try{face(s0,s1)}finally{OUTL3D=k0}}})}}
+    else face(0,1)}
+  if(C.z>z1+gh(mx,my)){const tp=()=>poly(ctx,proj(C,V,cs.map(p=>[p[0],p[1],z1])),o.top||shade(col,.12));if(SPLIT){const q=camXform(C,mx,my);let rd=0;for(const p of cs)rd=Math.max(rd,Math.hypot(p[0]-mx,p[1]-my));SPLIT.push({d:q.f+.01,r:q.r,x:mx,y:my,rad:rd,fn:tp})}else tp()}}
 function bill(C,V,x,y,z){const q=camXform(C,x,y);if(q.f<.8)return null;const k=V.foc/q.f;return{x:V.cx+q.r*k,y:V.hz+(C.z-z-gh(x,y))*k,k,f:q.f}}
 let LIGHTQ=[];
 function nightK(){return S&&S.wx&&S.wx.on?S.wx.n:0}
@@ -2949,13 +2956,15 @@ function bush3D(ctx,C,V,b){const B=bill(C,V,b.x,b.y,0),T=bill(C,V,b.x,b.y,b.h);i
 function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];const blinkOn=Math.floor(t*2.6)%2===0;
   const add=(x,y,rad,fn)=>{const q=camXform(C,x,y);if(q.f<-rad||q.f>maxD)return;if(Math.abs(q.r)>Math.max(0,q.f)*(V.cx/V.foc)+rad+6)return;items.push({d:q.f,fn,x,y,rad,r:q.r})};
   const addO=(x,y,rad,fn)=>add(x,y,rad,mirror||TOUCH?fn:()=>{OUTL3D=2;try{fn()}finally{OUTL3D=0}});
+  const SPL=[],addS=(x,y,rad,fn,ol)=>{const q=camXform(C,x,y);if(q.f<-rad||q.f>maxD)return;if(Math.abs(q.r)>Math.max(0,q.f)*(V.cx/V.foc)+rad+6)return;SPL.push([fn,ol&&!mirror&&!TOUCH?2:0])};
   if(S&&S.exam&&!mirror){const tk=S.tasks[S.task];if(tk&&tk.zone){poly(ctx,proj(C,V,zonePts(tk.zone).map(p=>[p[0],p[1],.05])),Math.floor(t*2.6)%2?'rgba(255,210,63,.45)':'rgba(255,210,63,.2)')}}
   if(W.cLights)for(const L of W.cLights){const sx=L.x+(-L.uy)*(L.w+3),sy=L.y+L.ux*(L.w+3);add(sx,sy,2,()=>{box(ctx,C,V,[[sx-.5,sy-.5],[sx+.5,sy-.5],[sx+.5,sy+.5],[sx-.5,sy+.5]],0,13,'#5c677d');const n=L.kind==='sem3'?3:2,st=semState(L,t);
     box(ctx,C,V,[[sx-1.2,sy-1.2],[sx+1.2,sy-1.2],[sx+1.2,sy+1.2],[sx-1.2,sy+1.2]],13,13+n*2.2,'#1b1b22');const cols=L.kind==='sem3'?[['R','#ff2a2a'],['A','#ffd23f'],['V','#3ddc84']]:[['R','#ff2a2a'],['V','#3ddc84']];
     cols.forEach(([k,c],i)=>{const B=bill(C,V,sx-L.ux*1.3,sy-L.uy*1.3,13+n*2.2-1.1-i*2.2);if(!B)return;ctx.fillStyle=st===k?c:'#2a2a30';ctx.beginPath();ctx.arc(B.x,B.y,Math.max(1,.8*B.k),0,7);ctx.fill();if(st===k)glow(ctx,B.x,B.y,Math.max(3,2.2*B.k),c+'66')})})}
   if(W.roofs)for(const q of W.roofs){const cx=q.reduce((s,r)=>s+r[0],0)/q.length,cy=q.reduce((s,r)=>s+r[1],0)/q.length,rad=Math.max(...q.map(r=>Math.hypot(r[0]-cx,r[1]-cy)));add(cx,cy,rad,()=>poly(ctx,proj(C,V,q.map(r=>[r[0],r[1],q.h||16])),'rgba(31,63,143,.88)'))}
-  if(W.pblds)for(const b of W.pblds)add(b.cx,b.cy,b.rad,()=>box(ctx,C,V,b.p,0,b.ht,b.col,{win:true,top:b.roof}));
-  for(const b of W.blds)addO(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<85+Math.max(b.w,b.h)/2;
+  if(W.pblds)for(const b of W.pblds)addS(b.cx,b.cy,b.rad,()=>box(ctx,C,V,b.p,0,b.ht,b.col,{win:true,top:b.roof}));
+  for(const b of W.blds)if(!b.parts&&!b.tower)addS(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<85+Math.max(b.w,b.h)/2;box(ctx,C,V,[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]],0,b.ht,b.col,{win:b.win||true,top:b.roof,near:b.H?near:false,shop:b.shop})},true);
+  for(const b of W.blds)if(b.parts||b.tower)addO(b.x+b.w/2,b.y+b.h/2,Math.hypot(b.w,b.h)/2,()=>{const near=Math.hypot(b.x+b.w/2-C.x,b.y+b.h/2-C.y)<85+Math.max(b.w,b.h)/2;
     if(b.parts){parts3D(ctx,C,V,b,near);if(!b.tower)return}
     else box(ctx,C,V,[[b.x,b.y],[b.x+b.w,b.y],[b.x+b.w,b.y+b.h],[b.x,b.y+b.h]],0,b.ht,b.tower?'#1f4f8a':b.col,{win:b.win||true,top:b.roof,near:b.H?near:false,shop:b.shop});
     if(b.tower){const cx=b.x+b.w/2,cy=b.y+b.h/2,on=Math.sin(t*3)>0;if(b.parts){for(const[a,c]of[[[cx+15.5,cy-26.1],[cx-15.5,cy-26.1]],[[cx-15.5,cy+26.1],[cx+15.5,cy+26.1]],[[cx-26.1,cy-13.5],[cx-26.1,cy+13.5]],[[cx+26.1,cy+13.5],[cx+26.1,cy-13.5]]])logoFace(ctx,C,V,a,c,151,171,on)}
@@ -2972,7 +2981,7 @@ function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];con
       if(r>9){const tx=s.t.split(' ');ptext(ctx,tx[0],Math.round(T.x-tx[0].length*2),Math.round(T.y-6),'#000');ptext(ctx,tx[1],Math.round(T.x-tx[1].length*2),Math.round(T.y+1),'#000')}})}
   if(W.fountains)for(const f of W.fountains)add(f.x,f.y,6,()=>{box(ctx,C,V,[[f.x-5,f.y-5],[f.x+5,f.y-5],[f.x+5,f.y+5],[f.x-5,f.y+5]],0,1.2,'#9aa5b1',{top:'#4dc3ff'});const T=bill(C,V,f.x,f.y,3+Math.sin(t*6)*.5),B=bill(C,V,f.x,f.y,1.2);if(T&&B){ctx.fillStyle='#bfe9ff';ctx.fillRect(T.x-Math.max(.5,.3*B.k),T.y,Math.max(1,.6*B.k),B.y-T.y)}});
   if(W.stalls)for(const s of W.stalls)add(s.x,s.y,4,()=>{box(ctx,C,V,[[s.x-1.6,s.y-1],[s.x+1.6,s.y-1],[s.x+1.6,s.y+1],[s.x-1.6,s.y+1]],0,2.2,'#8d6e63');box(ctx,C,V,[[s.x-.15,s.y-.15],[s.x+.15,s.y-.15],[s.x+.15,s.y+.15],[s.x-.15,s.y+.15]],2.2,4.3,'#ddd');box(ctx,C,V,octPts(s.x,s.y,3),4.3,4.9,s.col)});
-  if(W.walls)for(const q of W.walls)add(q.cx,q.cy,q.r,()=>box(ctx,C,V,q.p,0,q.ht,q.col,{top:q.col}));
+  if(W.walls)for(const q of W.walls)addS(q.cx,q.cy,q.r,()=>box(ctx,C,V,q.p,0,q.ht,q.col,{top:q.col}));
   if(W.turbines)for(const T of W.turbines)add(T.x,T.y,30,()=>turbine3D(ctx,C,V,T,t));
   if(W.jets)for(const J of W.jets){const j=jetPos(J,t);if(j)add(j.x,j.y,22,()=>jet3D(ctx,C,V,j))}
   if(W.cows)for(const c of W.cows)add(c.x,c.y,3,()=>cow3D(ctx,C,V,c));if(W.ccow&&W.ccow.v){const c=W.ccow;add(c.x,c.y,3,()=>{if(c.kind==='mono'){const B=bill(C,V,c.x,c.y,0),T=bill(C,V,c.x,c.y,1.8);if(!B||!T)return;const w=Math.max(1.5,1.4*B.k);ctx.fillStyle='#6d4c2f';ctx.fillRect(B.x-w/2,T.y,w,B.y-T.y);ctx.fillStyle='#f1d3a8';ctx.beginPath();ctx.arc(T.x,T.y,w*.45,0,7);ctx.fill();ctx.strokeStyle='#6d4c2f';ctx.lineWidth=Math.max(1,.3*B.k);ctx.beginPath();ctx.moveTo(B.x-w/2,B.y-w);ctx.quadraticCurveTo(B.x-w*2,B.y-w*3,B.x-w*1.2,T.y-w);ctx.stroke()}else cow3D(ctx,C,V,c)})}
@@ -3030,15 +3039,16 @@ function drawObjects3D(V,C,W,P,t,maxD,mirror){const ctx=V.ctx;const items=[];con
       add(v?R.pos:(a0+a1)/2,v?(a0+a1)/2:R.pos,16,()=>box(ctx,C,V,cs,.6,10,loco?'#f4c430':'#2b6cb0',{win:true}))}}
   const tg=S&&(S.exam?(S.tasks[S.task]||{}).tgt:S.dest);
   if(tg&&!mirror)add(tg.x,tg.y,2,()=>{const T=bill(C,V,tg.x,tg.y,13+Math.sin(t*4));if(!T)return;const r=Math.max(2.5,2*T.k);ctx.fillStyle='#000';ctx.beginPath();ctx.moveTo(T.x,T.y-r-1);ctx.lineTo(T.x+r+1,T.y);ctx.lineTo(T.x,T.y+r+1);ctx.lineTo(T.x-r-1,T.y);ctx.fill();ctx.fillStyle='#ffd23f';ctx.beginPath();ctx.moveTo(T.x,T.y-r);ctx.lineTo(T.x+r,T.y);ctx.lineTo(T.x,T.y+r);ctx.lineTo(T.x-r,T.y);ctx.fill()});
+  for(const[fn,ol]of SPL){SPLIT=[];const k0=OUTL3D;OUTL3D=ol;try{fn()}finally{OUTL3D=k0;for(const f of SPLIT)if(f.d>-f.rad&&f.d<maxD)items.push(f);SPLIT=null}}
   items.sort((a,b)=>b.d-a.d);
-  if(!V.occOn){for(const it of items)it.fn();return}
+  if(!V.occOn){for(const it of items){it.fn();if(LIGHTQ.length)flushLights(ctx,C,V)}return}
   const OC=400,OZ=V.oz,OY=V.oy,ON=V.on,NC=V.w>>1,occ=(col,f)=>{const b=col*OC,n=ON[col];if(!n||OZ[b]>=f)return V.h;let lo=0,hi=n-1;while(lo<hi){const m=(lo+hi+1)>>1;if(OZ[b+m]<f)lo=m;else hi=m-1}return OY[b+lo]};
-  for(const it of items){const f=it.d-it.rad-2;if(f<6){it.fn();continue}const k=V.foc/Math.max(1,it.d-it.rad*.5);
+  for(const it of items){const f=it.d-it.rad-2;if(f<6){it.fn();if(LIGHTQ.length)flushLights(ctx,C,V);continue}const k=V.foc/Math.max(1,it.d-it.rad*.5);
     const c0=clamp(((V.cx+(it.r-it.rad)*V.foc/Math.max(1,it.d-it.rad))>>1)-1,0,NC-1),c1=clamp(((V.cx+(it.r+it.rad)*V.foc/Math.max(1,it.d-it.rad))>>1)+1,0,NC-1);
     const base=V.hz+(C.z-gh(it.x,it.y))*V.foc/Math.max(1,it.d+it.rad);let need=false;const ys=[];
     for(let c=c0;c<=c1;c++){const y=occ(c,f);ys.push(y);if(y<base-1)need=true}
-    if(!need){it.fn();continue}
-    ctx.save();ctx.beginPath();ctx.moveTo(c0*2,-50);for(let c=c0;c<=c1;c++){ctx.lineTo(c*2,ys[c-c0]);ctx.lineTo(c*2+2,ys[c-c0])}ctx.lineTo(c1*2+2,-50);ctx.closePath();ctx.clip();it.fn();ctx.restore()}}
+    if(!need){it.fn();if(LIGHTQ.length)flushLights(ctx,C,V);continue}
+    ctx.save();ctx.beginPath();ctx.moveTo(c0*2,-50);for(let c=c0;c<=c1;c++){ctx.lineTo(c*2,ys[c-c0]);ctx.lineTo(c*2+2,ys[c-c0])}ctx.lineTo(c1*2+2,-50);ctx.closePath();ctx.clip();it.fn();if(LIGHTQ.length)flushLights(ctx,C,V);ctx.restore()}}
 // mezcla bilineal de 4 texeles (suaviza el piso cerca de la cámara en 32-bit)
 function bil32(bg,bw,x,y){if(x<0)x=0;if(y<0)y=0;const ix=x|0,iy=y|0,fx=x-ix,fy=y-iy,i=iy*bw+ix,a=bg[i],b=bg[i+1],c=bg[i+bw],d=bg[i+bw+1];if(a===b&&a===c&&a===d)return a;
   const w0=(1-fx)*(1-fy),w1=fx*(1-fy),w2=(1-fx)*fy,w3=fx*fy;
