@@ -17,6 +17,36 @@ html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font-family:
 #wrap{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);aspect-ratio:16/9;width:min(100vw,177.78vh);width:min(100vw,177.78dvh)}
 #game{width:100%;height:100%;image-rendering:pixelated;image-rendering:crisp-edges;display:block;background:#000}
 .hidden{display:none!important}
+.ldScene{position:relative;width:calc(var(--u)*190);height:calc(var(--u)*64);overflow:hidden;border-radius:calc(var(--u)*3);background:linear-gradient(180deg,#ff9a5a 0%,#ffc37a 34%,#ffe2a8 52%,#2f6b2a 52%);box-shadow:0 0 0 calc(var(--u)*1) #000,0 0 0 calc(var(--u)*2) #4f5288,0 calc(var(--u)*4) calc(var(--u)*10) rgba(0,0,0,.5)}
+.ldSun{position:absolute;left:62%;top:14%;width:calc(var(--u)*16);height:calc(var(--u)*16);border-radius:50%;background:#fff3c4;box-shadow:0 0 calc(var(--u)*10) #ffd27a}
+.ldHills,.ldTrees{position:absolute;left:0;width:200%;will-change:transform}
+.ldHills{top:24%;height:30%;background:radial-gradient(ellipse 12% 100% at 10% 100%,#6b6aa8 98%,transparent 100%),radial-gradient(ellipse 16% 120% at 32% 100%,#5c5b98 98%,transparent 100%),radial-gradient(ellipse 13% 90% at 55% 100%,#6b6aa8 98%,transparent 100%),radial-gradient(ellipse 15% 110% at 80% 100%,#5c5b98 98%,transparent 100%);background-size:50% 100%;animation:ldMove 9s linear infinite}
+.ldTrees{top:40%;height:14%;background:radial-gradient(circle at 50% 70%,#24602a 58%,transparent 62%);background-size:calc(var(--u)*9) 100%;animation:ldMove 3.5s linear infinite}
+.ldRoadB{position:absolute;left:0;right:0;top:60%;height:30%;background:linear-gradient(180deg,#ecece4 0 6%,#3a3a43 6% 94%,#ecece4 94%)}
+.ldLines{position:absolute;left:0;top:47%;width:200%;height:calc(var(--u)*1.4);background:repeating-linear-gradient(90deg,#ffd23f 0 calc(var(--u)*9),transparent calc(var(--u)*9) calc(var(--u)*18));will-change:transform;animation:ldLn .42s linear infinite}
+.ldCone{position:absolute;top:57%;width:calc(var(--u)*5);height:calc(var(--u)*7);background:linear-gradient(180deg,#ff7b00 0 35%,#fff 35% 55%,#ff7b00 55%);clip-path:polygon(50% 0,100% 100%,0 100%);will-change:transform;animation:ldCone 2.1s linear infinite}
+.ldCone.k2{animation-delay:-.7s}.ldCone.k3{animation-delay:-1.4s}
+.ldCar{position:absolute;left:28%;top:56%;width:calc(var(--u)*46);will-change:transform;animation:ldBump .26s steps(2) infinite}
+.ldCarS{display:block;width:100%;image-rendering:pixelated}
+.ldW{transform-box:fill-box;transform-origin:center;animation:ldSpin .25s steps(4) infinite}
+.ldPuff{position:absolute;left:calc(var(--u)*-3);top:62%;width:calc(var(--u)*4);height:calc(var(--u)*4);border-radius:50%;background:rgba(235,235,240,.8);opacity:0;animation:ldPuff .9s linear infinite}
+.ldPuff.p2{animation-delay:.3s}.ldPuff.p3{animation-delay:.6s}
+.ldT{font-size:calc(var(--u)*8);margin:0;color:var(--acc);text-shadow:calc(var(--u)*1.5) calc(var(--u)*1.5) 0 #b8341b,calc(var(--u)*3) calc(var(--u)*3) 0 #000}
+.ldT i{display:inline-block;font-style:normal;animation:ldDot 1.2s steps(1) infinite}.ldT i:nth-child(2){animation-delay:.2s}.ldT i:nth-child(3){animation-delay:.4s}
+.ldBar{width:calc(var(--u)*120);height:calc(var(--u)*3);background:#14142a;box-shadow:0 0 0 calc(var(--u)*1) #4f5288;overflow:hidden;border-radius:calc(var(--u)*2)}
+.ldBar b{display:block;width:40%;height:100%;background:linear-gradient(90deg,#ffd23f,#ff9f1c);will-change:transform;animation:ldBarA 1.1s ease-in-out infinite}
+.ldTip{color:#9cf;font-size:calc(var(--u)*3.8);max-width:calc(var(--u)*230);line-height:1.7}
+@keyframes ldMove{to{transform:translateX(-50%)}}
+@keyframes ldLn{to{transform:translateX(calc(var(--u)*-18))}}
+@keyframes ldCone{from{transform:translateX(calc(var(--u)*200))}to{transform:translateX(calc(var(--u)*-12))}}
+@keyframes ldBump{50%{transform:translateY(calc(var(--u)*-.6))}}
+@keyframes ldSpin{to{transform:rotate(360deg)}}
+@keyframes ldPuff{0%{opacity:.85;transform:translate(0,0) scale(.6)}100%{opacity:0;transform:translate(calc(var(--u)*-16),calc(var(--u)*-6)) scale(1.8)}}
+@keyframes ldDot{0%,100%{opacity:0}30%,80%{opacity:1}}
+@keyframes ldBarA{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
+#splash{--u:clamp(2px,min(.42vw,.75vh),7px);position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:calc(var(--u)*5);background:radial-gradient(ellipse at 50% 40%,#1c2148,#06060e 70%);transition:opacity .45s;font-family:'Press Start 2P',monospace}
+#splash.out{opacity:0;pointer-events:none}
+#splash h1{font-size:calc(var(--u)*13);margin:0;color:#ffd23f;text-shadow:calc(var(--u)*2) calc(var(--u)*2) 0 #b8341b,calc(var(--u)*4) calc(var(--u)*4) 0 #000}
 #hud{position:absolute;inset:0;pointer-events:none;font-size:calc(var(--u)*5);line-height:1.4}
 .box{background:linear-gradient(180deg,rgba(34,36,70,.9),rgba(10,11,24,.9));border:calc(var(--u)*1) solid #05050c;box-shadow:inset 0 calc(var(--u)*1) 0 rgba(255,255,255,.16),inset 0 0 0 calc(var(--u)*1) #4f5288,inset 0 calc(var(--u)*-2) 0 rgba(0,0,0,.35),0 calc(var(--u)*2) calc(var(--u)*4) rgba(0,0,0,.45);padding:calc(var(--u)*3);border-radius:calc(var(--u)*1.5)}
 #taskbox{position:absolute;left:calc(var(--u)*4);top:calc(var(--u)*4);width:calc(var(--u)*200)}
@@ -125,6 +155,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
 </style>
 </head>
 <body>
+<div id="splash"><h1>PLANTEL PIXEL</h1><div class="ldScene"><div class="ldSun"></div><div class="ldHills"></div><div class="ldTrees"></div><div class="ldRoadB"><div class="ldLines"></div></div><div class="ldCone k1"></div><div class="ldCone k2"></div><div class="ldCone k3"></div><div class="ldCar"><svg class="ldCarS" viewBox="0 0 34 15" shape-rendering="crispEdges"><rect x="9" y="2" width="15" height="5" fill="#c1121f"/><rect x="10" y="3" width="6" height="4" fill="#9fd3ff"/><rect x="17" y="3" width="6" height="4" fill="#7fb8e6"/><rect x="1" y="7" width="32" height="5" fill="#e63946"/><rect x="1" y="7" width="32" height="1" fill="#ff7a85"/><rect x="2" y="11" width="30" height="1" fill="#8d0f1a"/><rect x="31" y="8" width="2" height="2" fill="#fff6b0"/><rect x="1" y="8" width="2" height="2" fill="#ff3b3b"/><rect x="14" y="8" width="1" height="3" fill="#8d0f1a"/><g class="ldW"><rect x="5" y="10" width="5" height="5" fill="#111"/><rect x="6.5" y="11.5" width="2" height="2" fill="#9aa0a6"/></g><g class="ldW"><rect x="24" y="10" width="5" height="5" fill="#111"/><rect x="25.5" y="11.5" width="2" height="2" fill="#9aa0a6"/></g></svg><i class="ldPuff p1"></i><i class="ldPuff p2"></i><i class="ldPuff p3"></i></div></div><div class="ldBar"><b></b></div><div class="ldTip">Simulador de manejo · Costa Rica</div></div>
 <button id="fsBtn" title="Pantalla completa">⛶ PANTALLA COMPLETA</button>
 <div id="rotate">GIRE EL TELÉFONO<br>(modo horizontal)<br>para manejar</div>
 <div id="wrap">
@@ -361,7 +392,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
     <button id="bBack">VOLVER</button>
   </div>
 
-  <div id="loadMsg" class="screen hidden" style="z-index:50"><h2>CARGANDO…</h2><div class="sub">Preparando el mapa</div></div>
+  <div id="loadMsg" class="screen hidden" style="z-index:50;background:radial-gradient(ellipse at 50% 40%,#1c2148,#06060e 70%)"><div class="ldScene"><div class="ldSun"></div><div class="ldHills"></div><div class="ldTrees"></div><div class="ldRoadB"><div class="ldLines"></div></div><div class="ldCone k1"></div><div class="ldCone k2"></div><div class="ldCone k3"></div><div class="ldCar"><svg class="ldCarS" viewBox="0 0 34 15" shape-rendering="crispEdges"><rect x="9" y="2" width="15" height="5" fill="#c1121f"/><rect x="10" y="3" width="6" height="4" fill="#9fd3ff"/><rect x="17" y="3" width="6" height="4" fill="#7fb8e6"/><rect x="1" y="7" width="32" height="5" fill="#e63946"/><rect x="1" y="7" width="32" height="1" fill="#ff7a85"/><rect x="2" y="11" width="30" height="1" fill="#8d0f1a"/><rect x="31" y="8" width="2" height="2" fill="#fff6b0"/><rect x="1" y="8" width="2" height="2" fill="#ff3b3b"/><rect x="14" y="8" width="1" height="3" fill="#8d0f1a"/><g class="ldW"><rect x="5" y="10" width="5" height="5" fill="#111"/><rect x="6.5" y="11.5" width="2" height="2" fill="#9aa0a6"/></g><g class="ldW"><rect x="24" y="10" width="5" height="5" fill="#111"/><rect x="25.5" y="11.5" width="2" height="2" fill="#9aa0a6"/></g></svg><i class="ldPuff p1"></i><i class="ldPuff p2"></i><i class="ldPuff p3"></i></div></div><h2 class="ldT">CARGANDO<i>.</i><i>.</i><i>.</i></h2><div class="ldBar"><b></b></div><div class="ldTip" id="ldTip">Preparando el mapa</div></div>
 
   <div id="pause" class="screen hidden">
     <h2>PAUSA</h2>
@@ -1971,7 +2002,9 @@ const ROUTES={centro:1,r27:1,r32:1,tilaran:1,sjlibre:1,alajuela:1,manuel:1,cerro
 const MODES={custom:'MI PLANTEL',manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERTE · RUTA 2',alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};for(const k in OFICIALES){MODES['of_'+k]='RECORRIDO OFICIAL · '+OFICIALES[k].n;MNAME['of_'+k]='RECORRIDO '+OFICIALES[k].n}
 for(const k in SEDES){MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';MNAME['pl_'+k]='PLANTEL '+SEDES[k].n}
 // Arranque: primero se muestra CARGANDO (para que no parezca congelado) y luego se arma el mapa
-function start(mode){if(window.__syncStart)return startNow(mode);const L=$('loadMsg');if(L)L.classList.remove('hidden');setTimeout(()=>{try{startNow(mode)}finally{if(L)L.classList.add('hidden')}},40)}
+const LDTIPS=['Consejo: póngase el cinturón ANTES de arrancar. Sin cinturón no puede manejar.','Consejo: en el ALTO deténgase por completo, aunque no venga nadie.','Consejo: en la rotonda, direccional IZQUIERDA adentro y DERECHA para salir.','Consejo: en la reversa, mire por los espejos y vaya despacio. Un cono tocado cuesta puntos.','Consejo: con amarillo se detiene si lo puede hacer con seguridad.','Consejo: el paso peatonal es del peatón. Ceda siempre.','Dato: en el examen práctico se necesita 80 o más para aprobar.','Consejo: use la direccional unos 30 metros antes de doblar.','Dato: la prueba tiene revisión del vehículo, el plantel y el recorrido en calle.','Consejo: en el estacionamiento tiene 5 intentos. Con calma.'];
+function start(mode){if(window.__syncStart)return startNow(mode);const L=$('loadMsg');if(L){const tp=$('ldTip');if(tp)tp.textContent=pick(LDTIPS);L.classList.remove('hidden')}
+  requestAnimationFrame(()=>setTimeout(()=>{try{startNow(mode)}finally{if(L)L.classList.add('hidden')}},60))}
 function startNow(mode){
   logDrive();ARCOK=mode==='city'||mode==='sjlibre'||mode==='alajuela';MODE_NOW=mode;
   const W=(mode==='plantel'||mode==='tuto')?buildPlantel():mode.startsWith('of_')?buildOficial(OFICIALES[mode.slice(3)]):mode.startsWith('pl_')?buildSede(mode.slice(3)):mode==='sanjose'?buildCustom(SJ_OFICIAL):mode==='custom'?buildCustom(loadCustom()):(mode==='centro'||mode==='sjlibre')?buildCentro():mode==='r27'?buildR27():mode==='alajuela'?buildAlajuela():mode==='r32'?buildR32():ROUTEDEF[mode]?buildRoute(ROUTEDEF[mode]):buildCity();if(mode==='city')addEvents(W,SCENALL);if(mode==='sjlibre')addEvents(W,['llanta','varado','nino','hidro','ambulancia','bus','moto','accidente','frenos','encandilado','neblina']);if(mode==='alajuela')addEvents(W,['llanta','varado','hidro','nino','animal','motor','acelerador','bus','encandilado','derrape']);W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;
@@ -3406,6 +3439,8 @@ function updateHUD(){const P=S.P;let tg=null;{const ct=clockTxt();if(ct&&!S.mapO
   return tg}
 
 let last=performance.now(),acc=0;
+function hideSplash(){const e=$('splash');if(!e||e.dataset.out)return;e.dataset.out=1;const go=()=>{e.classList.add('out');setTimeout(()=>e.remove(),500)};(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(go,250))}
+setTimeout(()=>{try{hideSplash()}catch(e){}},8000);
 function frame(now){requestAnimationFrame(frame);try{tick(now)}catch(e){console.error(e)}}
 function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   if(ui==='theory'){if(TH.mode)thHead();const q=TH.mode&&TH.list[TH.i];if(q&&q.s&&q.s.endsWith('f'))drawSign(q.s,performance.now()/1000)}
@@ -3452,7 +3487,7 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
     for(const k in pressed)delete pressed[k];
     if(!A){const W=buildCity();W.bg=renderBG(W);W.skid=document.createElement('canvas');W.skid.width=W.w;W.skid.height=W.h;A={W,t:0,cx:300,cy:380}}
     A.t+=dt;updateWorld(A.W,null,dt,A.t);A.cx=330+Math.sin(A.t*.05)*300;A.cy=380+Math.cos(A.t*.07)*230;
-    drawWorld(A.W,null,Math.round(clamp(A.cx,0,A.W.w-VW)),Math.round(clamp(A.cy,0,A.W.h-VH)),A.t);post32();
+    drawWorld(A.W,null,Math.round(clamp(A.cx,0,A.W.w-VW)),Math.round(clamp(A.cy,0,A.W.h-VH)),A.t);post32();hideSplash();
   }}
 function fit(){{const vv=window.visualViewport,iw=vv?vv.width:innerWidth,ih=vv?vv.height:innerHeight,wr=$('wrap'),ww=Math.min(iw,ih*VW/VH);wr.style.width=ww+'px';wr.style.height=(ww*VH/VW)+'px';wr.style.left=((vv?vv.offsetLeft:0)+iw/2)+'px';wr.style.top=((vv?vv.offsetTop:0)+ih/2)+'px'}
   const w=$('wrap').getBoundingClientRect().width;$('wrap').style.setProperty('--u',(w/VW)+'px');const u=w/VW;
