@@ -1591,24 +1591,12 @@
    "tipo": "retroceso",
    "pts": [
     [
-     228.6,
-     219.4
+     229.72,
+     219.94
     ],
     [
-     231.6,
-     221.6
-    ],
-    [
-     243.2,
-     231.5
-    ],
-    [
-     254.6,
-     241.4
-    ],
-    [
-     257.5,
-     244.0
+     257.49,
+     244.01
     ]
    ],
    "ancho": 2.5,
@@ -1622,9 +1610,9 @@
    "x": 234.27,
    "y": 235.49,
    "r": 4,
-   "txt": "Ponga la direccional DERECHA [E], salga del espacio con cuidado y tome UNO de los DOS CARRILES de salida (flechas hacia arriba), sin pisar la línea blanca del centro.",
-   "direccional": "derecha",
-   "dirFalta": "No puso la direccional DERECHA al salir del parqueo"
+   "txt": "Ponga la direccional IZQUIERDA [Q], salga del espacio con cuidado y tome UNO de los DOS CARRILES de salida (flechas hacia arriba), sin pisar la línea blanca del centro.",
+   "direccional": "izquierda",
+   "dirFalta": "No puso la direccional IZQUIERDA al salir del parqueo"
   },
   {
    "tipo": "ir",

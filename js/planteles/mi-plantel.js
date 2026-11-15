@@ -40,14 +40,27 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
   for(const t of D.trees||[]){const x=t.x*K,y=t.y*K;W.trees.push({x,y,r:Math.max(2,(t.r||2)*K*.75)});W.obst.push({x:x-1.5,y:y-1.5,w:3,h:3,type:'tree'})}
   // subidas: el juego empuja el carro cuesta abajo (hay que frenar o usar el freno de mano)
   W.slopes=(D.slopes||[]).filter(q=>q.pts&&q.pts.length>1).map(q=>({seg:[q.pts[0][0]*K,q.pts[0][1]*K,q.pts[1][0]*K,q.pts[1][1]*K],hw:(q.w||7)*K/2,grade:q.grade||.1,n:Math.round((q.grade||.1)*100)+'%'}));if(!W.slopes.length)W.slopes=null;
-  // RELIEVE 3D de las pendientes: una rampa que cruza una calle separa dos niveles (lo de arriba queda alto y lo de abajo bajo);
-  // las demás (zacate) son terreno que BAJA desde su punto 1 (arriba, a la altura de lo que lo rodea) hacia afuera, solo en su franja.
+  // RELIEVE 3D de las pendientes:
+  // · una rampa que cruza una calle separa dos niveles (el punto 1 es el de ARRIBA); sus extremos se redondean para que no haya quiebre;
+  // · las pendientes en zacate BAJAN desde el borde del asfalto hacia afuera (0 en el borde, más hondo mientras más lejos), con su
+  //   inclinación y sin pasar de su largo; al final se suaviza el zacate para que no queden escalones ni bordes filosos.
   if(W.slopes&&W.slopes.length){const rs=[];for(const r of D.roads||[]){const q=r.pts||[];for(let i=0;i<q.length-1;i++){const n=Math.ceil(Math.hypot(q[i+1][0]-q[i][0],q[i+1][1]-q[i][1]));for(let k=0;k<=n;k++)rs.push([(q[i][0]+(q[i+1][0]-q[i][0])*k/n)*K,(q[i][1]+(q[i+1][1]-q[i][1])*k/n)*K])}}
     const SL=W.slopes.filter(q=>q.seg).map(q=>{const[a,b,c,d]=q.seg,L=Math.hypot(c-a,d-b)||1,ux=(c-a)/L,uy=(d-b)/L;
-      const glob=rs.some(([x,y])=>{const t=(x-a)*ux+(y-b)*uy,l=Math.abs(-(x-a)*uy+(y-b)*ux);return t>L*.2&&t<L*.8&&l<q.hw});return{a,b,ux,uy,L,hw:q.hw,H:q.grade*L,glob}});
-    const AS=(D.areas||[]).filter(a=>a.kind==='asfalto'&&a.pts&&a.pts.length>2).map(a=>a.pts.map(p=>[p[0]*K,p[1]*K])),onAs=(x,y)=>AS.some(pp=>inPoly(x,y,pp))||rs.some(([rx,ry])=>(rx-x)*(rx-x)+(ry-y)*(ry-y)<(6*K)*(6*K));
-    if(SL.length)makeHM(W,4,(x,y)=>{let h=0;for(const s of SL){const t=(x-s.a)*s.ux+(y-s.b)*s.uy,f=s.H*(1-clamp(t/s.L,0,1));
-      if(s.glob)h+=f;else{const l=Math.abs(-(x-s.a)*s.uy+(y-s.b)*s.ux),m=1-clamp((l-s.hw)/12,0,1);if(t>0&&m>0&&!onAs(x,y))h-=s.H*clamp(t/s.L,0,1)*m*(1-clamp((t-s.L)/12,0,1))}}return h})}
+      const glob=rs.some(([x,y])=>{const t=(x-a)*ux+(y-b)*uy,l=Math.abs(-(x-a)*uy+(y-b)*ux);return t>L*.2&&t<L*.8&&l<q.hw});q.grass=!glob;return{a,b,ux,uy,L,hw:q.hw,H:q.grade*L,g:q.grade,glob}});
+    const AS=(D.areas||[]).filter(a=>a.kind==='asfalto'&&a.pts&&a.pts.length>2).map(a=>a.pts.map(p=>[p[0]*K,p[1]*K])),onAs=(x,y)=>AS.some(pp=>inPoly(x,y,pp))||rs.some(([rx,ry])=>(rx-x)*(rx-x)+(ry-y)*(ry-y)<(3*K)*(3*K));
+    const pe=.12,ease=u=>u<pe?u*u/(2*pe*(1-pe)):u>1-pe?1-(1-u)*(1-u)/(2*pe*(1-pe)):(u-pe/2)/(1-pe);
+    if(SL.length){makeHM(W,4,(x,y)=>{let h=0;for(const s of SL)if(s.glob)h+=s.H*(1-ease(clamp(((x-s.a)*s.ux+(y-s.b)*s.uy)/s.L,0,1)));return h});
+      const GR=SL.filter(s=>!s.glob);if(GR.length){const M=W.hm,r=M.r,w=M.w,hh=M.h,N=w*hh,pav=new Uint8Array(N),gr=new Float32Array(N),cap=new Float32Array(N),dist=new Float32Array(N);
+        const R3=Math.ceil(3*K/r);for(const[rx,ry]of rs){const ci=Math.round(rx/r),cj=Math.round(ry/r);for(let dj=-R3;dj<=R3;dj++)for(let di=-R3;di<=R3;di++){if(di*di+dj*dj>R3*R3)continue;const ii=ci+di,jj=cj+dj;if(ii>=0&&jj>=0&&ii<w&&jj<hh)pav[jj*w+ii]=1}}
+        const fade=40,sm=t=>t*t*(3-2*t);// el borde de cada pendiente de zacate baja poco a poco en 10 m (sin paredes)
+        for(let j=0;j<hh;j++)for(let i=0;i<w;i++){const x=i*r,y=j*r,k=j*w+i;if(!pav[k]&&AS.some(pp=>inPoly(x,y,pp)))pav[k]=1;dist[k]=pav[k]?0:1e9;
+          for(const s of GR){const t=(x-s.a)*s.ux+(y-s.b)*s.uy,l=Math.abs(-(x-s.a)*s.uy+(y-s.b)*s.ux),q=sm(1-clamp((l-s.hw)/fade,0,1))*sm(1-clamp(Math.max(-t,t-s.L)/fade,0,1));if(q>0&&s.g*q>gr[k]){gr[k]=s.g*q;cap[k]=s.H*q}}}
+        // distancia de cada celda al asfalto (dos pasadas, aproximación euclídea)
+        const D1=1,D2=1.4142;for(let j=0;j<hh;j++)for(let i=0;i<w;i++){const k=j*w+i;let d=dist[k];if(i>0)d=Math.min(d,dist[k-1]+D1);if(j>0){d=Math.min(d,dist[k-w]+D1);if(i>0)d=Math.min(d,dist[k-w-1]+D2);if(i<w-1)d=Math.min(d,dist[k-w+1]+D2)}dist[k]=d}
+        for(let j=hh-1;j>=0;j--)for(let i=w-1;i>=0;i--){const k=j*w+i;let d=dist[k];if(i<w-1)d=Math.min(d,dist[k+1]+D1);if(j<hh-1){d=Math.min(d,dist[k+w]+D1);if(i<w-1)d=Math.min(d,dist[k+w+1]+D2);if(i>0)d=Math.min(d,dist[k+w-1]+D2)}dist[k]=d}
+        const a=M.a;for(let k=0;k<N;k++)if(!pav[k]&&gr[k]>0&&dist[k]<1e8)a[k]-=Math.min(gr[k]*dist[k]*r,cap[k],1.5*K);// como mucho 1,5 m más abajo que el plantel
+        // suavizado del zacate (el asfalto no se mueve)
+        const tmp=new Float32Array(N);for(let it=0;it<8;it++){tmp.set(a);for(let j=1;j<hh-1;j++)for(let i=1;i<w-1;i++){const k=j*w+i;if(pav[k])continue;a[k]=(tmp[k]*4+tmp[k-1]+tmp[k+1]+tmp[k-w]+tmp[k+w])/8}}}}}
   if(D.lim){const q=P(D.lim);W.limP=q;for(let i=0;i<q.length;i++){const[a,b]=q[i],[c,d]=q[(i+1)%q.length],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=2.4)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:1.4,type:'muro'})}}
   W.pslots=[];for(const s of D.slots||[]){const o={cx:s.x*K,cy:s.y*K,ang:s.ang||0,hl:(s.l||5)*K/2,hw:(s.w||2.5)*K/2,target:!!s.target,num:s.num};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);if(s.ocupado&&!s.target)addParked(W,o.cx,o.cy,o.ang,pick(CARCOLS),pick(['sedan','hatch','suv']))}
   W.pslot=W.pslots.find(o=>o.target)||null;

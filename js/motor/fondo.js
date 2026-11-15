@@ -139,5 +139,5 @@ function renderBG(W){fitBoards(W);
   if(W.bushes)for(const b of W.bushes){fillCirc(x,b.x+1,b.y+1,b.r,'rgba(0,0,0,.25)');fillCirc(x,b.x,b.y,b.r,b.c);px(b.x-1,b.y-1,shade(b.c,.2))}
   for(const p of W.parked)drawCar(x,p.x,p.y,p.h,p.col,{},0,0,p.type);
   return c}
-function slopeAt(W,x,y){if(!W.slopes)return null;for(const q of W.slopes){if(!q.seg){if(inR(x,y,q))return q;continue}const[ax,ay,bx,by]=q.seg,dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy||1,t=clamp(((x-ax)*dx+(y-ay)*dy)/l2,0,1),ex=ax+dx*t-x,ey=ay+dy*t-y;if(ex*ex+ey*ey<q.hw*q.hw){if(q.dx==null){const l=Math.sqrt(l2);q.dx=dx/l;q.dy=dy/l}return q}}return null}
+function slopeAt(W,x,y){if(!W.slopes)return null;for(const q of W.slopes){if(q.grass)continue;if(!q.seg){if(inR(x,y,q))return q;continue}const[ax,ay,bx,by]=q.seg,dx=bx-ax,dy=by-ay,l2=dx*dx+dy*dy||1,t=clamp(((x-ax)*dx+(y-ay)*dy)/l2,0,1),ex=ax+dx*t-x,ey=ay+dy*t-y;if(ex*ex+ey*ey<q.hw*q.hw){if(q.dx==null){const l=Math.sqrt(l2);q.dx=dx/l;q.dy=dy/l}return q}}return null}
 function polePos(s){if(s.dir==='E')return[s.pos-3,s.b+4];if(s.dir==='W')return[s.pos+3,s.a-4];if(s.dir==='S')return[s.a-4,s.pos-3];return[s.b+4,s.pos+3]}
