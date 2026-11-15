@@ -23,7 +23,7 @@ for pk, p in I.items():
     if vname not in voices:
         voices[vname] = PiperVoice.load(os.path.join(vdir, vname + '.onnx'))
     v = voices[vname]
-    out = os.path.join(root, 'audio', 'voces', pk); os.makedirs(out, exist_ok=True)
+    out = os.path.join(root, 'audio', 'voces', pk, 'piper'); os.makedirs(out, exist_ok=True)
     for ev, L in p['L'].items():
         for vid, txt in L:
             t = txt.lower().replace('mae', 'mae').replace('rock and roll', 'rocanrol')
@@ -35,4 +35,5 @@ for pk, p in I.items():
             open(os.path.join(out, vid + '.mp3'), 'wb').write(mp3)
             done.append(pk + '/' + vid)
 print(len(done), 'audios')
+subprocess.run([sys.executable, os.path.join(root, 'herramientas', 'lista_voces.py'), root])
 print(json.dumps(done))
