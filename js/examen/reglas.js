@@ -55,7 +55,12 @@ function rules(W,P,px,py,dt){
   if(W.jay&&!S.exam||S.mode==='street'){S.jayT=(S.jayT==null?12:S.jayT)-dt;if(S.jayT<=0){S.jayT=14+Math.random()*12;spawnJay(W,P)}}
   if(W.paths.length&&!inRnd&&P.gear===1&&P.v>8){let best=null,bd=1e9,cnt=0;let bp=null;for(const p of W.paths){let pb=1e9,pq=null;for(const q of p.segs){const t=clamp(((P.x-q.ax)*q.dx+(P.y-q.ay)*q.dy)/q.len2,0,1);const ex=q.ax+q.dx*t-P.x,ey=q.ay+q.dy*t-P.y;const d2=ex*ex+ey*ey;if(d2<pb){pb=d2;pq=q}}if(pb<(p.hw||HW)**2){cnt++;if(pb<bd){bd=pb;best=pq;bp=p}}}
     let wr=false;if(cnt===1&&best){const l=Math.sqrt(best.len2),ux=best.dx/l,uy=best.dy/l;const al=c*ux+s*uy,side=ux*(P.y-best.ay)-uy*(P.x-best.ax);if(bp.oneway){if(al<-.6)wr=true}else if(Math.abs(al)>.6&&Math.abs(side)>2&&(al>0?side<0:side>0))wr=true}
-    if(wr){S.wrongT2=(S.wrongT2||0)+dt;if(S.wrongT2>.9)fault('wrong','Invadir el carril contrario','II',6)}else S.wrongT2=0}
+    const zl=W.noInv&&W.noInv.some(z=>Math.hypot(P.x-z.x,P.y-z.y)<z.r);
+    if(zl){// zona donde se usa el carril contrario a propósito (ej. salida por el CEDA): direccional IZQUIERDA para entrar y DERECHA para volver
+      if(wr&&!S.invZ){S.invZ=true;if(!(P.blinkL||S.t-(P.lastL||-9)<2.5))fault('sigInv','No puso la direccional IZQUIERDA para pasar al otro carril','III',8)}
+      else if(!wr&&S.invZ&&cnt===1){S.invZ=false;if(!(P.blinkR||S.t-(P.lastR||-9)<2.5))fault('sigRet','No puso la direccional DERECHA para volver a su carril','III',8)}
+      S.wrongT2=0}
+    else{if(!wr)S.invZ=false;if(wr){S.wrongT2=(S.wrongT2||0)+dt;if(S.wrongT2>.9)fault('wrong','Invadir el carril contrario','II',6)}else S.wrongT2=0}}
   for(const st of W.stops){const hz=st.dir==='E'||st.dir==='W';const lat=hz?P.y:P.x;if(lat<st.a-3||lat>st.b+3){st.minV=999;continue}
     const sg=(st.dir==='E'||st.dir==='S')?1:-1;const d=(st.pos-(hz?P.x:P.y))*sg,dPrev=(st.pos-(hz?px:py))*sg;
     const dv=dirVec[st.dir],fw=(c*dv[0]+s*dv[1])>.5;

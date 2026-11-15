@@ -793,53 +793,53 @@
    "col": "n"
   },
   {
-   "x": 250,
-   "y": 240.25,
+   "x": 250.09,
+   "y": 240.2,
    "col": "v"
   },
   {
-   "x": 248,
-   "y": 242.5,
+   "x": 247.85,
+   "y": 242.76,
    "col": "v"
   },
   {
-   "x": 253.75,
-   "y": 243.75,
+   "x": 253.86,
+   "y": 243.49,
    "col": "n"
   },
   {
-   "x": 251.75,
-   "y": 246,
+   "x": 251.62,
+   "y": 246.05,
    "col": "n"
   },
   {
-   "x": 250,
-   "y": 244.25,
+   "x": 249.73,
+   "y": 244.4,
    "col": "n"
   },
   {
-   "x": 252,
-   "y": 241.75,
+   "x": 251.97,
+   "y": 241.84,
    "col": "n"
   },
   {
-   "x": 245.01,
-   "y": 235.78,
+   "x": 245.14,
+   "y": 235.63,
    "col": "n"
   },
   {
-   "x": 240.51,
-   "y": 231.8,
+   "x": 240.6,
+   "y": 231.69,
    "col": "n"
   },
   {
-   "x": 236.02,
-   "y": 227.83,
+   "x": 236.08,
+   "y": 227.76,
    "col": "n"
   },
   {
-   "x": 231.52,
-   "y": 223.85,
+   "x": 231.54,
+   "y": 223.83,
    "col": "n"
   },
   {
@@ -1008,7 +1008,7 @@
    "x": 250.854238917159,
    "y": 243.12298221498705,
    "ang": -2.4227626539681686,
-   "w": 3,
+   "w": 3.4,
    "l": 5,
    "num": 1,
    "target": true,
@@ -1561,29 +1561,29 @@
   },
   {
    "tipo": "zigzag",
-   "x": 243.85,
-   "y": 237.09,
+   "x": 243.99,
+   "y": 236.95,
    "r": 2.0,
    "txt": "ZIGZAG (1/4): pase el cono naranja 1 por la izquierda, sin tocarlo."
   },
   {
    "tipo": "zigzag",
-   "x": 241.57,
-   "y": 230.6,
+   "x": 241.75,
+   "y": 230.37,
    "r": 2.0,
    "txt": "ZIGZAG (2/4): pase el cono naranja 2 por la derecha, sin tocarlo."
   },
   {
    "tipo": "zigzag",
-   "x": 234.86,
-   "y": 229.14,
+   "x": 234.93,
+   "y": 229.08,
    "r": 2.0,
    "txt": "ZIGZAG (3/4): pase el cono naranja 3 por la izquierda, sin tocarlo."
   },
   {
    "tipo": "zigzag",
-   "x": 232.58,
-   "y": 222.65,
+   "x": 232.69,
+   "y": 222.51,
    "r": 2.0,
    "txt": "ZIGZAG (4/4): pase el cono naranja 4 por la derecha, sin tocarlo."
   },
@@ -1622,7 +1622,9 @@
    "x": 234.27,
    "y": 235.49,
    "r": 4,
-   "txt": "Salga del espacio con cuidado y tome UNO de los DOS CARRILES de salida (flechas hacia arriba), sin pisar la línea blanca del centro."
+   "txt": "Ponga la direccional DERECHA [E], salga del espacio con cuidado y tome UNO de los DOS CARRILES de salida (flechas hacia arriba), sin pisar la línea blanca del centro.",
+   "direccional": "derecha",
+   "dirFalta": "No puso la direccional DERECHA al salir del parqueo"
   },
   {
    "tipo": "ir",
@@ -1638,7 +1640,7 @@
    "y": 219,
    "r": 5,
    "parar": true,
-   "txt": "Doble a la IZQUIERDA hacia la salida (por arriba de la isla no se pasa). En el CEDA y el SEMÁFORO deténgase y espere la luz VERDE."
+   "txt": "Ponga la direccional IZQUIERDA [Q] y pase al otro carril hacia la salida (por arriba de la isla no se pasa). En el CEDA y el SEMÁFORO deténgase y espere la luz VERDE."
   },
   {
    "tipo": "ir",
@@ -1646,7 +1648,7 @@
    "y": 180.5,
    "r": 5,
    "parar": true,
-   "txt": "Con luz verde, siga hasta la RAMPA y haga ALTO completo en la línea. Baje con el freno, despacio."
+   "txt": "Con luz verde, ponga la direccional DERECHA [E] para volver a su carril, siga hasta la RAMPA y haga ALTO completo en la línea. Baje con el freno, despacio."
   },
   {
    "tipo": "salida",
@@ -1654,6 +1656,28 @@
    "y": 168.5,
    "r": 7,
    "txt": "Baje la rampa con cuidado y salga del plantel por la entrada."
+  }
+ ],
+ "zonasSinInvasion": [
+  {
+   "x": 214,
+   "y": 218,
+   "r": 9
+  },
+  {
+   "x": 202,
+   "y": 208.5,
+   "r": 9
+  },
+  {
+   "x": 189,
+   "y": 199,
+   "r": 8
+  },
+  {
+   "x": 180,
+   "y": 191,
+   "r": 7
   }
  ]
 }
