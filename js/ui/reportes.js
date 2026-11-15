@@ -4,7 +4,7 @@
 // por correo o WhatsApp desde el teléfono del jugador. También queda guardado en el aparato (pp_reports) para
 // subirlo cuando exista la base de datos.
 // CONTACTO: a dónde llegan los reportes. Si un campo está vacío, ese botón no aparece.
-const CONTACTO={correo:'',whatsapp:''};// whatsapp: solo números con código de país, ej. '50688887777'
+const CONTACTO={correo:'info@pulzarsolutions.com',whatsapp:''};// whatsapp: solo números con código de país, ej. '50688887777'
 const APP_VER='2026.11.15';
 const REP={tipo:'problema',desde:null};
 const REP_TIPOS={problema:'PROBLEMA',sugerencia:'SUGERENCIA',examen:'EXAMEN DISTINTO AL REAL'};
