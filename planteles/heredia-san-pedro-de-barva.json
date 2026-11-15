@@ -823,28 +823,28 @@
    "col": "n"
   },
   {
-   "x": 245.92946159990234,
-   "y": 236.99152541269532,
+   "x": 249.5,
+   "y": 239.76,
    "col": "v"
   },
   {
-   "x": 242.97666614856522,
-   "y": 234.2263977256686,
+   "x": 245.01,
+   "y": 235.78,
    "col": "n"
   },
   {
-   "x": 239.71698365822564,
-   "y": 231.37069560062352,
+   "x": 240.51,
+   "y": 231.8,
    "col": "n"
   },
   {
-   "x": 236.21153846153845,
-   "y": 228.26923076923077,
+   "x": 236.02,
+   "y": 227.83,
    "col": "n"
   },
   {
-   "x": 232.98076923076923,
-   "y": 225.3846153846154,
+   "x": 231.52,
+   "y": 223.85,
    "col": "n"
   },
   {
@@ -1568,44 +1568,44 @@
   },
   {
    "tipo": "parar",
-   "x": 230.0,
-   "y": 220.0,
+   "x": 230.9,
+   "y": 221.22,
    "r": 5,
    "txt": "Rodee la parte de arriba de la isla y póngase en el segundo punto, junto al ALTO y la malla. Deténgase.",
    "dlg": [
     "Deténgase aquí. Ahora viene el ZIGZAG entre los conos naranja.",
-    "Pase un cono por un lado y el siguiente por el otro, sin tocarlos.",
+    "Pase el primer cono por la izquierda (del lado de la malla), el segundo por la derecha, y así, sin tocarlos.",
     "Al final se detiene y regresa de RETROCESO por la línea blanca hasta este mismo punto.",
     "Cuando esté listo, puede empezar."
    ]
   },
   {
    "tipo": "zigzag",
-   "x": 231.92,
-   "y": 226.58,
-   "r": 2.4,
-   "txt": "ZIGZAG (1/4): pase el cono naranja 1 por la derecha, sin tocarlo."
+   "x": 232.58,
+   "y": 222.65,
+   "r": 2.0,
+   "txt": "ZIGZAG (1/4): pase el cono naranja 1 por la izquierda, sin tocarlo."
   },
   {
    "tipo": "zigzag",
-   "x": 237.5,
-   "y": 226.81,
-   "r": 2.4,
-   "txt": "ZIGZAG (2/4): pase el cono naranja 2 por la izquierda, sin tocarlo."
+   "x": 234.86,
+   "y": 229.14,
+   "r": 2.0,
+   "txt": "ZIGZAG (2/4): pase el cono naranja 2 por la derecha, sin tocarlo."
   },
   {
    "tipo": "zigzag",
-   "x": 238.66,
-   "y": 232.57,
-   "r": 2.4,
-   "txt": "ZIGZAG (3/4): pase el cono naranja 3 por la derecha, sin tocarlo."
+   "x": 241.57,
+   "y": 230.6,
+   "r": 2.0,
+   "txt": "ZIGZAG (3/4): pase el cono naranja 3 por la izquierda, sin tocarlo."
   },
   {
    "tipo": "zigzag",
-   "x": 244.27,
-   "y": 232.77,
-   "r": 2.4,
-   "txt": "ZIGZAG (4/4): pase el cono naranja 4 por la izquierda, sin tocarlo."
+   "x": 243.85,
+   "y": 237.09,
+   "r": 2.0,
+   "txt": "ZIGZAG (4/4): pase el cono naranja 4 por la derecha, sin tocarlo."
   },
   {
    "tipo": "retroceso",
@@ -1619,12 +1619,12 @@
      231.5
     ],
     [
-     231.6,
-     221.6
+     232.4,
+     222.2
     ],
     [
-     230.0,
-     220.0
+     230.9,
+     221.22
     ]
    ],
    "ancho": 2.5,
