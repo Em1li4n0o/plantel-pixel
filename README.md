@@ -34,6 +34,8 @@ y entre a http://localhost:8080
 
 Los datos que el menú necesita para mostrar nombres (`mundo/datos-rutas.js`) y lo que comparten varios modos (`mundo/trazos.js`, `mundo/animales.js`, `mundo/aviones.js`) siempre se cargan. Para agregar un paquete nuevo: sumarlo a `PAQUETES` y a `pkgFor()` en `cargador.js`, y no ponerlo en `index.html`.
 
+**Versión:** antes de cada commit que cambie el juego, correr `python herramientas/version.py`. Le pone `?v=fecha` a cada archivo en `index.html`, para que los navegadores bajen la versión nueva en vez de usar archivos guardados (GitHub Pages los guarda 10 minutos y algunos navegadores más).
+
 Todos los archivos comparten las mismas variables globales (no son módulos). Si una línea que corre al cargar un archivo usa una función de un archivo que carga después, hay que envolverla en una función flecha (`()=>back()`), para que se busque hasta que se use.
 
 ## Rendimiento, instructores y práctica tranquila

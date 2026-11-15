@@ -7,9 +7,11 @@ const PAQUETES={
   teoria:['examen/teorico.js'],
   rutas:['mundo/rutas.js','mundo/alajuela.js','mundo/recorridos-oficiales.js','mundo/molde-rutas.js'],
 };
+// versión de esta publicación (la pone herramientas/version.py en index.html): se agrega a lo que se baja después
+const VER=(()=>{const me=document.querySelector('script[src*="nucleo/cargador.js"]');return me&&me.src.includes('?')?'?'+me.src.split('?')[1]:''})();
 const PKG_OK={},PKG_P={};
 function need(pk){if(PKG_OK[pk])return Promise.resolve();if(PKG_P[pk])return PKG_P[pk];
-  const me=document.querySelector('script[src*="nucleo/cargador.js"]'),ver=me&&me.src.includes('?')?'?'+me.src.split('?')[1]:'';
+  const ver=VER;
   PKG_P[pk]=Promise.all(PAQUETES[pk].map(f=>new Promise((ok,bad)=>{const s=document.createElement('script');s.src='js/'+f+ver;s.async=false;
     s.onload=ok;s.onerror=()=>{s.remove();bad(new Error('No cargó '+f))};document.head.appendChild(s)})))
     .then(()=>{PKG_OK[pk]=true},e=>{delete PKG_P[pk];throw e});

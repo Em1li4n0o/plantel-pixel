@@ -54,10 +54,10 @@ function instrLine(pk,ev){const p=INSTR[pk],L=p&&p.L[ev];if(!L||!L.length)return
   const T=S?(S.stn||(S.stn={})):{};let k=Math.floor(Math.random()*L.length);if(L.length>1&&T.last===pk+ev+k)k=(k+1)%L.length;T.last=pk+ev+k;const[id,txt]=L[k];
   toast(p.n,txt,'info');
   if(muted||!CFG.voice)return;const vr=instrVar(pk),key=pk+'/'+vr+'/'+id;
-  if(vr&&VOCES_LISTA.includes(key)){try{shush();if(CLIP)CLIP.pause();CLIP=new Audio('audio/voces/'+key+'.mp3');CLIP.volume=Math.min(1,.4+CFG.sfx*.6);CLIP.onerror=()=>say(txt,true);CLIP.play().catch(()=>say(txt,true));return}catch(e){}}
+  if(vr&&VOCES_LISTA.includes(key)){try{shush();if(CLIP)CLIP.pause();CLIP=new Audio('audio/voces/'+key+'.mp3'+VER);CLIP.volume=Math.min(1,.4+CFG.sfx*.6);CLIP.onerror=()=>say(txt,true);CLIP.play().catch(()=>say(txt,true));return}catch(e){}}
   say(txt,true)}
 // reacciones en manejo libre: se detectan aquí, una cada 6 segundos como mucho
-function react(ev,force){const T=S.stn;if(!force&&T.cool>0)return;T.cool=6;instrLine(instrNow(),ev)}
+function react(ev,force){const T=S.stn||(S.stn={});if(!force&&T.cool>0)return;T.cool=6;instrLine(instrNow(),ev)}
 function stuntStep(P,dt){if(S.foot||S.calm)return;
   const T=S.stn||(S.stn={});if(T.ph==null){Object.assign(T,{yaw:0,dr:0,off:0,cool:3,cr:S.crashes||0,cu:S.crushes||0,fast:false,lastCr:-9,ph:P.h})}
   T.cool-=dt;const kmh=Math.abs(P.v)*KMH,dh=nA(P.h-T.ph);T.ph=P.h;
