@@ -130,5 +130,5 @@ function customExam(W,D){const K=4,E=D.exam;if(!E||!E.length)return null;const T
 function customTasks(){const W=S.W,o=W.pslot;{const X=customExam(W,W.custom);if(X)return X}const T=[];
   if(o)T.push({txt:'MI PLANTEL: estaciónese de RETROCESO en el espacio amarillo'+(o.num?' ('+o.num+')':'')+'. Respete ALTO y CEDA y no toque conos.',tgt:{x:o.cx,y:o.cy},ok:'¡Estacionamiento correcto!',
     check(){const P=S.P,dx=P.x-o.cx,dy=P.y-o.cy,c=Math.cos(o.ang),s=Math.sin(o.ang),al=dx*c+dy*s,lt=-dx*s+dy*c;return still('cst',Math.abs(al)<o.hl*.45&&Math.abs(lt)<o.hw*.45&&Math.cos(P.h-o.ang)>.93,1.2)}});
-  T.push({txt:'MI PLANTEL: practique libremente. Respete los ALTO y CEDA, use direccionales y no toque conos. [ESC] para salir.',tgt:{x:W.spawn.x,y:W.spawn.y},check(){return false}});
+  T.push({txt:(S.mode==='heredia'?'PLANTEL DE HEREDIA':'MI PLANTEL')+': practique libremente. Respete los ALTO y CEDA, use direccionales y no toque conos. [ESC] para salir.',tgt:{x:W.spawn.x,y:W.spawn.y},check(){return false}});
   return T}
