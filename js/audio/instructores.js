@@ -7,7 +7,8 @@
 // VOCES GRABADAS: cada frase tiene un id. Si existe el archivo audio/voces/<instructor>/<id>.mp3 y está en
 // VOCES_GRABADAS, se reproduce esa grabación (voz real: actor de voz, ElevenLabs, Piper...). Si no, se lee con la
 // voz del navegador. El guion completo para grabar está en audio/voces/GUION.md.
-const VOCES_GRABADAS=new Set([/* 'rock/trompo1', 'general/choque1', ... */]);
+// Hoy: voces generadas con Piper (código abierto). Para cambiar una por una grabación mejor, reemplace el .mp3 con el mismo nombre.
+const VOCES_GRABADAS=new Set(['general/aplastar1', 'general/casi1', 'general/casi2', 'general/choque1', 'general/choque2', 'general/derrape1', 'general/derrape2', 'general/hola1', 'general/trompo1', 'general/trompo2', 'general/velocidad1', 'tropical/aplastar1', 'tropical/casi1', 'tropical/casi2', 'tropical/choque1', 'tropical/choque2', 'tropical/derrape1', 'tropical/derrape2', 'tropical/hola1', 'tropical/trompo1', 'tropical/trompo2', 'tropical/velocidad1', 'lofi/aplastar1', 'lofi/casi1', 'lofi/casi2', 'lofi/choque1', 'lofi/choque2', 'lofi/derrape1', 'lofi/derrape2', 'lofi/hola1', 'lofi/trompo1', 'lofi/trompo2', 'lofi/velocidad1', 'rock/aplastar1', 'rock/casi1', 'rock/casi2', 'rock/choque1', 'rock/choque2', 'rock/derrape1', 'rock/derrape2', 'rock/hola1', 'rock/trompo1', 'rock/trompo2', 'rock/velocidad1']);
 const INSTR={
   general:{n:'PROFE PIXEL',d:'Amable y claro',rate:.98,pitch:1,L:{
     trompo:[['trompo1','¡Uy, qué trompo! Bien controlado, pero en la calle real ni se le ocurra.'],['trompo2','¡Una vuelta completa! Eso sí que no lo enseño en clase.']],
