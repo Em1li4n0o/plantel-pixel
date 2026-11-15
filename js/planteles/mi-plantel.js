@@ -11,7 +11,7 @@ function normCustom(D0){const D=JSON.parse(JSON.stringify(D0));const lim=(D.area
   for(const k of['roads','areas','bldgs','fences','slopes','rails'])for(const e of D[k]||[])for(const q of e.pts||[])sh(q);
   for(const k of['cones','signs','texts','slots','people','poles','trees','rings','zonasSinInvasion'])for(const e of D[k]||[]){e.x-=ox;e.y-=oy}if(D.start){D.start.x-=ox;D.start.y-=oy}for(const e of D.exam||[]){if(e.x!=null){e.x-=ox;e.y-=oy}if(e.pts)for(const q of e.pts)sh(q)}D.lim=lim?lim.pts:null;return D}
 function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{pts:[[10,30],[70,30]],lanes:2,laneW:3.5}],start:{x:14,y:32,ang:0}};HW=7;
-  const W=newWorld('custom',Math.max(120,Math.round((D.w||100)*K)),Math.max(90,Math.round((D.h||80)*K)));W.limit=D.limit||20;W.ppaved=[];W.planes=[];W.pblds=[];W.walkers=[];W.custom=D;W.noInv=(D.zonasSinInvasion||[]).map(z=>({x:z.x*K,y:z.y*K,r:z.r*K}));
+  const W=newWorld('custom',Math.max(120,Math.round((D.w||100)*K)),Math.max(90,Math.round((D.h||80)*K)));W.limit=D.limit||20;W.ppaved=[];W.planes=[];W.pblds=[];W.walkers=[];W.custom=D;W.noInv=(D.zonasSinInvasion||[]).map(z=>({x:z.x*K,y:z.y*K,r:z.r*K,libre:!!z.libre}));
   const P=a=>a.map(([x,y])=>[x*K,y*K]),roadW=r=>r.wide?(r.wideW||5):(r.lanes||1)*(r.laneW||3.5);
   const ext=pts=>{const q=pts.map(v=>v.slice()),n=q.length,e=.8*K;const a=q[0],b=q[1],L1=Math.hypot(a[0]-b[0],a[1]-b[1])||1;q[0]=[a[0]+(a[0]-b[0])/L1*e,a[1]+(a[1]-b[1])/L1*e];const c=q[n-1],d=q[n-2],L2=Math.hypot(c[0]-d[0],c[1]-d[1])||1;q[n-1]=[c[0]+(c[0]-d[0])/L2*e,c[1]+(c[1]-d[1])/L2*e];return q};
   const rpts=r=>{const q=P(r.pts);return ext(r.curva===false||q.length<3?q:smoothLine(q,3))};
@@ -22,13 +22,17 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
   W.roofs=[];for(const a of D.areas||[])if(a.kind==='techo'&&a.pts&&a.pts.length>2){const q=P(a.pts);q.h=(a.h||4.2)*K;W.roofs.push(q)}
   for(const b of D.bldgs||[]){if(!b.pts||b.pts.length<3)continue;const pp=P(b.pts),cx=pp.reduce((s,r)=>s+r[0],0)/pp.length,cy=pp.reduce((s,r)=>s+r[1],0)/pp.length;
     W.pblds.push({p:pp,ht:(b.h||6)*K*.5,col:b.col||'#ecebe4',roof:shade(b.col||'#ecebe4',-.12),cx,cy,rad:Math.max(...pp.map(r=>Math.hypot(r[0]-cx,r[1]-cy)))});
-    for(let i=0;i<pp.length;i++){const A=pp[i],B=pp[(i+1)%pp.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=2.5)W.circObs.push({x:A[0]+(B[0]-A[0])*t/L,y:A[1]+(B[1]-A[1])*t/L,r:1.5,type:'muro'})}}
+    const pc=pp.map(([x,y])=>[cx+(x-cx)*.97,cy+(y-cy)*.97]);// choque: contorno 3 % más chico hacia el centro (los círculos sobresalían de la pared)
+    for(let i=0;i<pc.length;i++){const A=pc[i],B=pc[(i+1)%pc.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=2.5)W.circObs.push({x:A[0]+(B[0]-A[0])*t/L,y:A[1]+(B[1]-A[1])*t/L,r:1.5,type:'muro'})}}
   for(const c of D.cones||[])W.cones.push({x:c.x*K,y:c.y*K,vx:0,vy:0,hit:false,green:c.col==='v',fatal:c.fatal?'Tocó un cono marcado: prueba perdida':undefined});
   W.pstops=[];W.cedas=[];W.cLights=[];(D.signs||[]).forEach((s,i)=>{const o={x:s.x*K,y:s.y*K,ux:Math.cos(s.ang||0),uy:Math.sin(s.ang||0),w:(s.w||7)*K/2};if(s.kind==='sem3'||s.kind==='sem2'){W.cLights.push(Object.assign(o,{id:i,kind:s.kind,verde:+s.verde||12,amarillo:+s.amarillo||3,rojo:+s.rojo||12,desfase:+s.desfase||0}));return}if(s.kind==='alto')W.pstops.push(Object.assign(o,{code:'alto'+i,txt:'No hizo ALTO total',minV:99}));else W.cedas.push(o)});
   for(const q of W.roofs)for(let i=0;i<q.length;i++){const A=q[i],B=q[(i+1)%q.length],L=Math.hypot(B[0]-A[0],B[1]-A[1]);for(let t=0;t<=L;t+=24){const x=A[0]+(B[0]-A[0])*t/L,y=A[1]+(B[1]-A[1])*t/L;if(pavedW(W,x,y))continue;const b={x:x-1,y:y-1,w:2,h:2,ht:q.h,type:'bld',col:'#8d99ae',roof:'#5c677d',poste:true};W.blds.push(b);W.circObs.push({x,y,r:1.3,type:'poste'})}}
   // vallas: malla y verja (líneas que no se pueden atravesar), muro y barrera naranja (con volumen en 3D)
-  for(const f of D.fences||[]){if(!f.pts||f.pts.length<2||f.kind==='pintura')continue;const q=P(f.pts);
-    for(let i=0;i<q.length-1;i++){const[a,b]=q[i],[c,d]=q[i+1],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=2.4)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:f.kind==='barrera'?1.4:1.25,type:'valla'});
+  const LIM=D.lim?P(D.lim):null,RC=(()=>{let n=0,x=0,y=0;for(const r of D.roads||[])for(const p of r.pts||[]){x+=p[0]*K;y+=p[1]*K;n++}return n?[x/n,y/n]:[W.w/2,W.h/2]})();
+  for(const f of D.fences||[]){if(!f.pts||f.pts.length<2||f.kind==='pintura')continue;const q=P(f.pts),borde=f.kind==='malla'||f.kind==='muro';
+    for(let i=0;i<q.length-1;i++){const[a,b]=q[i],[c,d]=q[i+1],L=Math.hypot(c-a,d-b)||1;let ox=0,oy=0;
+      if(borde){let nx=-(d-b)/L,ny=(c-a)/L;const mx=(a+c)/2,my=(b+d)/2,pa=pavedW(W,mx+nx*8,my+ny*8),pb=pavedW(W,mx-nx*8,my-ny*8),dentro=pa!==pb?pa:(LIM?inPoly(mx+nx*8,my+ny*8,LIM):(nx*(RC[0]-mx)+ny*(RC[1]-my)>0));if(dentro){nx=-nx;ny=-ny}ox=nx*.35*K;oy=ny*.35*K}
+      for(let t=0;t<=L;t+=2.4)W.circObs.push({x:a+(c-a)*t/L+ox,y:b+(d-b)*t/L+oy,r:f.kind==='barrera'?1.4:1.25,type:'valla'});
       if(f.kind==='muro'||f.kind==='barrera'){const th=(f.kind==='muro'?.25:.3)*K,nx=-(d-b)/L*th,ny=(c-a)/L*th,pp=[[a+nx,b+ny],[c+nx,d+ny],[c-nx,d-ny],[a-nx,b-ny]];W.pblds.push({p:pp,ht:(f.kind==='muro'?2.4:.9)*K*.5,col:f.kind==='muro'?'#a39d92':'#ff7b00',roof:f.kind==='muro'?'#8d877c':'#ffffff',cx:(a+c)/2,cy:(b+d)/2,rad:L/2+2})}
       else W.fences.push([a,b,c,d])}}
   // postes (de luz, con brillo de noche) y árboles
