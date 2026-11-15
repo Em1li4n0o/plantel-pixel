@@ -12,6 +12,23 @@ python -m http.server 8080
 
 y entre a http://localhost:8080
 
+## Estructura del código
+
+`index.html` solo trae las pantallas (HTML). El estilo está en `css/juego.css` y la lógica en `js/`, separada por tema. Los archivos se cargan en el orden en que aparecen en `index.html`:
+
+| Carpeta | Qué tiene |
+|---|---|
+| `js/nucleo/` | constantes, estado del juego, inicio de cada modo y el bucle principal |
+| `js/motor/` | sprites y fuente pixel, render del fondo 2D, dibujo 2D y la vista 3D (cámaras, carros 3D, horizonte) |
+| `js/vehiculos/` | catálogo de vehículos y física del jugador |
+| `js/mundo/` | construcción de ciudades, rutas, recorridos oficiales, edificios, tráfico, clima, situaciones de riesgo |
+| `js/planteles/` | plantel de San José, planteles hechos en el creador y planteles de las sedes |
+| `js/examen/` | reglas y faltas, tareas, examen teórico, historial y reporte, repetición de faltas |
+| `js/audio/` | sonidos, voz del instructor y música |
+| `js/ui/` | garaje y controles (teclado, toque, mouse) |
+
+Todos los archivos comparten las mismas variables globales (no son módulos). Si una línea que corre al cargar un archivo usa una función de un archivo que carga después, hay que envolverla en una función flecha (`()=>back()`), para que se busque hasta que se use.
+
 ## Controles
 
 | Tecla | Acción |
