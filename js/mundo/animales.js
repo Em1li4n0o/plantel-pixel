@@ -1,0 +1,9 @@
+'use strict';
+// ===================== ARBUSTOS, PERROS Y VACAS (compartidos) =====================
+function addBushes(W,CL,R,dens,t0,t1){W.bushes=W.bushes||[];const cols=['#2f7d32','#3b8a3a','#26682b','#4a9a3f','#5b8f2e'];for(let i=0;i<CL.length;i+=2){if(i>=t0-2&&i<=t1+2&&t0>=0)continue;for(let k=0;k<dens*2;k++){if(R()>.55)continue;const sd=R()<.5?-1:1,d=19+R()*26,o=offLine(CL,sd*d)[i];const x=o[0]+(R()-.5)*8,y=o[1]+(R()-.5)*8;if(pavedW(W,x,y))continue;W.bushes.push({x,y,r:1.6+R()*2.2,h:1.6+R()*2.6,c:cols[R()*5|0]})}}}
+function addDogs(W,n){if(!W.walkers)W.walkers=[];const sw=W.sidewalks.filter(r=>r.w>=30&&r.h>=30);if(!sw.length)return;for(let i=0;i<n;i++)W.walkers.push({r:pick(sw),s:Math.random()*1000,sp:(5+Math.random()*5)*(Math.random()<.5?-1:1),an:0,x:0,y:0,col:pick(['#8d6e63','#d7b98e','#3e2c23','#a1887f','#f5f0e6','#5d4037']),dog:true})}
+// vaca (ganado en los potreros; una cruza la carretera de vez en cuando)
+function mono2D(g,x,y){g.fillStyle='rgba(0,0,0,.3)';g.fillRect(Math.round(x)-1,Math.round(y)+1,4,2);g.fillStyle='#6d4c2f';g.fillRect(Math.round(x)-1,Math.round(y)-1,3,3);g.fillStyle='#f1d3a8';g.fillRect(Math.round(x),Math.round(y)-2,1,1);g.fillStyle='#6d4c2f';g.fillRect(Math.round(x)-3,Math.round(y)-2,2,1)}
+function cow2D(g,x,y,h){g.save();g.translate(Math.round(x),Math.round(y));g.rotate(h);g.fillStyle='rgba(0,0,0,.3)';g.fillRect(-2,-1,7,4);g.fillStyle='#f4f1ea';g.fillRect(-3,-2,6,4);g.fillStyle='#222';g.fillRect(-2,-2,2,2);g.fillRect(1,0,2,2);g.fillStyle='#d9b38c';g.fillRect(3,-1,2,2);g.restore()}
+function cow3D(ctx,C,V,c){const cc=Math.cos(c.h),ss=Math.sin(c.h),pt=(a,b)=>[c.x+cc*a-ss*b,c.y+ss*a+cc*b],R2=(a0,a1,b0,b1)=>[pt(a0,b0),pt(a0,b1),pt(a1,b1),pt(a1,b0)];
+  box(ctx,C,V,R2(2.2,-2.2,-.9,.9),1.3,3,'#f4f1ea');box(ctx,C,V,R2(-.5,-1.6,-.92,.92),1.8,2.8,'#222');box(ctx,C,V,R2(3.1,2.2,-.5,.5),2,3,'#d9b38c');for(const a of[1.6,-1.6])for(const b of[-.6,.6])box(ctx,C,V,R2(a+.3,a-.3,b-.25,b+.25),0,1.3,'#d8d4cc')}

@@ -32,3 +32,4 @@ function card(h){h=nA(h);if(h>-Math.PI/4&&h<=Math.PI/4)return'E';if(h>Math.PI/4&
 function shade(hex,f){const n=parseInt(hex.slice(1),16);let r=n>>16,gg=n>>8&255,b=n&255;const m=f<0?0:255,k=Math.abs(f);r=Math.round(r+(m-r)*k);gg=Math.round(gg+(m-gg)*k);b=Math.round(b+(m-b)*k);return'#'+((1<<24)|(r<<16)|(gg<<8)|b).toString(16).slice(1)}
 const CARCOLS=['#f2f2ee','#e9e8e2','#f4f4f0','#c7cbd1','#b4b9c0','#9ea4ac','#6b717b','#4a4f58','#2a2d33','#1d1e23','#b3202a','#d0313b','#7a1f2b','#1f3f7a','#2f6fb5','#5b8fc9','#2f5d50','#c9b48a','#8a6d4b','#e07a2e'];
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};

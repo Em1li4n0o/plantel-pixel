@@ -121,7 +121,6 @@ function drawSign(id,t=0){const c=thc,f=(col,x,y,w,h)=>{c.fillStyle=col;c.fillRe
     [['#ff3030','#4a0f0f'],['#ffd23f','#4a3d0f'],['#3ddc84','#0f4a2a']].forEach(([a,b],i)=>{fillCirc(c,16,7+i*9,3,(i===on&&lit)?a:b)});
     if(fl&&lit){const y=7+on*9;f(on?'#ffd23f':'#ff3030',3,y,4,1);f(on?'#ffd23f':'#ff3030',25,y,4,1)}}}
 const TH={mode:null,list:[],i:0,ans:[],start:0,chosen:false};
-const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
 function wrongSet(){return new Set(store.get('pp_wrong',[]))}
 function openTheory(){show('theory');ui='theory';TH.mode=null;$('thHome').classList.remove('hidden');$('thQ').classList.add('hidden');$('thRes').classList.add('hidden');
   const w=wrongSet().size,p=store.get('pp_prog',{});$('thInfo').textContent=`${QB.length} preguntas de práctica · nota mínima 70 · Mejor nota: ${p.teorico?p.teorico.score:'--'}`;$('thRev').textContent=`3 · REPASAR MIS ERRORES (${w})`;$('thRev').disabled=!w}

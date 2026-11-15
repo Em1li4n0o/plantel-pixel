@@ -27,6 +27,13 @@ y entre a http://localhost:8080
 | `js/audio/` | sonidos, voz del instructor y música |
 | `js/ui/` | garaje y controles (teclado, toque, mouse) |
 
+**Carga por partes.** Lo pesado que no todos usan no se baja al abrir el juego. `js/nucleo/cargador.js` lo pide la primera vez que hace falta y lo deja en memoria:
+
+- paquete `teoria`: `examen/teorico.js` (al abrir el examen teórico);
+- paquete `rutas`: `mundo/rutas.js`, `mundo/alajuela.js`, `mundo/recorridos-oficiales.js` y `mundo/molde-rutas.js` (al entrar al centro de San José, Ruta 27, Ruta 32, Alajuela, los recorridos oficiales o una ruta emblemática).
+
+Los datos que el menú necesita para mostrar nombres (`mundo/datos-rutas.js`) y lo que comparten varios modos (`mundo/trazos.js`, `mundo/animales.js`, `mundo/aviones.js`) siempre se cargan. Para agregar un paquete nuevo: sumarlo a `PAQUETES` y a `pkgFor()` en `cargador.js`, y no ponerlo en `index.html`.
+
 Todos los archivos comparten las mismas variables globales (no son módulos). Si una línea que corre al cargar un archivo usa una función de un archivo que carga después, hay que envolverla en una función flecha (`()=>back()`), para que se busque hasta que se use.
 
 ## Controles

@@ -1,13 +1,14 @@
 'use strict';
 // ===================== ESTADO =====================
-let S=null,A=null,ui='menu';
+let S=null,A=null,ui='menu',MODE_NOW=null;
 function spawnState(W){const ty=isArc(CAR.type)&&!ARCOK?'sedan':(MODE_NOW==='alajuela'&&!isArc(CAR.type)?'taxi':CAR.type),v=VEH[ty];return{x:W.spawn.x,y:W.spawn.y,h:W.spawn.h,v:0,steer:0,thr:0,bp:0,gear:1,belt:false,blinkL:false,blinkR:false,haz:false,lastL:-99,lastR:-99,bh0:0,armed:false,brake:false,col:carCol(),type:ty,sp:v,nitro:1,L:v.L,Wd:v.Wd,player:true}}
 const ROUTES={centro:1,r27:1,r32:1,tilaran:1,sjlibre:1,alajuela:1,manuel:1,cerro:1};
 const MODES={custom:'MI PLANTEL',manuel:'MANUEL ANTONIO · COSTA PACÍFICA',cerro:'CERRO DE LA MUERTE · RUTA 2',alajuela:'ALAJUELA · AEROPUERTO Y LA GUÁCIMA',tilaran:'TILARÁN · PARQUE EÓLICO',r32:'RUTA 32 · BRAULIO CARRILLO',sjlibre:'SAN JOSÉ · MANEJO LIBRE',centro:'CENTRO DE SAN JOSÉ',r27:'RUTA 27',tuto:'TUTORIAL',sanjose:'PLANTEL SAN JOSÉ',plantel:'PLANTEL PIXEL',street:'PRUEBA EN CALLE',city:'MANEJO LIBRE'};for(const k in OFICIALES){MODES['of_'+k]='RECORRIDO OFICIAL · '+OFICIALES[k].n;MNAME['of_'+k]='RECORRIDO '+OFICIALES[k].n}
 for(const k in SEDES){MODES['pl_'+k]='PLANTEL DE '+SEDES[k].n+' (PRELIMINAR)';MNAME['pl_'+k]='PLANTEL '+SEDES[k].n}
 // Arranque: primero se muestra CARGANDO (para que no parezca congelado) y luego se arma el mapa
 const LDTIPS=['Consejo: póngase el cinturón ANTES de arrancar. Sin cinturón no puede manejar.','Consejo: en el ALTO deténgase por completo, aunque no venga nadie.','Consejo: en la rotonda, direccional IZQUIERDA adentro y DERECHA para salir.','Consejo: en la reversa, mire por los espejos y vaya despacio. Un cono tocado cuesta puntos.','Consejo: con amarillo se detiene si lo puede hacer con seguridad.','Consejo: el paso peatonal es del peatón. Ceda siempre.','Dato: en el examen práctico se necesita 80 o más para aprobar.','Consejo: use la direccional unos 30 metros antes de doblar.','Dato: la prueba tiene revisión del vehículo, el plantel y el recorrido en calle.','Consejo: en el estacionamiento tiene 5 intentos. Con calma.'];
-function start(mode){if(window.__syncStart)return startNow(mode);const L=$('loadMsg');if(L){const tp=$('ldTip');if(tp)tp.textContent=pick(LDTIPS);L.classList.remove('hidden')}
+function start(mode){const pk=pkgFor(mode);if(pk&&!PKG_OK[pk]){const L=$('loadMsg');if(L)L.classList.remove('hidden');need(pk).then(()=>{if(L)L.classList.add('hidden');start(mode)},e=>{if(L)L.classList.add('hidden');toast('SIN CONEXIÓN','No se pudo cargar esta parte del juego. Revise el internet e intente de nuevo.','bad')});return}
+  if(window.__syncStart)return startNow(mode);const L=$('loadMsg');if(L){const tp=$('ldTip');if(tp)tp.textContent=pick(LDTIPS);L.classList.remove('hidden')}
   requestAnimationFrame(()=>setTimeout(()=>{try{startNow(mode)}finally{if(L)L.classList.add('hidden')}},60))}
 function startNow(mode){
   logDrive();ARCOK=mode==='city'||mode==='sjlibre'||mode==='alajuela';MODE_NOW=mode;
