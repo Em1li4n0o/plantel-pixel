@@ -1016,7 +1016,7 @@
    "w": 3,
    "l": 5,
    "num": 1,
-   "target": false,
+   "target": true,
    "ocupado": false
   }
  ],
@@ -1285,6 +1285,20 @@
     ]
    ],
    "kind": "barrera"
+  },
+  {
+   "pts": [
+    [
+     251.62,
+     252.02
+    ],
+    [
+     259.12,
+     243.52
+    ]
+   ],
+   "kind": "pintura",
+   "carriles": 1
   }
  ],
  "poles": [],
@@ -1433,7 +1447,7 @@
     ]
    ],
    "w": 7,
-   "grade": 0.25
+   "grade": 0.12
   },
   {
    "pts": [
@@ -1508,5 +1522,152 @@
    "X0": 35739426.52035982,
    "Y0": 63342744.93347377
   }
- }
+ },
+ "exam": [
+  {
+   "tipo": "ir",
+   "x": 172,
+   "y": 184.5,
+   "r": 6,
+   "txt": "Póngase el cinturón [C] y SUBA la RAMPA (12 %) hacia el carril, sin irse para atrás."
+  },
+  {
+   "tipo": "ir",
+   "x": 227,
+   "y": 235,
+   "r": 7,
+   "txt": "Siga por el carril de la IZQUIERDA (flechas hacia abajo) hasta el fondo del plantel."
+  },
+  {
+   "tipo": "ir",
+   "x": 255.3,
+   "y": 250.5,
+   "r": 6,
+   "txt": "Al fondo, dé la curva hacia la IZQUIERDA con direccional [Q]."
+  },
+  {
+   "tipo": "fila",
+   "x": 254.6,
+   "y": 241.4,
+   "txt": "REVISIÓN: deténgase en el primer punto, junto al evaluador. Le va a revisar el vehículo."
+  },
+  {
+   "tipo": "ir",
+   "x": 236.2,
+   "y": 236,
+   "r": 6,
+   "txt": "Dé la curva y suba por el carril del CENTRO (flechas hacia arriba)."
+  },
+  {
+   "tipo": "ir",
+   "x": 221.0,
+   "y": 223.5,
+   "r": 4,
+   "isla": 1,
+   "txt": "Llegue a la isla rayada por la IZQUIERDA y haga ALTO completo en la línea."
+  },
+  {
+   "tipo": "parar",
+   "x": 230.0,
+   "y": 220.0,
+   "r": 5,
+   "txt": "Rodee la parte de arriba de la isla y póngase en el segundo punto, junto al ALTO y la malla. Deténgase.",
+   "dlg": [
+    "Deténgase aquí. Ahora viene el ZIGZAG entre los conos naranja.",
+    "Pase un cono por un lado y el siguiente por el otro, sin tocarlos.",
+    "Al final se detiene y regresa de RETROCESO por la línea blanca hasta este mismo punto.",
+    "Cuando esté listo, puede empezar."
+   ]
+  },
+  {
+   "tipo": "zigzag",
+   "x": 231.92,
+   "y": 226.58,
+   "r": 2.4,
+   "txt": "ZIGZAG (1/4): pase el cono naranja 1 por la derecha, sin tocarlo."
+  },
+  {
+   "tipo": "zigzag",
+   "x": 237.5,
+   "y": 226.81,
+   "r": 2.4,
+   "txt": "ZIGZAG (2/4): pase el cono naranja 2 por la izquierda, sin tocarlo."
+  },
+  {
+   "tipo": "zigzag",
+   "x": 238.66,
+   "y": 232.57,
+   "r": 2.4,
+   "txt": "ZIGZAG (3/4): pase el cono naranja 3 por la derecha, sin tocarlo."
+  },
+  {
+   "tipo": "zigzag",
+   "x": 244.27,
+   "y": 232.77,
+   "r": 2.4,
+   "txt": "ZIGZAG (4/4): pase el cono naranja 4 por la izquierda, sin tocarlo."
+  },
+  {
+   "tipo": "retroceso",
+   "pts": [
+    [
+     254.6,
+     241.4
+    ],
+    [
+     243.2,
+     231.5
+    ],
+    [
+     231.6,
+     221.6
+    ],
+    [
+     230.0,
+     220.0
+    ]
+   ],
+   "ancho": 2.5,
+   "txt": "Deténgase al final del zigzag. Luego RETROCEDA recto por la línea blanca hasta el segundo punto, junto al ALTO."
+  },
+  {
+   "tipo": "parqueo"
+  },
+  {
+   "tipo": "ir",
+   "x": 255.37,
+   "y": 247.77,
+   "r": 5,
+   "txt": "Salga del espacio con cuidado y pase por los DOS CARRILES del fondo, sin pisar la línea blanca del centro."
+  },
+  {
+   "tipo": "alto5",
+   "x": 243.8,
+   "y": 249.4,
+   "txt": "Haga ALTO completo en la línea (cuente 5 segundos). Ahí espera al evaluador."
+  },
+  {
+   "tipo": "ir",
+   "x": 211.5,
+   "y": 219,
+   "r": 5,
+   "parar": true,
+   "txt": "Suba por el carril hacia la salida. En el CEDA y el SEMÁFORO deténgase y espere la luz VERDE."
+  },
+  {
+   "tipo": "ir",
+   "x": 168.5,
+   "y": 180.5,
+   "r": 5,
+   "parar": true,
+   "txt": "Con luz verde, siga hasta la RAMPA y haga ALTO completo en la línea. Baje con el freno, despacio."
+  },
+  {
+   "tipo": "salida",
+   "x": 148,
+   "y": 168.5,
+   "r": 7,
+   "txt": "Baje la rampa con cuidado y salga del plantel por la entrada."
+  }
+ ]
 }

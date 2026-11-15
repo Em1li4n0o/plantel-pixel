@@ -36,6 +36,14 @@ function buildCustom(D){const K=4;if(D)D=normCustom(D);D=D||{w:80,h:60,roads:[{p
   for(const t of D.trees||[]){const x=t.x*K,y=t.y*K;W.trees.push({x,y,r:Math.max(2,(t.r||2)*K*.75)});W.obst.push({x:x-1.5,y:y-1.5,w:3,h:3,type:'tree'})}
   // subidas: el juego empuja el carro cuesta abajo (hay que frenar o usar el freno de mano)
   W.slopes=(D.slopes||[]).filter(q=>q.pts&&q.pts.length>1).map(q=>({seg:[q.pts[0][0]*K,q.pts[0][1]*K,q.pts[1][0]*K,q.pts[1][1]*K],hw:(q.w||7)*K/2,grade:q.grade||.1,n:Math.round((q.grade||.1)*100)+'%'}));if(!W.slopes.length)W.slopes=null;
+  // RELIEVE 3D de las pendientes: una rampa que cruza una calle separa dos niveles (lo de arriba queda alto y lo de abajo bajo);
+  // las demás (zacate) son terreno que BAJA desde su punto 1 (arriba, a la altura de lo que lo rodea) hacia afuera, solo en su franja.
+  if(W.slopes&&W.slopes.length){const rs=[];for(const r of D.roads||[]){const q=r.pts||[];for(let i=0;i<q.length-1;i++){const n=Math.ceil(Math.hypot(q[i+1][0]-q[i][0],q[i+1][1]-q[i][1]));for(let k=0;k<=n;k++)rs.push([(q[i][0]+(q[i+1][0]-q[i][0])*k/n)*K,(q[i][1]+(q[i+1][1]-q[i][1])*k/n)*K])}}
+    const SL=W.slopes.filter(q=>q.seg).map(q=>{const[a,b,c,d]=q.seg,L=Math.hypot(c-a,d-b)||1,ux=(c-a)/L,uy=(d-b)/L;
+      const glob=rs.some(([x,y])=>{const t=(x-a)*ux+(y-b)*uy,l=Math.abs(-(x-a)*uy+(y-b)*ux);return t>L*.2&&t<L*.8&&l<q.hw});return{a,b,ux,uy,L,hw:q.hw,H:q.grade*L,glob}});
+    const AS=(D.areas||[]).filter(a=>a.kind==='asfalto'&&a.pts&&a.pts.length>2).map(a=>a.pts.map(p=>[p[0]*K,p[1]*K])),onAs=(x,y)=>AS.some(pp=>inPoly(x,y,pp))||rs.some(([rx,ry])=>(rx-x)*(rx-x)+(ry-y)*(ry-y)<(6*K)*(6*K));
+    if(SL.length)makeHM(W,4,(x,y)=>{let h=0;for(const s of SL){const t=(x-s.a)*s.ux+(y-s.b)*s.uy,f=s.H*(1-clamp(t/s.L,0,1));
+      if(s.glob)h+=f;else{const l=Math.abs(-(x-s.a)*s.uy+(y-s.b)*s.ux),m=1-clamp((l-s.hw)/12,0,1);if(t>0&&m>0&&!onAs(x,y))h-=s.H*clamp(t/s.L,0,1)*m*(1-clamp((t-s.L)/12,0,1))}}return h})}
   if(D.lim){const q=P(D.lim);W.limP=q;for(let i=0;i<q.length;i++){const[a,b]=q[i],[c,d]=q[(i+1)%q.length],L=Math.hypot(c-a,d-b)||1;for(let t=0;t<=L;t+=2.4)W.circObs.push({x:a+(c-a)*t/L,y:b+(d-b)*t/L,r:1.4,type:'muro'})}}
   W.pslots=[];for(const s of D.slots||[]){const o={cx:s.x*K,cy:s.y*K,ang:s.ang||0,hl:(s.l||5)*K/2,hw:(s.w||2.5)*K/2,target:!!s.target,num:s.num};W.opaved.push(o);W.oslots.push(o);W.pslots.push(o);if(s.ocupado&&!s.target)addParked(W,o.cx,o.cy,o.ang,pick(CARCOLS),pick(['sedan','hatch','suv']))}
   W.pslot=W.pslots.find(o=>o.target)||null;
@@ -84,7 +92,7 @@ const DLG_FILA1=[['EVALUADOR','Muy bien, el vehículo está en orden.'],['EVALUA
 function semState(L,t){const g=L.verde,y=L.kind==='sem3'?L.amarillo:0,rd=L.rojo,T=g+y+rd,k=(((t+L.desfase)%T)+T)%T;return k<g?'V':k<g+y?'A':'R'}
 function semRules(W,P,dt){for(const L of W.cLights){const dx=P.x-L.x,dy=P.y-L.y,al=dx*L.ux+dy*L.uy,lat=Math.abs(dy*L.ux-dx*L.uy),hd=Math.cos(P.h)*L.ux+Math.sin(P.h)*L.uy;
   if(lat<L.w+2&&hd>.3&&P.gear===1){if(L.prev!=null&&L.prev<=0&&al>0){const st=semState(L,S.t);if(st==='R')fault('semR'+L.id,'Pasarse el semáforo en ROJO','I',10);else if(st==='A'&&Math.abs(P.v)*KMH>15)toast('AMARILLO','Con amarillo se detiene si puede hacerlo con seguridad','info')}L.prev=al}else L.prev=null}}
-const PHN={ingreso:'Ingreso',fase1:'Revisión del vehículo',fila:'Fila y revisión del vehículo',ir:'Recorrido (ALTO, CEDA y carril)',zigzag:'Zigzag',rotonda:'Rotonda',reversa:'Reversa',alto5:'ALTO de 5 segundos',parar:'Parada con el evaluador',parqueo:'Estacionamiento',salida:'Salida'};
+const PHN={ingreso:'Ingreso',fase1:'Revisión del vehículo',fila:'Fila y revisión del vehículo',ir:'Recorrido (ALTO, CEDA y carril)',zigzag:'Zigzag',rotonda:'Rotonda',reversa:'Reversa',retroceso:'Retroceso en línea recta',alto5:'ALTO de 5 segundos',parar:'Parada con el evaluador',parqueo:'Estacionamiento',salida:'Salida'};
 // ejercicio en el que va el examen (para el reporte final)
 function curPh(){const k=S&&S.tasks&&S.tasks[S.task];if(!k)return null;if(k.ph)return k.ph;const m=(k.txt||'').match(/^([A-ZÁÉÍÓÚÑ0-9 ]{3,}?)\s*[:·]/);return m?m[1].charAt(0)+m[1].slice(1).toLowerCase():null}
 function customExam(W,D){const K=4,E=D.exam;if(!E||!E.length)return null;const T=[],G=(x,y)=>({x:x*K,y:y*K}),near=(p,r)=>Math.hypot(S.P.x-p.x,S.P.y-p.y)<r*K;
@@ -116,10 +124,24 @@ function customExam(W,D){const K=4,E=D.exam;if(!E||!E.length)return null;const T
       T.push({txt:'Deténgase antes de los carriles de REVERSA: el evaluador le indica el carril.',tgt:at(1*K),check(){if(this.dl||still('rvq',Math.hypot(S.P.x-at(0).x,S.P.y-at(0).y)<10*K,1))return dlgRun(this,[['EVALUADOR','Deténgase aquí. Esta es la parte de CONDUCCIÓN EN REVERSA.'],['EVALUADOR','Le toca el carril '+name+'. Avance recto hasta el ALTO de los conos verdes y deténgase.'],['EVALUADOR','Luego retroceda en línea recta hasta pasar los conos verdes de atrás. Si toca un cono, pierde la prueba.'],['EVALUADOR','Prepárese. Cuando esté listo, ya puede empezar.']]);return false}});
       T.push({txt:'REVERSA: por el carril '+name+', avance hasta el ALTO y deténgase. Después retroceda recto hasta pasar los conos VERDES de atrás.',tgt:at(sEnd),ok:'¡Reversa completada!',
         check(){const P=S.P,q=proj(P.x,P.y),inL=q.d<off*2.2;if(!this.wl&&inL&&Math.sign(q.lat)!==lane&&Math.abs(q.lat)>off*.5&&q.s>sBack&&q.s<sEnd){this.wl=1;fault('rvlane','Usó el carril equivocado en la reversa','II',6)}
-          if(!this.ph){if(inL&&q.s>sEnd-4*K&&Math.abs(P.v)<.4){this.ph=1;this.tgt=at(sBack);toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto. Mire los espejos.','info');say('Ahora retroceda en línea recta.')}return false}
+          if(!this.stg){if(inL&&q.s>sEnd-4*K&&Math.abs(P.v)<.4){this.stg=1;this.tgt=at(sBack);toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto. Mire los espejos.','info');say('Ahora retroceda en línea recta.')}return false}
           if(inL&&P.gear===-1){if(P.v<-1)this.mv=true;if(this.mv&&Math.abs(P.v)<.3&&q.s>sBack+P.L){this.st=(this.st||0)+S.dt;if(this.st>1.2&&!this.fl){this.fl=1;fault('rstop','Detenerse durante el retroceso','IV',2)}}else this.st=0}
           if(q.s<sBack&&Math.abs(P.v)<.4){if(!this.mv)fault('rnoret','No realizó el retroceso en reversa','III',22);return true}return false}});
       T.push({txt:'Avance otra vez hasta el ALTO y deténgase COMPLETAMENTE (cuente 5 segundos).',tgt:at(sEnd),check(){const P=S.P,q=proj(P.x,P.y);if(q.d<off*2.2&&q.s>sEnd-4*K&&Math.abs(P.v)<.3)this.w=(this.w||0)+S.dt;else if(this.w&&this.w<3&&q.s>sEnd){fault('alto5','Arrancó del ALTO sin detenerse lo suficiente','II',6);this.w=99}return this.w>=4.5},ok:'¡Buen ALTO!'})}
+    else if(st.tipo==='retroceso'){const c=st.pts.map(([x,y])=>[x*K,y*K]),seg=[];let L=0;for(let i=0;i<c.length-1;i++){const a=c[i],b=c[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]);seg.push({a,b,l,s0:L});L+=l}
+      const proj=(x,y)=>{let best=null;for(const q of seg){const ux=(q.b[0]-q.a[0])/q.l,uy=(q.b[1]-q.a[1])/q.l,t=clamp((x-q.a[0])*ux+(y-q.a[1])*uy,0,q.l),d=Math.hypot(x-q.a[0]-ux*t,y-q.a[1]-uy*t);if(!best||d<best.d)best={d,s:q.s0+t}}return best};
+      const A={x:c[0][0],y:c[0][1]},B={x:c[c.length-1][0],y:c[c.length-1][1]},ancho=(st.ancho||2.5)*K;
+      // retroceso: llegar al inicio de la línea, detenerse y retroceder recto hasta el final, sin salirse ni detenerse a medio camino
+      T.push({txt:st.txt||'RETROCESO: deténgase al inicio de la línea blanca y retroceda recto por ella, sin detenerse, hasta volver al punto marcado.',tgt:A,ok:'¡Retroceso completado!',
+        start(){this.stg=0;this.mv=false;this.st=0},
+        check(){const P=S.P,q=proj(P.x,P.y);
+          if(!this.stg){if(Math.hypot(P.x-A.x,P.y-A.y)<5*K&&Math.abs(P.v)<.4){this.stg=1;this.tgt=B;toast('AHORA EN REVERSA','Toque S dos veces y retroceda recto por la línea blanca. Mire los espejos.','info');say('Ahora retroceda en línea recta por la línea blanca.')}return false}
+          if(P.gear===-1&&P.v<-1)this.mv=true;
+          if(this.mv&&q.d>ancho&&!this.fo){this.fo=1;fault('rtline','Se salió de la línea durante el retroceso','II',6)}
+          if(this.mv&&Math.abs(P.v)<.3&&q.s<L-4*K){this.st+=S.dt;if(this.st>1.5&&!this.fl){this.fl=1;fault('rstop','Detenerse durante el retroceso','IV',2)}}else this.st=0;
+          if(this.mv&&q.s>=L-3*K&&Math.abs(P.v)<.4)return true;
+          if(!this.mv&&P.gear===1&&P.v>2&&q.s>4*K&&!this.nr){this.nr=1;fault('rnoret','No realizó el retroceso en reversa','III',22)}
+          return false}})}
     else if(st.tipo==='alto5')T.push({txt:st.txt||'Haga ALTO completo (5 segundos).',tgt:p,check(){if(near(p,4)&&Math.abs(S.P.v)<.3)this.w=(this.w||0)+S.dt;return this.w>=4.5},ok:'¡Buen ALTO!'});
     else if(st.tipo==='parqueo'){const o=W.pslot;if(!o)continue;T.push({txt:'ESTACIONAMIENTO EN REVERSA: estaciónese de retroceso en el espacio '+(o.num||'')+' (el amarillo). Tiene 5 intentos. Si toca un cono pierde la prueba.',tgt:{x:o.cx,y:o.cy},ok:'¡Estacionamiento correcto!',
       start(){this.tries=0;this.lg=1;S.dlg={lines:[['EVALUADOR','Vaya y estaciónese de retroceso en el espacio '+(o.num||'')+'. Tiene cinco intentos.']],i:0,t:0,auto:true}},

@@ -48,6 +48,12 @@ Todos los archivos comparten las mismas variables globales (no son módulos). Si
   - **ElevenLabs** (`herramientas/generar_voces_elevenlabs.py`, modelo Eleven v4): con la cuenta gratis usa las voces de fábrica (Chris, Roger, Lily, Bill, Callum y Laura), porque la biblioteca no está disponible por la API en ese plan. Con plan de pago busca en la biblioteca de ElevenLabs la mejor voz latina para cada papel (Profe Pixel vacilón, Profe Tropical reggaetonero relajado, Profe Zen chica dulce o viejito zen, Rocko señor rasposo o chica radical) y genera las frases. Deja `audio/voces/_candidatos.html` para escuchar otras opciones sin gastar créditos. Necesita la clave en `ELEVENLABS_API_KEY`. Las 6 voces gastan unos 2.700 de los 10.000 créditos gratis del mes; el plan gratis no es para uso comercial, así que antes de vender hay que pasar a Starter (USD 6) y volver a generar.
 - **Práctica tranquila** (botón en PLANTELES y en RUTAS): las faltas no restan ni reprueban, el instructor las explica, un accidente no termina la prueba y con R (o tocando el aviso de arriba) se repite el paso. Suena lo-fi y guía el Profe Zen. No cuenta como examen ni da la licencia.
 
+## Plantel de Heredia (San Pedro de Barva)
+
+Dibujado por el equipo en el Creador de planteles (`planteles/heredia-san-pedro-de-barva.json`, copiado en `js/planteles/heredia.js`). Se juega en PLANTELES → HEREDIA · PLANTEL. Examen: subir la rampa (12 %), carril hasta el fondo, REVISIÓN del vehículo, curva y ALTO en la isla rayada, ZIGZAG entre los 4 conos naranja, RETROCESO por la línea blanca, PARQUEO en reversa en el espacio 1, DOS CARRILES, ALTO de 5 segundos, CEDA y SEMÁFORO, ALTO en la rampa y salida. El tipo de fase `retroceso` (retroceder recto por una línea) es nuevo y sirve para cualquier plantel.
+
+**Relieve de las pendientes (todos los planteles del creador):** una pendiente que cruza una calle separa dos niveles y se ve en 3D (el punto 1 es el de arriba); las pendientes en zacate bajan hacia afuera sin tocar el asfalto.
+
 ## Reportes y términos
 
 - **Reportar problema o sugerencia** (en el menú y en la pausa): el jugador elige PROBLEMA, SUGERENCIA o EXAMEN (algo que no es como el real), escribe y lo manda por correo, WhatsApp, el menú de compartir del teléfono o copiando el texto. Lleva datos técnicos (versión, equipo, modo, vehículo y últimos errores) si la casilla queda marcada. Una copia queda en el aparato (`pp_reports`) para subirla cuando exista la base de datos. El correo y el WhatsApp de destino se configuran en `CONTACTO`, en `js/ui/reportes.js`.
