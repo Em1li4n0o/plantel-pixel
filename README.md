@@ -50,7 +50,7 @@ Todos los archivos comparten las mismas variables globales (no son módulos). Si
 
 ## Plantel de Heredia (San Pedro de Barva)
 
-Dibujado por el equipo en el Creador de planteles (`planteles/heredia-san-pedro-de-barva.json`, copiado en `js/planteles/heredia.js`). Se juega en PLANTELES → HEREDIA · PLANTEL. Examen: subir la rampa (12 %), carril hasta el fondo, REVISIÓN junto al evaluador, ZIGZAG hacia arriba entre los 4 conos naranja (a 6 m) hasta el ALTO de la malla, RETROCESO por la línea blanca hasta la X, PARQUEO en reversa en el espacio 1, DOS CARRILES, ALTO de 5 segundos, carril del centro, ALTO en la isla, CEDA y SEMÁFORO (por arriba de la isla no se pasa), ALTO en la rampa y salida. El tipo de fase `retroceso` (retroceder recto por una línea) es nuevo y sirve para cualquier plantel.
+Dibujado por el equipo en el Creador de planteles (`planteles/heredia-san-pedro-de-barva.json`, copiado en `js/planteles/heredia.js`). Se juega en PLANTELES → HEREDIA · PLANTEL. Examen: subir la rampa (12 %), carril hasta el fondo, REVISIÓN junto al evaluador, ZIGZAG hacia arriba entre los 4 conos naranja (a 6 m) hasta el ALTO de la malla, RETROCESO por la línea blanca hasta la X, PARQUEO en reversa en el espacio 1, uno de los DOS CARRILES de salida (separados por una línea blanca) hasta su ALTO junto a la isla, CEDA y SEMÁFORO (por arriba de la isla no se pasa), ALTO en la rampa y salida. El tipo de fase `retroceso` (retroceder recto por una línea) es nuevo y sirve para cualquier plantel.
 
 **Relieve de las pendientes (todos los planteles del creador):** una pendiente que cruza una calle separa dos niveles y se ve en 3D (el punto 1 es el de arriba); las pendientes en zacate bajan hacia afuera sin tocar el asfalto.
 

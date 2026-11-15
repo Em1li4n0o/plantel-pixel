@@ -823,11 +823,6 @@
    "col": "n"
   },
   {
-   "x": 245.49,
-   "y": 240.61,
-   "col": "v"
-  },
-  {
    "x": 245.01,
    "y": 235.78,
    "col": "n"
@@ -1289,12 +1284,12 @@
   {
    "pts": [
     [
-     251.62,
-     252.02
+     247.58,
+     247.43
     ],
     [
-     259.12,
-     243.52
+     220.96,
+     223.55
     ]
    ],
    "kind": "pintura",
@@ -1624,31 +1619,18 @@
   },
   {
    "tipo": "ir",
-   "x": 255.37,
-   "y": 247.77,
-   "r": 5,
-   "txt": "Salga del espacio con cuidado y pase por los DOS CARRILES del fondo, sin pisar la línea blanca del centro."
-  },
-  {
-   "tipo": "alto5",
-   "x": 243.7,
-   "y": 249.4,
-   "txt": "Haga ALTO completo en la línea (cuente 5 segundos). Ahí espera al evaluador."
-  },
-  {
-   "tipo": "ir",
-   "x": 236.1,
-   "y": 235.1,
-   "r": 6,
-   "txt": "Suba por el carril del CENTRO (flechas hacia arriba)."
-  },
-  {
-   "tipo": "ir",
-   "x": 219.8,
-   "y": 223.5,
+   "x": 234.27,
+   "y": 235.49,
    "r": 4,
+   "txt": "Salga del espacio con cuidado y tome UNO de los DOS CARRILES de salida (flechas hacia arriba), sin pisar la línea blanca del centro."
+  },
+  {
+   "tipo": "ir",
+   "x": 222.8,
+   "y": 225.2,
+   "r": 3.5,
    "parar": true,
-   "txt": "Llegue a la isla rayada por la IZQUIERDA y haga ALTO completo en la línea."
+   "txt": "Al final de su carril, junto a la isla rayada, haga ALTO completo en la línea."
   },
   {
    "tipo": "ir",
