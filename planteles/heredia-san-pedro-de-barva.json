@@ -823,8 +823,8 @@
    "col": "n"
   },
   {
-   "x": 249.5,
-   "y": 239.76,
+   "x": 245.49,
+   "y": 240.61,
    "col": "v"
   },
   {
@@ -1540,70 +1540,55 @@
   },
   {
    "tipo": "ir",
-   "x": 255.3,
-   "y": 250.5,
+   "x": 252.5,
+   "y": 252.5,
    "r": 6,
    "txt": "Al fondo, dé la curva hacia la IZQUIERDA con direccional [Q]."
   },
   {
    "tipo": "fila",
-   "x": 254.6,
-   "y": 241.4,
-   "txt": "REVISIÓN: deténgase en el primer punto, junto al evaluador. Le va a revisar el vehículo."
-  },
-  {
-   "tipo": "ir",
-   "x": 236.2,
-   "y": 236,
-   "r": 6,
-   "txt": "Dé la curva y suba por el carril del CENTRO (flechas hacia arriba)."
-  },
-  {
-   "tipo": "ir",
-   "x": 221.0,
-   "y": 223.5,
-   "r": 4,
-   "isla": 1,
-   "txt": "Llegue a la isla rayada por la IZQUIERDA y haga ALTO completo en la línea."
+   "x": 255.4,
+   "y": 247.8,
+   "txt": "REVISIÓN: deténgase al fondo, junto al evaluador. Le va a revisar el vehículo."
   },
   {
    "tipo": "parar",
-   "x": 230.9,
-   "y": 221.22,
+   "x": 250.9,
+   "y": 239.1,
    "r": 5,
-   "txt": "Rodee la parte de arriba de la isla y póngase en el segundo punto, junto al ALTO y la malla. Deténgase.",
+   "txt": "Dé la curva y póngase en el punto junto a la malla, al inicio del ZIGZAG. Deténgase.",
    "dlg": [
-    "Deténgase aquí. Ahora viene el ZIGZAG entre los conos naranja.",
-    "Pase el primer cono por la izquierda (del lado de la malla), el segundo por la derecha, y así, sin tocarlos.",
-    "Al final se detiene y regresa de RETROCESO por la línea blanca hasta este mismo punto.",
+    "Deténgase aquí. Ahora viene el ZIGZAG entre los conos naranja, hacia arriba.",
+    "Pase el primer cono por la izquierda, el siguiente por la derecha (del lado de la malla), y así, sin tocarlos.",
+    "Termina arriba, en el ALTO junto a la malla. Ahí hace ALTO completo.",
     "Cuando esté listo, puede empezar."
    ]
   },
   {
    "tipo": "zigzag",
-   "x": 232.58,
-   "y": 222.65,
+   "x": 243.85,
+   "y": 237.09,
    "r": 2.0,
    "txt": "ZIGZAG (1/4): pase el cono naranja 1 por la izquierda, sin tocarlo."
-  },
-  {
-   "tipo": "zigzag",
-   "x": 234.86,
-   "y": 229.14,
-   "r": 2.0,
-   "txt": "ZIGZAG (2/4): pase el cono naranja 2 por la derecha, sin tocarlo."
   },
   {
    "tipo": "zigzag",
    "x": 241.57,
    "y": 230.6,
    "r": 2.0,
+   "txt": "ZIGZAG (2/4): pase el cono naranja 2 por la derecha, sin tocarlo."
+  },
+  {
+   "tipo": "zigzag",
+   "x": 234.86,
+   "y": 229.14,
+   "r": 2.0,
    "txt": "ZIGZAG (3/4): pase el cono naranja 3 por la izquierda, sin tocarlo."
   },
   {
    "tipo": "zigzag",
-   "x": 243.85,
-   "y": 237.09,
+   "x": 232.58,
+   "y": 222.65,
    "r": 2.0,
    "txt": "ZIGZAG (4/4): pase el cono naranja 4 por la derecha, sin tocarlo."
   },
@@ -1611,24 +1596,28 @@
    "tipo": "retroceso",
    "pts": [
     [
-     254.6,
-     241.4
+     228.6,
+     219.4
+    ],
+    [
+     231.6,
+     221.6
     ],
     [
      243.2,
      231.5
     ],
     [
-     232.4,
-     222.2
+     254.6,
+     241.4
     ],
     [
-     230.9,
-     221.22
+     257.5,
+     244.0
     ]
    ],
    "ancho": 2.5,
-   "txt": "Deténgase al final del zigzag. Luego RETROCEDA recto por la línea blanca hasta el segundo punto, junto al ALTO."
+   "txt": "Haga ALTO arriba, junto a la malla. Luego RETROCEDA recto por la línea blanca, hacia la zona verde, hasta la X blanca."
   },
   {
    "tipo": "parqueo"
@@ -1642,9 +1631,24 @@
   },
   {
    "tipo": "alto5",
-   "x": 243.8,
+   "x": 243.7,
    "y": 249.4,
    "txt": "Haga ALTO completo en la línea (cuente 5 segundos). Ahí espera al evaluador."
+  },
+  {
+   "tipo": "ir",
+   "x": 236.1,
+   "y": 235.1,
+   "r": 6,
+   "txt": "Suba por el carril del CENTRO (flechas hacia arriba)."
+  },
+  {
+   "tipo": "ir",
+   "x": 219.8,
+   "y": 223.5,
+   "r": 4,
+   "parar": true,
+   "txt": "Llegue a la isla rayada por la IZQUIERDA y haga ALTO completo en la línea."
   },
   {
    "tipo": "ir",
@@ -1652,7 +1656,7 @@
    "y": 219,
    "r": 5,
    "parar": true,
-   "txt": "Suba por el carril hacia la salida. En el CEDA y el SEMÁFORO deténgase y espere la luz VERDE."
+   "txt": "Doble a la IZQUIERDA hacia la salida (por arriba de la isla no se pasa). En el CEDA y el SEMÁFORO deténgase y espere la luz VERDE."
   },
   {
    "tipo": "ir",
