@@ -26,7 +26,7 @@ function startNow(mode){
   if(S.arcade)setTimeout(()=>toast('MODO ARCADE','Sin multas · los choques rebotan · TURBO con '+(TOUCH?'el botón TURBO':'SHIFT'),'good'),900);
   toast(MODES[mode],mode==='tuto'?'Siga las instrucciones de arriba, paso a paso.':S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
 }
-function show(id){for(const s of['welScr','rtScr','plScr','menu','rules','end','pause','garage','licScr','theory','prgScr','cfgScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
+function show(id){for(const s of['welScr','rtScr','plScr','menu','rules','end','pause','garage','licScr','theory','prgScr','cfgScr','repScr','tycScr'])$(s).classList.add('hidden');if(id)$(id).classList.remove('hidden')}
 function toMenu(){shush();logDrive();S=null;$('hud').classList.add('hidden');show('menu');ui='menu';refreshMenu();if(engG)engG.gain.value=0;fsPaint()}
 function newDest(){const W=S.W,P=S.P;if(W.taxi){taxiNew();return}let i;do{i=Math.random()*W.dests.length|0}while(S.dest&&W.dests[i]===S.dest&&W.dests.length>1);S.dest=W.dests[i];
   S.destT=S.t;S.destPar=Math.round(12+(Math.abs(S.dest.x-P.x)+Math.abs(S.dest.y-P.y))/30)}

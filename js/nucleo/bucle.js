@@ -101,9 +101,9 @@ let PROF=store.get('pp_prof',null);
 function applyProf(){if(!PROF)return;TOUCH=PROF.dev==='movil';document.body.classList.toggle('touch',TOUCH);const L=LICS.find(l=>l.id===PROF.lic);$('profL').textContent='PERFIL: '+(PROF.dev==='movil'?'TELÉFONO':'COMPUTADORA')+' · '+(L?'LICENCIA '+L.id:'PRÁCTICA LIBRE')+' (CAMBIAR)'}
 function openWelcome(){show('welScr');ui='wel';const sel={dev:PROF?PROF.dev:(TOUCH?'movil':'pc'),lic:PROF?PROF.lic:null};
   $('welLic').innerHTML=LICS.filter(l=>l.id!=='ARCADE').map(l=>`<button data-l="${l.id}" style="min-width:0;padding:calc(var(--u)*1.5) calc(var(--u)*2.5)">${l.id}<small>${l.d}</small></button>`).join('')+'<button data-l="-" style="min-width:0">AÚN NO SÉ<small>solo practicar</small></button>';
-  const paint=()=>{for(const b of $('welDev').children)b.classList.toggle('sel',b.dataset.d===sel.dev);for(const b of $('welLic').children)b.classList.toggle('sel',b.dataset.l===sel.lic);$('welOk').disabled=!(sel.dev&&sel.lic)};
+  const paint=()=>{for(const b of $('welDev').children)b.classList.toggle('sel',b.dataset.d===sel.dev);for(const b of $('welLic').children)b.classList.toggle('sel',b.dataset.l===sel.lic);$('welOk').disabled=!(sel.dev&&sel.lic&&$('welTycChk').checked)};$('welTycChk').checked=tycOk();$('welTycChk').onchange=paint;
   for(const b of $('welDev').children)b.onclick=()=>{sel.dev=b.dataset.d;paint()};for(const b of $('welLic').children)b.onclick=()=>{sel.lic=b.dataset.l;paint()};
-  $('welOk').onclick=()=>{PROF={dev:sel.dev,lic:sel.lic,d:Date.now()};store.set('pp_prof',PROF);const L=LICS.find(l=>l.id===sel.lic);if(L&&!L.t.includes(CAR.type)){CAR.type=L.t[0];store.set('pp_car',CAR)}applyProf();fit();back()};paint()}
+  $('welOk').onclick=()=>{if(!$('welTycChk').checked)return;store.set('pp_tyc',TYC_VER);PROF={dev:sel.dev,lic:sel.lic,d:Date.now()};store.set('pp_prof',PROF);const L=LICS.find(l=>l.id===sel.lic);if(L&&!L.t.includes(CAR.type)){CAR.type=L.t[0];store.set('pp_car',CAR)}applyProf();fit();back()};paint()}
 $('profL').onclick=openWelcome;
 // Pantalla completa (computadora y celular); el botón cambia a SALIR bien visible
 function fsEl(){return document.fullscreenElement||document.webkitFullscreenElement}
@@ -116,6 +116,6 @@ for(const b of document.querySelectorAll('#touch [data-k]')){const k=b.dataset.k
   const down=e=>{e.preventDefault();try{b.setPointerCapture(e.pointerId)}catch(_){}audioInit();if(!keys[k])pressed[k]=true;keys[k]=true;b.classList.add('on');onKey(k)};
   const up=e=>{keys[k]=false;b.classList.remove('on')};
   b.addEventListener('pointerdown',down);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',up);b.addEventListener('lostpointercapture',up);b.addEventListener('contextmenu',e=>e.preventDefault())}
-addEventListener('resize',()=>{fit();fsPaint()});if(window.visualViewport){visualViewport.addEventListener('resize',fit);visualViewport.addEventListener('scroll',fit)}addEventListener('orientationchange',()=>setTimeout(fit,300));applyProf();fit();fsPaint();refreshMenu();if(!PROF)openWelcome();
+addEventListener('resize',()=>{fit();fsPaint()});if(window.visualViewport){visualViewport.addEventListener('resize',fit);visualViewport.addEventListener('scroll',fit)}addEventListener('orientationchange',()=>setTimeout(fit,300));applyProf();fit();fsPaint();refreshMenu();if(!PROF)openWelcome();else if(!tycOk())openTyc();
 cfgApply();requestAnimationFrame(frame);
 if(location.hash==='#custom'&&loadCustom())setTimeout(()=>{try{history.replaceState(null,'',location.pathname)}catch(e){}const w=$('welScr');if(w)w.classList.add('hidden');start('custom')},400);

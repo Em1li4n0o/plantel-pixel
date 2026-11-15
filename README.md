@@ -36,6 +36,11 @@ Los datos que el menú necesita para mostrar nombres (`mundo/datos-rutas.js`) y 
 
 Todos los archivos comparten las mismas variables globales (no son módulos). Si una línea que corre al cargar un archivo usa una función de un archivo que carga después, hay que envolverla en una función flecha (`()=>back()`), para que se busque hasta que se use.
 
+## Reportes y términos
+
+- **Reportar problema o sugerencia** (en el menú y en la pausa): el jugador elige PROBLEMA, SUGERENCIA o EXAMEN (algo que no es como el real), escribe y lo manda por correo, WhatsApp, el menú de compartir del teléfono o copiando el texto. Lleva datos técnicos (versión, equipo, modo, vehículo y últimos errores) si la casilla queda marcada. Una copia queda en el aparato (`pp_reports`) para subirla cuando exista la base de datos. El correo y el WhatsApp de destino se configuran en `CONTACTO`, en `js/ui/reportes.js`.
+- **Términos y privacidad** en `terminos.html`. Se aceptan en la pantalla de bienvenida; a quien ya tenía perfil se le piden una vez al abrir. Si los términos cambian de forma importante, subir `TYC_VER` en `js/ui/reportes.js` para que todos acepten de nuevo.
+
 ## Controles
 
 | Tecla | Acción |

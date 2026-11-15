@@ -46,6 +46,8 @@ addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
 function onKey(k){
   if(!S){
     if(ui==='wel'){if(k==='enter'&&!$('welOk').disabled)$('welOk').onclick();return}
+    if(ui==='tyc'){if(k==='enter')tycAccept();return}
+    if(ui==='rep'){if(k==='escape')repBack();return}
     if(ui==='rules'){if(k==='escape'||k==='enter')back();return}
     if(ui==='lic'){if(k==='escape'||k==='enter')back();return}
     if(ui==='prg'){if(k==='escape')back();return}
@@ -84,7 +86,7 @@ function onKey(k){
 function back(){show('menu');ui='menu';refreshMenu()}
 function openPlanteles(){show('plScr');ui='pl'}
 function openRutas(){show('rtScr');ui='rt'}
-function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);$('cfgScr').classList.add('hidden');if(engG&&S.paused)engG.gain.value=0}
+function togglePause(){S.paused=!S.paused;$('pause').classList.toggle('hidden',!S.paused);$('cfgScr').classList.add('hidden');$('repScr').classList.add('hidden');if(engG&&S.paused)engG.gain.value=0}
 $('b0').onclick=openTheory;$('bSJ').onclick=openPlanteles;$('plSJ').onclick=()=>{audioInit();start('sanjose')};$('plMine').onclick=()=>{if(!loadCustom()){if(confirm('Todavía no ha creado un plantel. ¿Abrir el Creador de planteles?'))location.href='editor.html';return}audioInit();start('custom')};for(const b of document.querySelectorAll('#plScr [data-sede]'))b.onclick=()=>{audioInit();start('pl_'+b.dataset.sede)};for(const b of document.querySelectorAll('#plScr [data-of]'))b.onclick=()=>{audioInit();start('of_'+b.dataset.of)};$('plBack').onclick=back;$('dlg').onclick=()=>{if(S&&S.dlg){S.dlg.i++;S.dlg.t=0}};$('bRT').onclick=openRutas;$('rtC').onclick=()=>{audioInit();start('centro')};$('rtR').onclick=()=>{audioInit();start('r27')};$('rtL').onclick=()=>{audioInit();start('sjlibre')};$('rtB').onclick=()=>{audioInit();start('r32')};$('rtE').onclick=()=>{audioInit();start('tilaran')};$('rtA').onclick=()=>{audioInit();start('alajuela')};$('rtM').onclick=()=>{audioInit();start('manuel')};$('rtD').onclick=()=>{audioInit();start('cerro')};$('rtBack').onclick=back;$('b2').onclick=()=>{audioInit();start('street')};$('b3').onclick=()=>{audioInit();start('city')};
 $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show('rules');ui='rules'};$('b7').onclick=openProgress;$('bT').onclick=()=>{audioInit();start('tuto')};$('bBack').onclick=back;$('licBack').onclick=back;
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;

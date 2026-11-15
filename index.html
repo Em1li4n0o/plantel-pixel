@@ -85,6 +85,7 @@
     <div class="blink sub">PRESIONE UN NÚMERO · ¿PRIMERA VEZ? PULSE 0</div>
     <a id="profL" class="sub" style="color:var(--acc);pointer-events:auto;cursor:pointer"></a>
     <a href="instructor.html" class="sub" style="color:var(--info);pointer-events:auto">PANEL DEL INSTRUCTOR ›</a>
+    <div class="links"><a id="bRep">REPORTAR PROBLEMA O SUGERENCIA</a> · <a href="terminos.html" target="_blank" rel="noopener">TÉRMINOS Y PRIVACIDAD</a></div>
   </div>
 
   <div id="welScr" class="screen hidden">
@@ -94,6 +95,7 @@
     <div class="row" id="welDev"><button data-d="pc">COMPUTADORA<small>con teclado</small></button><button data-d="movil">TELÉFONO O TABLET<small>con botones en pantalla</small></button></div>
     <div class="sub" style="color:var(--acc)">2 · ¿QUÉ LICENCIA ESTÁ SACANDO?</div>
     <div class="row" id="welLic" style="flex-wrap:wrap;justify-content:center;gap:calc(var(--u)*1.5)"></div>
+    <label class="tycChk"><input type="checkbox" id="welTycChk"> Acepto los <a href="terminos.html" target="_blank" rel="noopener">Términos y condiciones y la Política de privacidad</a></label>
     <button id="welOk" disabled>EMPEZAR ▶</button>
   </div>
 
@@ -258,12 +260,33 @@
     <button id="bRestart">REINICIAR</button>
     <button id="bGfx">GRÁFICOS: 32-BIT</button>
     <button id="bCfg">CONFIGURACIÓN</button>
+    <button id="bRepP">REPORTAR PROBLEMA</button>
     <button id="bMenu">MENÚ</button>
   </div>
   <div id="cfgScr" class="screen hidden">
     <h2>CONFIGURACIÓN</h2>
     <div id="cfgRows" style="display:flex;flex-direction:column;gap:calc(var(--u)*2.5);min-width:calc(var(--u)*230)"></div>
     <button id="bCfgBack">VOLVER</button>
+  </div>
+  <div id="repScr" class="screen hidden">
+    <h2>REPORTAR O SUGERIR</h2>
+    <div class="sub">Cuéntenos qué pasó o qué mejoraría. Lo leemos todo.</div>
+    <div class="row" id="repTipo"><button data-t="problema">PROBLEMA<small>algo falla</small></button><button data-t="sugerencia">SUGERENCIA<small>una idea</small></button><button data-t="examen">EXAMEN<small>no es como el real</small></button></div>
+    <textarea id="repTxt" maxlength="1500" rows="5"></textarea>
+    <input id="repQuien" maxlength="80" placeholder="Su nombre o escuela de manejo (opcional)">
+    <label class="tycChk"><input type="checkbox" id="repTec" checked> Incluir datos técnicos (equipo, modo, vehículo y errores) para poder repetir el problema</label>
+    <div class="row" style="flex-wrap:wrap"><button id="repMail">ENVIAR POR CORREO</button><button id="repWa">ENVIAR POR WHATSAPP</button><button id="repShare">COMPARTIR</button><button id="repCopy">COPIAR TEXTO</button></div>
+    <div id="repMsg" class="sub" style="color:var(--good)"></div>
+    <button id="repBack">VOLVER</button>
+  </div>
+  <div id="tycScr" class="screen hidden">
+    <h2>TÉRMINOS Y PRIVACIDAD</h2>
+    <div class="tycBox">
+      <p>Plantel Pixel es un simulador para <b>practicar</b>. No reemplaza las clases con un instructor ni el examen oficial, y no garantiza que usted apruebe. No es un producto del COSEVI ni de Educación Vial.</p>
+      <p>Su progreso, perfil y configuración se guardan <b>solo en este aparato</b>. Si nos manda un reporte, lo hace usted desde su correo o WhatsApp.</p>
+      <p>Lea el texto completo en <a href="terminos.html" target="_blank" rel="noopener">Términos y condiciones y Política de privacidad</a>.</p>
+    </div>
+    <button id="tycOk">ACEPTO Y CONTINÚO ▶</button>
   </div>
 
   <div id="end" class="screen hidden">
@@ -309,6 +332,7 @@
 <script src="js/audio/musica.js"></script>
 <script src="js/examen/repeticion-reto.js"></script>
 <script src="js/ui/entrada.js"></script>
+<script src="js/ui/reportes.js"></script>
 <script src="js/nucleo/bucle.js"></script>
 </body>
 </html>
