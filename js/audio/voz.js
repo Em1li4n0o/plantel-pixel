@@ -14,5 +14,5 @@ function say(txt,cut){if(!VOZ||muted||!window.speechSynthesis||(typeof CFG!=='un
   if(!t)return;const now=performance.now();if(t===SAYLAST&&now-SAYT<4000)return;SAYLAST=t;SAYT=now;
   if(cut||speechSynthesis.pending)speechSynthesis.cancel();
   // frases cortas: Chrome corta las frases largas y suenan más naturales por partes
-  for(const part of t.split(/(?<=[.;?])\s+/)){if(!part.trim())continue;const u=new SpeechSynthesisUtterance(part);u.lang=VOICE?VOICE.lang:'es-CR';if(VOICE)u.voice=VOICE;u.rate=.98;u.pitch=1;speechSynthesis.speak(u)}}catch(e){}}
+  for(const part of t.split(/(?<=[.;?])\s+/)){if(!part.trim())continue;const u=new SpeechSynthesisUtterance(part);u.lang=VOICE?VOICE.lang:'es-CR';if(VOICE)u.voice=VOICE;const pz=typeof instrVoice==='function'?instrVoice():{rate:.98,pitch:1};u.rate=pz.rate;u.pitch=pz.pitch;speechSynthesis.speak(u)}}catch(e){}}
 function shush(){try{speechSynthesis.cancel()}catch(e){}}

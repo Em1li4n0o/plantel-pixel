@@ -36,6 +36,14 @@ Los datos que el menú necesita para mostrar nombres (`mundo/datos-rutas.js`) y 
 
 Todos los archivos comparten las mismas variables globales (no son módulos). Si una línea que corre al cargar un archivo usa una función de un archivo que carga después, hay que envolverla en una función flecha (`()=>back()`), para que se busque hasta que se use.
 
+## Rendimiento, instructores y práctica tranquila
+
+- **Gráficos automáticos** (pausa → GRÁFICOS, o CONFIGURACIÓN): AUTO, ALTOS (32-bit), MEDIOS (16-bit) o BAJOS (16-bit, se dibuja menos lejos, espejos más lentos y 30 cuadros por segundo). En AUTO el juego mide cada cuadro: si el aparato se traba baja de nivel solo, y si va sobrado por un rato vuelve a subir. Está en `js/nucleo/rendimiento.js`.
+- **Ahorro de batería:** nunca más de 60 cuadros por segundo (aunque la pantalla sea de 120 Hz), 30 en los menús, 10 en la pausa, y el audio se suspende con el juego en segundo plano.
+- **Instructores con personalidad** (`js/audio/instructores.js`): cada emisora trae el suyo. PROFE PIXEL (radio apagada), PROFE TROPICAL (Tropical), PROFE ZEN (Lo-fi y práctica tranquila) y ROCKO (Arcade Rock). Cambia el tono de la voz y, en manejo libre, reaccionan a trompos, derrapes, más de 180 km/h, choques, casi-choques y carros aplastados.
+- **Voces grabadas:** el guion para grabar está en `audio/voces/GUION.md`. Cada frase grabada va en `audio/voces/<instructor>/<id>.mp3` y se anota en `VOCES_GRABADAS`; si no existe, se usa la voz del navegador.
+- **Práctica tranquila** (botón en PLANTELES y en RUTAS): las faltas no restan ni reprueban, el instructor las explica, un accidente no termina la prueba y con R (o tocando el aviso de arriba) se repite el paso. Suena lo-fi y guía el Profe Zen. No cuenta como examen ni da la licencia.
+
 ## Reportes y términos
 
 - **Reportar problema o sugerencia** (en el menú y en la pausa): el jugador elige PROBLEMA, SUGERENCIA o EXAMEN (algo que no es como el real), escribe y lo manda por correo, WhatsApp, el menú de compartir del teléfono o copiando el texto. Lleva datos técnicos (versión, equipo, modo, vehículo y últimos errores) si la casilla queda marcada. Una copia queda en el aparato (`pp_reports`) para subirla cuando exista la base de datos. El correo y el WhatsApp de destino se configuran en `CONTACTO`, en `js/ui/reportes.js`.

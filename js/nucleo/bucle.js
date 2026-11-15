@@ -13,8 +13,8 @@ function step(dt){
   const px=P.x,py=P.y;
   updatePlayer(W,P,dt);if(S.over)return;
   rules(W,P,px,py,dt);if(S.over)return;if(W.tolls)tollRules(W,P,dt);if(W.r32)r32Rules(W,P,dt);if(W.pstops)pstopRules(W,P,dt);if(W.cLights&&W.cLights.length)semRules(W,P,dt);if(S.over)return;
-  updateWorld(W,P,dt,S.t);if(S.over)return;
-  if(S.exam){const tk=S.tasks[S.task];if(tk){if(!tk.started){tk.started=true;tk.start&&tk.start();say(tk.txt,true)}
+  updateWorld(W,P,dt,S.t);if(S.over)return;if(!S.exam)stuntStep(P,dt);
+  if(S.exam){const tk=S.tasks[S.task];if(tk){if(!tk.started){tk.started=true;calmSnap();tk.start&&tk.start();say(tk.txt,true)}
       if(tk.check()){toast('✔ '+(tk.ok||'¡LISTO!'),'','good');sfx.good();S.task++;if(S.task>=S.tasks.length)endExam('done')}}}
   else if(W.taxi){taxiStep(W,P,dt);lapStep(W,P)}
   else{const d=S.dest;if(Math.hypot(P.x-d.x,P.y-d.y)<16){S.deliv++;const el=S.t-S.destT,bonus=Math.max(0,Math.round((S.destPar-el)*5)),mult=1+Math.min(S.streak,6)*.5;
@@ -44,7 +44,7 @@ function updateHUD(){const P=S.P;let tg=null;{const ct=clockTxt();if(ct&&!S.mapO
 let last=performance.now(),acc=0;
 function hideSplash(){const e=$('splash');if(!e||e.dataset.out)return;e.dataset.out=1;const go=()=>{e.classList.add('out');setTimeout(()=>e.remove(),500)};(document.fonts&&document.fonts.ready?document.fonts.ready:Promise.resolve()).then(()=>setTimeout(go,250))}
 setTimeout(()=>{try{hideSplash()}catch(e){}},8000);
-function frame(now){requestAnimationFrame(frame);try{tick(now)}catch(e){console.error(e)}}
+function frame(now){requestAnimationFrame(frame);if(!perfGate(now))return;const t0=performance.now();try{tick(now)}catch(e){console.error(e)}perfMeasure(performance.now()-t0,now)}
 function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
   if(ui==='theory'){if(TH.mode)thHead();const q=TH.mode&&TH.list[TH.i];if(q&&q.s&&q.s.endsWith('f'))drawSign(q.s,performance.now()/1000)}
   if(S&&S.replay){drawReplay(dt);return}
@@ -75,7 +75,7 @@ function tick(now){const dt=Math.max(0,Math.min(.05,(now-last)/1000));last=now;
       let pt=keys.f?1:0;if(!pt&&Math.abs(P.v)<4)for(const st of W.stops){if(st.kind!=='light')continue;const hz2=st.dir==='E'||st.dir==='W';const lat=hz2?P.y:P.x;if(lat<st.a-3||lat>st.b+3)continue;const sg=(st.dir==='E'||st.dir==='S')?1:-1;const d=(st.pos-(hz2?P.x:P.y))*sg;const dv=dirVec[st.dir];if(d>-2&&d<30&&(c*dv[0]+s*dv[1])>.5){pt=.75;break}}
       S.pitch=(S.pitch||0)+(pt-(S.pitch||0))*Math.min(1,dt*5);const slp=P.slope?P.slAl*P.slope.grade:0;S.slp=(S.slp||0)+(slp-(S.slp||0))*Math.min(1,dt*4);{const acc=(P.v-(S.pv??P.v))/Math.max(dt,1e-3);S.pv=P.v;S.nod=(S.nod||0)+(clamp(acc*.18,-6,6)-(S.nod||0))*Math.min(1,dt*5)}VMAIN.hz=Math.round(84+S.pitch*80-S.slp*280+(S.lp||0)*90+(S.nod||0));
       const hh=P.h+S.look+(S.yaw||0);render3D(VMAIN,{x:P.x+c+s*1.5,y:P.y+s-c*1.5,z:4-Math.min(3,(P.sea||0)*1.8),h:hh,c:Math.cos(hh),s:Math.sin(hh)},W,P,S.t,false);
-      S.mirF=((S.mirF||0)+1)%3;if(S.mirF===0)render3D(VMIR,{x:P.x-c*2+s*1.5,y:P.y-s*2-c*1.5,z:4.3,h:P.h+Math.PI,c:-c,s:-s},W,P,S.t,true);
+      S.mirF=((S.mirF||0)+1)%(QL?3:6);if(S.mirF===0)render3D(VMIR,{x:P.x-c*2+s*1.5,y:P.y-s*2-c*1.5,z:4.3,h:P.h+Math.PI,c:-c,s:-s},W,P,S.t,true);
       if(S.look<-.25){const a=P.h+Math.PI+.22;render3D(VSL,{x:P.x+c*1.5+s*5,y:P.y+s*1.5-c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
       if(S.look>.25){const a=P.h+Math.PI-.22;render3D(VSR,{x:P.x+c*1.5-s*5,y:P.y+s*1.5+c*5,z:4,h:a,c:Math.cos(a),s:Math.sin(a)},W,P,S.t,true)}
       g.drawImage(VMAIN.c,0,0);evOver(true);wipers(S.t);cockpit(P,S.t);const tg=updateHUD();if(!S.over)compass(P,tg);drawMini(W,P,tg)}

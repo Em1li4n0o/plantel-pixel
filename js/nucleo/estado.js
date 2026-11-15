@@ -21,7 +21,7 @@ function startNow(mode){
   if(document.body.classList.contains('touch')){const k=Math.min(80/mw,47/mh);mini.style.width=`calc(var(--u)*${(mw*k).toFixed(1)})`;mini.style.height=`calc(var(--u)*${(mh*k).toFixed(1)})`;mini.style.top='calc(var(--u)*31)';mini.style.bottom='auto'}
   else{const k=Math.min(90/mw,80/mh);mini.style.width=`calc(var(--u)*${(mw*k).toFixed(1)})`;mini.style.top='';mini.style.bottom='';mini.style.height=`calc(var(--u)*${(mh*k).toFixed(1)})`}
   show(null);$('hud').classList.remove('hidden');ui=null;
-  $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio2',true);shush();
+  $('banner').textContent='';$('toasts').innerHTML='';fsPaint();wxInit();calmInit();S.trace=[];S.radio=!S.exam&&store.get('pp_radio2',true);shush();
   S.arcade=isArc(S.P.type);if(isArc(CAR.type)&&!ARCOK)toast('VEHÍCULO DE LICENCIA','Los vehículos arcade son solo para manejo libre; aquí usa un sedán','info');
   if(S.arcade)setTimeout(()=>toast('MODO ARCADE','Sin multas · los choques rebotan · TURBO con '+(TOUCH?'el botón TURBO':'SHIFT'),'good'),900);
   toast(MODES[mode],mode==='tuto'?'Siga las instrucciones de arriba, paso a paso.':S.exam?'Siga las instrucciones de arriba. Mínimo 80 puntos.':'Llegue a destinos: rápido pero legal. ¡No enoje a los demás!','info');
@@ -35,15 +35,17 @@ function toast(title,txt,kind='info'){const d=document.createElement('div');d.cl
 const QUIET=new Set(['belt','off','speed','inc','exit','rnoret','cut']);
 function fault(code,text,cat,cdSec=5){if(!S||S.over||S.arcade)return;if(S.mode==='tuto'){if(!S.cd[code]||S.t>S.cd[code]){S.cd[code]=S.t+4;toast('OJO',text,'info')}return}if(S.cd[code]&&S.t<S.cd[code])return;S.cd[code]=S.t+cdSec;const pts=CAT[cat];
   S.faults.push({t:S.t,text,cat,pts,ph:curPh(),x:Math.round(S.P.x),y:Math.round(S.P.y)});
-  if(S.exam){S.score-=pts;say('Falta. '+text);if(S.score<80&&!S.failed){S.failed=true;$('banner').textContent='REPROBADO · siga practicando o pulse R'}toast(`FALTA CAT. ${cat} · -${pts}`,text,'bad')}
+  if(S.exam&&S.calm)calmFault(text,cat);
+  else if(S.exam){S.score-=pts;say('Falta. '+text);if(S.score<80&&!S.failed){S.failed=true;$('banner').textContent='REPROBADO · siga practicando o pulse R'}toast(`FALTA CAT. ${cat} · -${pts}`,text,'bad')}
   else{S.infr++;(S.wl=S.wl||[]).push(S.t);const lost=S.streak>0;S.streak=0;S.pts=Math.max(0,S.pts-50);toast(`INFRACCIÓN · CAT. ${cat}`,text+` · -50 pts${lost?' · ¡RACHA PERDIDA!':''}`,'bad')}
   if(!QUIET.has(code.replace(/\d+$/,'')))angerNear(S.W,S.P.x,S.P.y,95);
   sfx.bad()}
 function boing(v){beep(160+Math.random()*60,.18,'square',.1,420);beep(90,.25,'sawtooth',.08,-40)}
 function fatal(text){if(S.over||S.arcade)return;if(S.mode==='tuto'){toast('¡CUIDADO!',text,'bad');S.P.v=0;return}sfx.crash();angerNear(S.W,S.P.x,S.P.y,120);
-  if(S.exam){S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});S.score-=32;endExam('crash',text)}
+  if(S.exam&&S.calm){S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});calmCrash(text)}
+  else if(S.exam){S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});S.score-=32;endExam('crash',text)}
   else{S.infr++;(S.wl=S.wl||[]).push(S.t);S.streak=0;S.pts=Math.max(0,S.pts-100);S.faults.push({t:S.t,text,cat:'I',pts:32,x:Math.round(S.P.x),y:Math.round(S.P.y)});toast('¡ACCIDENTE!',text+' · -100 pts','bad');S.respawn=1.6;S.P.v=0}}
-function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;
+function endExam(reason,txt){S.over=true;if(engG)engG.gain.value=0;if(S.calm){calmEnd(reason);return}
   if(S.mode==='tuto'){$('endTitle').textContent='¡TUTORIAL COMPLETADO!';$('endTitle').style.color='var(--good)';$('endLic').classList.add('hidden');$('endSub').textContent='Ya sabe manejar el simulador. Siga con el EXAMEN TEÓRICO (1) o practique en MANEJO LIBRE (5). Las reglas completas están en REGLAS (9).';$('endList').innerHTML='';show('end');ui='end';sfx.fanfare();return}
   const ok=reason==='done'&&S.score>=80;S.okRes=ok;logDrive();checkDaily();$('bReplay').classList.toggle('hidden',!S.faults.length);say(reason==='crash'?'Accidente. Prueba terminada.':ok?'¡Felicidades, aprobó!':'Reprobado. Siga practicando.',true);$('endTitle').textContent=reason==='crash'?'¡ACCIDENTE!':ok?'¡APROBADO!':'REPROBADO';$('endTitle').style.color=ok?'var(--good)':'var(--bad)';
   let extra='';const prog=store.get('pp_prog',{});

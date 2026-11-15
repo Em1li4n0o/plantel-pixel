@@ -365,7 +365,7 @@ function render3D(V,C,W,P,t,mirror){CURW=W;HMON=!!W.hm&&!TOUCH;if(HMON)C.z+=hgt(
     const fog=f>FG?Math.min(1,(f-FG)/(160-FK*90)):0;const row=y*w;
     const BL=V.fine&&f<32;for(let x=0;x<w;x++){let c=(wx>=0&&wy>=0&&wx<bw-1&&wy<bh-1)?(BL?bil32(bg,bw,wx-.5,wy-.5):bg[(wy|0)*bw+(wx|0)]):GRASS32;if(fog)c=mix32(c,HAZE32,fog);buf[row+x]=c;wx+=rx;wy+=ry}}
   V.ctx.putImageData(V.img,0,0);
-  LIGHTQ=[];drawObjects3D(V,C,W,P,t,mirror?220:340,mirror);atmo3D(V,C,W,P,t,mirror);flushLights(V.ctx,C,V);
+  LIGHTQ=[];drawObjects3D(V,C,W,P,t,mirror?(QL?220:160):(QL?340:250),mirror);atmo3D(V,C,W,P,t,mirror);flushLights(V.ctx,C,V);
   if(S&&S.W===W){const ctx=V.ctx;if(S.inTun&&W.tunPts){ctx.save();ctx.globalCompositeOperation='lighter';for(const q of W.tunPts){const B=bill(C,V,q[0],q[1],9.5);if(B&&B.f<200)glow(ctx,B.x,B.y,Math.max(2,2.2*B.k),'rgba(255,170,60,.9)')}ctx.restore()}
     if(S.fogK>.02){ctx.fillStyle=`rgba(214,222,228,${.55*S.fogK})`;ctx.fillRect(0,0,V.w,V.h)}}}
 function cockpit(P,t){const col=P.col;const ox=Math.round(-clamp((S.look||0)+(S.yaw||0),-1.4,1.4)*215),oy=Math.round((S.pitch||0)*70);

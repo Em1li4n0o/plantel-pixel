@@ -150,3 +150,7 @@ input{font-family:inherit;font-size:calc(var(--u)*4.4);padding:calc(var(--u)*2.5
 #repTipo button.sel,#repTipo button.sel small{background:var(--acc);color:#000}
 .tycBox{max-width:calc(var(--u)*250);font:max(14px,calc(var(--u)*4.8))/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#dfe6ff;text-align:left}
 .tycBox p{margin:0 0 calc(var(--u)*3)}
+/* práctica tranquila */
+.calmBtn{min-width:0;padding:calc(var(--u)*2) calc(var(--u)*5);font-size:calc(var(--u)*3.8)}
+.calmBtn.calmOn{background:linear-gradient(180deg,#3b4a7a,#26305a);color:#cfe0ff;border-color:#0a0d1c;box-shadow:0 0 calc(var(--u)*5) rgba(140,170,255,.35)}
+#banner.calmBan{color:#bcd0ff;pointer-events:auto;cursor:pointer;font-size:calc(var(--u)*4)}

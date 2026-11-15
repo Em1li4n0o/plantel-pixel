@@ -71,7 +71,7 @@ function onKey(k){
   if(k==='t'){toggleFoot();return}
   if(k==='l'&&!S.foot){P.lights=!P.lights;sfx.gear();toast(P.lights?'LUCES ENCENDIDAS':'LUCES APAGADAS','',P.lights?'good':'info');return}
   if(k==='i'){VOZ=!VOZ;store.set('pp_voz',VOZ);if(!VOZ)shush();toast(VOZ?'VOZ DEL INSTRUCTOR ACTIVADA':'VOZ DEL INSTRUCTOR APAGADA','','info');return}
-  if(k==='o'){if(S.exam){toast('RADIO','En el examen no hay radio: concéntrese','info');return}if(!S.radio){S.radio=true}else if(CFG.station<STATIONS.length-1){CFG.station++}else{S.radio=false;CFG.station=0}cfgSave();store.set('pp_radio2',S.radio);S.radioT=8;if(!S.radio)shush();toast(S.radio?STATIONS[CFG.station].n:'RADIO APAGADA',S.radio?STATIONS[CFG.station].d+' · [O] cambia de emisora':'','info');return}
+  if(k==='o'){if(S.exam){toast('RADIO','En el examen no hay radio: concéntrese','info');return}if(!S.radio){S.radio=true}else if(CFG.station<STATIONS.length-1){CFG.station++}else{S.radio=false;CFG.station=0}cfgSave();store.set('pp_radio2',S.radio);S.radioT=8;if(!S.radio)shush();toast(S.radio?STATIONS[CFG.station].n:'RADIO APAGADA',S.radio?STATIONS[CFG.station].d+' · [O] cambia de emisora':'','info');setTimeout(instrHello,900);return}
   if(S.foot&&'qehgcb'.includes(k))return;
   if(k==='q'){P.blinkL=!P.blinkL;P.blinkR=false;P.haz=false;P.bh0=P.h;P.armed=false}
   if(k==='e'){P.blinkR=!P.blinkR;P.blinkL=false;P.haz=false;P.bh0=P.h;P.armed=false}
@@ -82,7 +82,7 @@ function onKey(k){
   if(k==='v'){if(!S.fp){S.fp=true;S.chase=false}else if(!S.chase&&S.mode!=='tuto'){S.chase=true;S.camH=P.h}else{S.fp=false;S.chase=false}store.set('pp_fp',S.fp);store.set('pp_chase',!!S.chase);
     if(S.chase){toast('VISTA DESDE ATRÁS','Cambie con [V]','info');return}toast(S.fp?'VISTA DE PILOTO':'VISTA DESDE ARRIBA',S.fp?'Z/X: mirar espejos laterales · F: mirar arriba (semáforo)':'Cambie con [V]','info')}
   if(k==='n'){muted=!muted;if(muted)shush();toast(muted?'SONIDO APAGADO':'SONIDO ENCENDIDO','','info')}
-  if(k==='r')start(S.mode)}
+  if(k==='r'){if(S.calm&&!S.over)calmRewind();else start(S.mode)}}
 function back(){show('menu');ui='menu';refreshMenu()}
 function openPlanteles(){show('plScr');ui='pl'}
 function openRutas(){show('rtScr');ui='rt'}
@@ -92,8 +92,8 @@ $('b4').onclick=openGarage;$('b5').onclick=showLicense;$('b6').onclick=()=>{show
 $('gPrev').onclick=()=>garage(-1,0);$('gNext').onclick=()=>garage(1,0);$('gCol').onclick=()=>garage(0,1);$('gOk').onclick=back;
 $('bResume').onclick=togglePause;
 function cfgDraw(){const pc=v=>Math.round(v*100)+'%',row=(lbl,val,id)=>`<div style="display:flex;justify-content:space-between;align-items:center;gap:calc(var(--u)*4)"><span>${lbl}</span><span style="display:flex;align-items:center;gap:calc(var(--u)*2)"><button data-c="${id}" data-d="-1" style="min-width:0;padding:calc(var(--u)*2) calc(var(--u)*3)">-</button><b style="min-width:calc(var(--u)*44);text-align:center;color:var(--acc)">${val}</b><button data-c="${id}" data-d="1" style="min-width:0;padding:calc(var(--u)*2) calc(var(--u)*3)">+</button></span></div>`;
-  $('cfgRows').innerHTML=row('MÚSICA',pc(CFG.music),'music')+row('EFECTOS Y MOTOR',pc(CFG.sfx),'sfx')+row('VOZ DEL INSTRUCTOR',CFG.voice?'SÍ':'NO','voice')+row('EMISORA',STATIONS[CFG.station].n.replace(/ [0-9.]+$/,''),'station')+row('BRILLO',pc(CFG.bright),'bright')+row('GRÁFICOS',GFX+'-BIT','gfx');
+  $('cfgRows').innerHTML=row('MÚSICA',pc(CFG.music),'music')+row('EFECTOS Y MOTOR',pc(CFG.sfx),'sfx')+row('VOZ DEL INSTRUCTOR',CFG.voice?'SÍ':'NO','voice')+row('EMISORA',STATIONS[CFG.station].n.replace(/ [0-9.]+$/,''),'station')+row('BRILLO',pc(CFG.bright),'bright')+row('GRÁFICOS',gqLabel(),'gfx');
   for(const b of $('cfgRows').querySelectorAll('button'))b.onclick=()=>{const k=b.dataset.c,d=+b.dataset.d;
     if(k==='music'||k==='sfx')CFG[k]=clamp(Math.round((CFG[k]+d*.1)*10)/10,0,1);else if(k==='bright')CFG.bright=clamp(Math.round((CFG.bright+d*.1)*10)/10,.6,1.5);else if(k==='voice'){CFG.voice=!CFG.voice;if(!CFG.voice)shush()}
-    else if(k==='station')CFG.station=(CFG.station+d+STATIONS.length)%STATIONS.length;else if(k==='gfx')setGfx(GFX===32?16:32);cfgSave();if(k==='sfx')beep(660,.08,'square',.1);cfgDraw()}}
-$('bCfg').onclick=()=>{show('cfgScr');cfgDraw()};$('bCfgBack').onclick=()=>{show('pause')};$('bGfx').textContent='GRÁFICOS: '+GFX+'-BIT';$('bGfx').onclick=()=>setGfx(GFX===32?16:32);$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
+    else if(k==='station')CFG.station=(CFG.station+d+STATIONS.length)%STATIONS.length;else if(k==='gfx')cycleGq(d);cfgSave();if(k==='sfx')beep(660,.08,'square',.1);cfgDraw()}}
+$('bCfg').onclick=()=>{show('cfgScr');cfgDraw()};$('bCfgBack').onclick=()=>{show('pause')};$('bGfx').textContent='GRÁFICOS: '+gqLabel();$('bGfx').onclick=()=>cycleGq(1);$('bRestart').onclick=()=>start(S.mode);$('bMenu').onclick=toMenu;$('bAgain').onclick=()=>start(S.mode);$('bReplay').onclick=startReplay;$('game').addEventListener('click',()=>{if(S&&S.replay)nextReplay()});$('bMenu2').onclick=toMenu;
