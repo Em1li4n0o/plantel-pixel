@@ -1,0 +1,56 @@
+{
+ "general/eleven": {
+  "voice_id": "94zOad0g7T7K4oa7zhDq",
+  "owner": "027c973dc3f5795166a060701677e1a8542f48d44104dc42fc0325deae59bf17",
+  "name": "Mauricio - Calm and Conversational",
+  "accent": "latin american",
+  "age": "middle_aged",
+  "desc": "Neutral Spanish with conversational and calm voice.",
+  "preview": "https://storage.googleapis.com/eleven-public-prod/aMFLZudGpbVyEMAcpCuGoohryKG2/voices/94zOad0g7T7K4oa7zhDq/18baea3b-d7ee-4863-994b-ac3f59315999.mp3"
+ },
+ "tropical/eleven": {
+  "voice_id": "zwDSHuqO0tEVwNUuHmR1",
+  "owner": "e68834e3b3e3aeb473189dc94b5a769cae7d6534e0aa29fc0b11024c33a494c9",
+  "name": "Ivan - Puerto Rico",
+  "accent": "puerto rican",
+  "age": "young",
+  "desc": "An energetic, charismatic influencer-style voice inspired by Puerto Rico’s reggaeton culture, with a confident urban tone and a smooth, rhythmic delivery.",
+  "preview": "https://storage.googleapis.com/eleven-public-prod/database/user/NumRVjJHPAQnbPjidUE8JjNtRmY2/voices/zwDSHuqO0tEVwNUuHmR1/4e8d78e9-0298-45c8-8a3d-7006c35aca69.mp3"
+ },
+ "lofi/dulce": {
+  "voice_id": "CaJslL1xziwefCeTNzHv",
+  "owner": "5d0a801649832bdc90fc6b58ac890a1e97cce61eba920e8a5313f08f4dcdfde2",
+  "name": "Cristina Campos - Friendly and Soft",
+  "accent": "latin american",
+  "age": "young",
+  "desc": "Middle aged mexican female with a friendly conversational tone. Great for live conversations.",
+  "preview": "https://storage.googleapis.com/eleven-public-prod/database/workspace/c093a158b7da4dadb8f9a5fae10b7211/voices/CaJslL1xziwefCeTNzHv/piQKkajjFXnelvIxcX33.mp3"
+ },
+ "lofi/abuelo": {
+  "voice_id": "9TcPbUAhHnAV8mzFDAWU",
+  "owner": "64c349917b964dd091bf8969e5e4965071c3c5f80d47c792aaff5f309f2f8dc9",
+  "name": "El Faraón - Powerful and Resonant",
+  "accent": "latin american",
+  "age": "old",
+  "desc": "Un abuelo cálido y cercano que cautiva con sus historias y su voz.",
+  "preview": "https://storage.googleapis.com/eleven-public-prod/database/workspace/90876024874e40ea85f2cfb45b7670c5/voices/9TcPbUAhHnAV8mzFDAWU/iEBnqaTXyJ8kEnzAeU1D.mp3"
+ },
+ "rock/rasposo": {
+  "voice_id": "dhwafD61uVd8h85wAZSE",
+  "owner": "2b882928cc8ad7196bc9c8f7ff4903c1bc843a4a15dcdbd79f794192abdf86b2",
+  "name": "Denzel - Jamaican, Raspy, and Deep",
+  "accent": "jamaican",
+  "age": "middle_aged",
+  "desc": "Authentic West Indian, Jamaican, Raspy Voice with a slight Edgy Rasta, Caribbean Island Vibe. Rough, Gangsta voice. Great for video games, cartoons and YouTube animation videos. Denzel is great for st",
+  "preview": "https://storage.googleapis.com/eleven-public-prod/database/user/dUyA4CaXwyRFdc2NTymn3nLguC53/voices/dhwafD61uVd8h85wAZSE/EOLG9k5FU1CThPTXx41r.mp3"
+ },
+ "rock/radical": {
+  "voice_id": "ajOR9IDAaubDK5qtLUqQ",
+  "owner": "5936c7495ba60119254818c2c1d4468cd5daaec31c57bdef4f9fa77f7b11b134",
+  "name": "Daniela - Warm, Clear and Positive",
+  "accent": "latin american",
+  "age": "young",
+  "desc": "Energetic and engaging young female Spanish speaker with a warm, clear, and expressive tone. Perfect for podcasts, customer service, and interactive content, delivering messages with authenticity and ",
+  "preview": "https://storage.googleapis.com/eleven-public-prod/database/user/T90Udpqx9jb0vfLESHZelKuHE5C3/voices/ajOR9IDAaubDK5qtLUqQ/TUnu15o9th6rXqdRHZfw.mp3"
+ }
+}

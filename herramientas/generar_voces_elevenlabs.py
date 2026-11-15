@@ -1,6 +1,6 @@
 # Voces del instructor con ElevenLabs (https://elevenlabs.io).
 #
-# Necesita una clave de la API de ElevenLabs en la variable ELEVENLABS_API_KEY (la clave se crea en
+# Necesita una clave de la API de ElevenLabs: el programa la pide al empezar (o la toma de ELEVENLABS_API_KEY). Se crea en
 # elevenlabs.io > Developers > API Keys; NO la guarde en el repositorio). Solo usa la biblioteca estándar de Python.
 #
 #   python herramientas/generar_voces_elevenlabs.py            busca voces, elige la mejor para cada papel y genera todo
@@ -19,7 +19,11 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 API = 'https://api.elevenlabs.io/v1'
 PICKS = os.path.join(ROOT, 'herramientas', 'voces_elevenlabs.json')
 CANDS = os.path.join(ROOT, 'herramientas', '_candidatos.json')
-MODEL = 'eleven_multilingual_v2'
+MODELS = ['eleven_v4', 'eleven_multilingual_v2']  # se prueba el más expresivo primero; si la cuenta no lo tiene, el siguiente
+# Cuenta gratis: ElevenLabs no deja usar por la API las voces de la biblioteca, solo sus voces de fábrica (hablan español
+# con el modelo multilingüe). Estas son las que mejor calzan con cada papel; con plan de pago se usan las de la biblioteca.
+FABRICA = {'general/eleven': 'Chris', 'tropical/eleven': 'Roger', 'lofi/dulce': 'Lily', 'lofi/abuelo': 'Bill',
+           'rock/rasposo': 'Callum', 'rock/radical': 'Laura'}
 # papel: qué buscar en la biblioteca y cómo debe sonar (estabilidad baja = más expresiva; style = más actuada)
 ROLES = {
     'general/eleven': dict(gender='male', age='middle_aged', search=['conversational', 'casual', ''], quiere='Hombre de unos 30 años, voz neutra pero interesante, vacilona y tranquila',
@@ -39,9 +43,12 @@ LATAM = ('latin', 'mexic', 'colomb', 'venez', 'argent', 'chile', 'peru', 'costa'
 CARIBE = ('puerto', 'caribbean', 'domin', 'cuba', 'colomb', 'venez', 'panam')
 
 def key():
-    k = os.environ.get('ELEVENLABS_API_KEY', '').strip()
-    if not k:
-        sys.exit('Falta la clave. En PowerShell:  $env:ELEVENLABS_API_KEY="su-clave"   y vuelva a correr este comando.')
+    k = os.environ.get('ELEVENLABS_API_KEY', '').strip().strip('"\'= ')
+    if not k:  # si no está en la variable, se pide aquí (no se ve en pantalla al pegarla)
+        import getpass
+        k = getpass.getpass('Pegue su clave de ElevenLabs (no se verá al pegarla) y presione Enter: ').strip().strip('"\'= ')
+        if not k: sys.exit('No se recibió ninguna clave.')
+        os.environ['ELEVENLABS_API_KEY'] = k
     return k
 
 def req(method, path, body=None, raw=False):
@@ -107,22 +114,47 @@ def elegir(rk, n):
     json.dump(picks, open(PICKS, 'w', encoding='utf-8'), ensure_ascii=False, indent=1)
     print(f'{rk} → {picks[rk]["name"]}. Ahora corra: generar {rk}')
 
+USE_LANG = True
+def tts(vid, txt, vs):
+    global MODELS, USE_LANG
+    while True:
+        body = {'text': txt, 'model_id': MODELS[0], 'voice_settings': dict(vs, use_speaker_boost=True)}
+        if USE_LANG: body['language_code'] = 'es'
+        try:
+            return req('POST', f'/text-to-speech/{vid}?output_format=mp3_44100_64', body, raw=True)
+        except RuntimeError as e:
+            m = str(e)
+            if USE_LANG and 'language' in m.lower(): USE_LANG = False; continue
+            if len(MODELS) > 1 and ('model' in m.lower() or 'language_code' in m or ' 400 ' in m or ' 422 ' in m):
+                print(f'  (el modelo {MODELS[0]} no está disponible para esta cuenta; uso {MODELS[1]})'); MODELS = MODELS[1:]; continue
+            raise
+
 def generar(solo=None):
-    picks = json.load(open(PICKS, encoding='utf-8'))
     I = lines()
-    mine = {v['voice_id'] for v in req('GET', '/voices').get('voices', [])}
+    sub = req('GET', '/user/subscription'); gratis = (sub.get('tier') or 'free') == 'free'
+    voces = req('GET', '/voices').get('voices', []); mine = {v['voice_id'] for v in voces}
+    if gratis:
+        print('Cuenta gratis: uso las voces de fábrica de ElevenLabs (las de la biblioteca piden plan de pago).')
+        byname = {v['name'].split(' ')[0].split('-')[0].strip().lower(): v for v in voces if v.get('category') == 'premade'}
+        picks = {}
+        for rk, nm in FABRICA.items():
+            v = byname.get(nm.lower())
+            if v: picks[rk] = dict(voice_id=v['voice_id'], name=v['name'], fabrica=True)
+            else: print(f'  {rk}: no encontré la voz {nm} en su cuenta')
+    else:
+        picks = json.load(open(PICKS, encoding='utf-8'))
     total = 0
     for rk, role in ROLES.items():
         if (solo and rk not in solo) or rk not in picks: continue
         pk, var = rk.split('/'); v = picks[rk]; vid = v['voice_id']
-        if vid not in mine:  # las voces de la biblioteca se agregan a la cuenta (no gastan los cupos de voces propias)
+        if vid not in mine and not v.get('fabrica'):  # las voces de la biblioteca se agregan a la cuenta (no gastan los cupos de voces propias)
             vid = req('POST', f'/voices/add/{v["owner"]}/{v["voice_id"]}', {'new_name': f'Plantel Pixel {rk}'}).get('voice_id', vid); mine.add(vid)
         out = os.path.join(ROOT, 'audio', 'voces', pk, var); os.makedirs(out, exist_ok=True)
         for ev, L in I[pk]['L'].items():
             for lid, txt in L:
-                audio = req('POST', f'/text-to-speech/{vid}?output_format=mp3_44100_64', {'text': txt, 'model_id': MODEL, 'voice_settings': dict(role['vs'], use_speaker_boost=True)}, raw=True)
+                audio = tts(vid, txt, role['vs'])
                 open(os.path.join(out, lid + '.mp3'), 'wb').write(audio); total += len(txt)
-        print(f'{rk}: listo con la voz {v["name"]}')
+        print(f'{rk}: listo con la voz {v["name"]} (modelo {MODELS[0]})')
     print(f'Letras usadas: {total}')
     try:
         s = req('GET', '/user/subscription'); print(f'Créditos del mes: {s.get("character_count")} de {s.get("character_limit")}')
